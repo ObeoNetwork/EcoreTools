@@ -1,0 +1,5 @@
+= sirius-components-ecore-starter
+
+== Goal
+
+This project provides an autoconfiguration for Ecore related MM.

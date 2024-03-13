@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   id="Layer_1_antenna"
+   data-name="Layer 1"
+   viewBox="0 0 92.7 69.3"
+   version="1.1"
+   sodipodi:docname="epackage.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs19" />
+  <sodipodi:namedview
+     id="namedview17"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="11.067821"
+     inkscape:cx="46.305413"
+     inkscape:cy="34.650002"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="2552"
+     inkscape:window-y="352"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="Layer_1_antenna" />
+  <title
+     id="title2">icon</title>
+  <style
+     id="style14">
+    /* <![CDATA[ */
+    #Layer_1_antenna g path {      
+      animation-iteration-count: infinite;
+      animation-duration: 4s;
+      animation-timing-function: linear;
+    }
+
+    #Layer_1_antenna g path:nth-of-type(1) {      
+      animation-name: color-antenna-1;
+    }
+    @keyframes color-antenna-1 {
+      0% { fill: #fff; }
+      20% { fill: #48c1c2; }
+      80% { fill: #48c1c2; }
+      100% { fill: #fff; }
+    }
+
+    #Layer_1_antenna g path:nth-of-type(2) {      
+      animation-name: color-antenna-2;
+    }
+    @keyframes color-antenna-2 {
+      0% { fill: #fff; }
+      20% { fill: #fff; }
+      40% { fill: #48c1c2; }
+      80% { fill: #48c1c2; }
+      100% { fill: #fff; }
+    }
+    
+    #Layer_1_antenna g path:nth-of-type(3) {      
+      animation-name: color-antenna-3;
+    }
+    @keyframes color-antenna-3 {
+      0% { fill: #fff; }
+      40% { fill: #fff; }
+      60% { fill: #48c1c2; }
+      80% { fill: #48c1c2; }
+      100% { fill: #fff; }
+    }
+    
+    #Layer_1_antenna g path:nth-of-type(4) {      
+      animation-name: color-antenna-4;
+    }
+    @keyframes color-antenna-4 {
+      0% { fill: #fff; }
+      60% { fill: #fff; }
+      80% { fill: #48c1c2; }
+      100% { fill: #fff; }
+    }
+}
+    /* ]]> */
+  </style>
+  <metadata
+     id="metadata836">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>icon</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <rect
+     style="fill:#ffffff;stroke:#d28d99;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill-opacity:1;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+     id="rect940"
+     width="88.191238"
+     height="66.022949"
+     x="2.2168291"
+     y="1.7349097"
+     ry="5.6016798" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#d28d99;fill-opacity:1;stroke:none"
+     x="32.93203"
+     y="49.191017"
+     id="text3914"><tspan
+       sodipodi:role="line"
+       id="tspan3912"
+       x="32.93203"
+       y="49.191017">P</tspan></text>
+</svg>
