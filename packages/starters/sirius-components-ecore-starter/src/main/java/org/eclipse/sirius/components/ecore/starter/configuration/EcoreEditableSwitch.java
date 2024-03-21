@@ -17,7 +17,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreSwitch;
 
 /**
- * Specific {@link EcoreSwitch} returning the whether an {@link EObject} is editable.
+ * Specific {@link EcoreSwitch} returning whether an {@link EObject} is editable.
  *
  * @author adieumegard
  */

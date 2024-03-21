@@ -16,6 +16,7 @@ import static org.eclipse.sirius.components.ecore.starter.view.EcoreViewBuilder.
 
 import java.util.Objects;
 
+import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageUtils;
 import org.eclipse.sirius.components.ecore.starter.view.EcoreViewBuilder;
 import org.eclipse.sirius.components.view.builder.IViewDiagramElementFinder;
 import org.eclipse.sirius.components.view.builder.generated.DiagramBuilders;
@@ -55,8 +56,8 @@ public class EPackageDescriptionProvider implements INodeDescriptionProvider {
 
         return this.diagramBuilderHelper.newNodeDescription()
                 .name(NAME)
-                .domainType("ecore::EPackage")
-                .semanticCandidatesExpression("feature:eSubpackages")
+                .domainType(EcorePackageUtils.getEPackageDataTypeQualifiedName())
+                .semanticCandidatesExpression(EcorePackageUtils.getEPackageContainmentFeatureName(true))
                 .childrenLayoutStrategy(DiagramFactory.eINSTANCE.createFreeFormLayoutStrategyDescription())
                 .labelExpression("aql:self.name")
                 .defaultHeightExpression("aql:15")

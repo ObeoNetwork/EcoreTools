@@ -16,6 +16,7 @@ import static org.eclipse.sirius.components.ecore.starter.view.EcoreViewBuilder.
 
 import java.util.Objects;
 
+import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageUtils;
 import org.eclipse.sirius.components.ecore.starter.view.EcoreViewBuilder;
 import org.eclipse.sirius.components.view.builder.IViewDiagramElementFinder;
 import org.eclipse.sirius.components.view.builder.generated.DiagramBuilders;
@@ -56,8 +57,8 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
 
         return this.diagramBuilderHelper.newNodeDescription()
                 .name(NAME)
-                .domainType("ecore::EClass")
-                .semanticCandidatesExpression("feature:eClassifiers")
+                .domainType(EcorePackageUtils.getEClassDataTypeQualifiedName())
+                .semanticCandidatesExpression(EcorePackageUtils.getEClassContainmentFeatureName(true))
                 .childrenLayoutStrategy(DiagramFactory.eINSTANCE.createFreeFormLayoutStrategyDescription())
                 .labelExpression("aql:self.name")
                 .defaultHeightExpression("aql:15")
