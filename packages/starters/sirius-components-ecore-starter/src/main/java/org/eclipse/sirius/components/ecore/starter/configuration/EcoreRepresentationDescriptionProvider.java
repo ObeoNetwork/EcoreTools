@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class EcoreRepresentationDescriptionProvider implements IEditingContextRepresentationDescriptionProvider {
 
-    private static final String ECORE_VIEW_DIAGRAM_ID = "EcoreDiagram";
+    public static final String ECORE_VIEW_DIAGRAM_ID = "Ecore Diagram";
 
     private final IViewConverter viewConverter;
 

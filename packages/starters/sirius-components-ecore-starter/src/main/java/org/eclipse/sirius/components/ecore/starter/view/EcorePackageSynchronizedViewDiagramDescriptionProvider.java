@@ -12,6 +12,8 @@
  *******************************************************************************/
 package org.eclipse.sirius.components.ecore.starter.view;
 
+import static org.eclipse.sirius.components.ecore.starter.configuration.EcoreRepresentationDescriptionProvider.ECORE_VIEW_DIAGRAM_ID;
+
 import java.util.List;
 
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.EClassDescriptionProvider;
@@ -25,7 +27,6 @@ import org.eclipse.sirius.components.view.builder.providers.IDiagramElementDescr
 import org.eclipse.sirius.components.view.builder.providers.IRepresentationDescriptionProvider;
 import org.eclipse.sirius.components.view.diagram.DiagramPalette;
 import org.eclipse.sirius.components.view.diagram.DiagramToolSection;
-import org.eclipse.sirius.components.view.diagram.DropTool;
 import org.eclipse.sirius.components.view.diagram.NodeTool;
 import org.eclipse.sirius.components.view.diagram.SynchronizationPolicy;
 
@@ -37,8 +38,6 @@ import org.eclipse.sirius.components.view.diagram.SynchronizationPolicy;
 @SuppressWarnings("checkstyle:MultipleStringLiterals")
 public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements IRepresentationDescriptionProvider {
 
-    public static final String ECORE_MODEL_REPRESENTATION_NAME = "Ecore diagram";
-
     private final DiagramBuilders diagramBuilderHelper = new DiagramBuilders();
 
     private final ViewBuilders viewBuilderHelper = new ViewBuilders();
@@ -49,7 +48,7 @@ public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements I
         var diagramDescription = diagramDescriptionBuilder
                 .autoLayout(true)
                 .domainType("ecore::Package")
-                .name(ECORE_MODEL_REPRESENTATION_NAME)
+                .name(ECORE_VIEW_DIAGRAM_ID)
                 .titleExpression("Ecore model synchronized").build();
 
 
@@ -72,7 +71,6 @@ public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements I
     private DiagramPalette createDiagramPalette(IViewDiagramElementFinder cache) {
         return this.diagramBuilderHelper.newDiagramPalette()
                 .toolSections(this.createDiagramToolSection(cache))
-                .dropTool(this.createDropTool(cache))
                 .build();
     }
 
@@ -90,22 +88,13 @@ public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements I
                 .featureName("name")
                 .valueExpression("aql:'EPackage' + self.eContainer().eContents()->filter(ecore::EPackage)->size()");
 
-        cache.getNodeDescription(EPackageDescriptionProvider.NAME).ifPresent(dataSourceNodeDescription -> {
-            var createView = this.diagramBuilderHelper.newCreateView()
-                    .parentViewExpression("aql:selectedNode")
-                    .semanticElementExpression("aql:newInstance")
-                    .elementDescription(dataSourceNodeDescription);
-
-            setValueName.children(createView.build());
-        });
-
         var changeContextNewInstance = this.viewBuilderHelper.newChangeContext()
                 .expression("aql:newInstance")
                 .children(setValueName.build());
 
         var createInstance = this.viewBuilderHelper.newCreateInstance()
                 .typeName("ecore::EPackage")
-                .referenceName("eSubPackages")
+                .referenceName("eSubpackages")
                 .variableName("newInstance")
                 .children(changeContextNewInstance.build());
 
@@ -122,16 +111,6 @@ public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements I
                 .featureName("name")
                 .valueExpression("aql:'EClass' + self.eContainer().eContents()->filter(ecore::EClass)->size()");
 
-        cache.getNodeDescription(EClassDescriptionProvider.NAME).ifPresent(dataSourceNodeDescription -> {
-            var createView = this.diagramBuilderHelper.newCreateView()
-                    .parentViewExpression("aql:selectedNode")
-                    .semanticElementExpression("aql:newInstance")
-                    .elementDescription(dataSourceNodeDescription);
-
-            setValueName.children(createView.build());
-        });
-
-
         var changeContextNewInstance = this.viewBuilderHelper.newChangeContext()
                 .expression("aql:newInstance")
                 .children(setValueName.build());
@@ -146,16 +125,6 @@ public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements I
                 .name("EClass")
                 .iconURLsExpression("/icons/full/obj16/EClass.gif")
                 .body(createInstance.build())
-                .build();
-    }
-
-    private DropTool createDropTool(IViewDiagramElementFinder cache) {
-        var changeContext = this.viewBuilderHelper.newChangeContext()
-                .expression("aql:self.drop(selectedNode, diagramContext, convertedNodes)");
-
-        return this.diagramBuilderHelper.newDropTool()
-                .name("Drop Tool")
-                .body(changeContext.build())
                 .build();
     }
 

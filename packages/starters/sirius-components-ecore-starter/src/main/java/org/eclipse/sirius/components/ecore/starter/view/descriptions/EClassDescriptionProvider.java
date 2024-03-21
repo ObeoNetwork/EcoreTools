@@ -17,9 +17,11 @@ import static org.eclipse.sirius.components.ecore.starter.view.EcoreViewBuilder.
 import java.util.Objects;
 
 import org.eclipse.sirius.components.ecore.starter.view.EcoreViewBuilder;
+import org.eclipse.sirius.components.view.builder.IViewDiagramElementFinder;
 import org.eclipse.sirius.components.view.builder.generated.DiagramBuilders;
 import org.eclipse.sirius.components.view.builder.providers.IColorProvider;
 import org.eclipse.sirius.components.view.builder.providers.INodeDescriptionProvider;
+import org.eclipse.sirius.components.view.diagram.DiagramDescription;
 import org.eclipse.sirius.components.view.diagram.DiagramFactory;
 import org.eclipse.sirius.components.view.diagram.NodeDescription;
 import org.eclipse.sirius.components.view.diagram.SynchronizationPolicy;
@@ -63,6 +65,11 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
                 .style(this.ecoreViewBuilder.createImageNodeStyleDescription(ECLASS_SVG_ID, this.colorProvider))
                 .synchronizationPolicy(this.synchronizationPolicy)
                 .build();
+    }
+
+    @Override
+    public void link(DiagramDescription diagramDescription, IViewDiagramElementFinder cache) {
+        cache.getNodeDescription(NAME).ifPresent(nodeDescription -> diagramDescription.getNodeDescriptions().add(nodeDescription));
     }
 
 
