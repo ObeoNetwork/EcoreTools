@@ -30,7 +30,7 @@ public class EcoreJavaServiceProvider implements IJavaServiceProvider {
     @Override
     public List<Class<?>> getServiceClasses(View view) {
         boolean isEcoreView = view.getDescriptions().stream().filter(DiagramDescription.class::isInstance).map(DiagramDescription.class::cast)
-                .anyMatch(diagramDescription -> diagramDescription.getDomainType().contains("ecore::"));
+                .anyMatch(diagramDescription -> diagramDescription.getDomainType().equals("ecore::EPackage"));
         if (isEcoreView) {
             return List.of(EcoreService.class);
         }

@@ -81,7 +81,6 @@ public class EPackageDescriptionProvider implements INodeDescriptionProvider {
         return this.diagramBuilderHelper.newNodePalette()
                 .deleteTool(this.ecoreViewBuilder.createDeleteTool())
                 .labelEditTool(this.ecoreViewBuilder.createLabelEditTool())
-                //.edgeTools(this.ecoreViewBuilder.createEdgeToProcessorTool(processorNodeDescription))
                 .build();
     }
 

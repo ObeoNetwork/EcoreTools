@@ -12,7 +12,7 @@
  *******************************************************************************/
 package org.eclipse.sirius.components.ecore.starter.configuration;
 
-import static org.eclipse.sirius.components.ecore.starter.view.EcorePackageSynchronizedViewDiagramDescriptionProvider.ECORE_MODEL_REPRESENTATION_NAME;
+import static org.eclipse.sirius.components.ecore.starter.configuration.EcoreRepresentationDescriptionProvider.ECORE_VIEW_DIAGRAM_ID;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -123,7 +123,7 @@ public class EcoreProjectTemplatesInitializer implements IProjectTemplateInitial
                 try (var inputStream = new ByteArrayInputStream(documentEntity.getContent().getBytes())) {
                     resource.load(inputStream, null);
 
-                    var optionalDiagram = this.findDiagramDescription(editingContext, ECORE_MODEL_REPRESENTATION_NAME);
+                    var optionalDiagram = this.findDiagramDescription(editingContext, ECORE_VIEW_DIAGRAM_ID);
                     if (optionalDiagram.isPresent()) {
                         DiagramDescription diagramDescription = optionalDiagram.get();
                         Object semanticTarget = resource.getContents().get(0);
