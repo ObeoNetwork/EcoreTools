@@ -47,7 +47,7 @@ public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements I
         var diagramDescriptionBuilder = this.diagramBuilderHelper.newDiagramDescription();
         var diagramDescription = diagramDescriptionBuilder
                 .autoLayout(true)
-                .domainType("ecore::Package")
+                .domainType("ecore::EPackage")
                 .name(ECORE_VIEW_DIAGRAM_ID)
                 .titleExpression("Ecore model synchronized").build();
 
