@@ -24,6 +24,7 @@ import org.eclipse.sirius.components.view.builder.providers.INodeDescriptionProv
 import org.eclipse.sirius.components.view.diagram.DiagramDescription;
 import org.eclipse.sirius.components.view.diagram.DiagramFactory;
 import org.eclipse.sirius.components.view.diagram.NodeDescription;
+import org.eclipse.sirius.components.view.diagram.NodePalette;
 import org.eclipse.sirius.components.view.diagram.SynchronizationPolicy;
 
 /**
@@ -64,6 +65,7 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
                 .keepAspectRatio(true)
                 .style(this.ecoreViewBuilder.createImageNodeStyleDescription(ECLASS_SVG_ID, this.colorProvider))
                 .synchronizationPolicy(this.synchronizationPolicy)
+                .palette(this.createNodePalette())
                 .build();
     }
 
@@ -72,5 +74,12 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
         cache.getNodeDescription(NAME).ifPresent(nodeDescription -> diagramDescription.getNodeDescriptions().add(nodeDescription));
     }
 
+    private NodePalette createNodePalette() {
+
+        return this.diagramBuilderHelper.newNodePalette()
+                .deleteTool(this.ecoreViewBuilder.createDeleteTool())
+                .labelEditTool(this.ecoreViewBuilder.createLabelEditTool())
+                .build();
+    }
 
 }
