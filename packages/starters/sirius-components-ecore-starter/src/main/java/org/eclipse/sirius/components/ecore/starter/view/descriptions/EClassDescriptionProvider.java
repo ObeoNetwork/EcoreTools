@@ -61,7 +61,7 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
                 .labelExpression("aql:self.name")
                 .defaultHeightExpression("aql:100")
                 .defaultWidthExpression("aql:120")
-                .keepAspectRatio(true)
+                .keepAspectRatio(false)
                 .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_EClass"))
                 .conditionalStyles(this.diagramBuilderHelper.newConditionalNodeStyle().condition(EcorePackageQueryUtils.getEClassInterfaceFeatureName(true))
                         .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_AbstractEClass")).build())
@@ -69,6 +69,8 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
                         .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_AbstractEClass")).build())
                 .synchronizationPolicy(this.synchronizationPolicy)
                 .palette(this.createNodePalette())
+                .childrenDescriptions(new EAttributeDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
+                .childrenDescriptions(new EOperationDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
                 .build();
     }
 

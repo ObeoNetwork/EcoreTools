@@ -34,6 +34,14 @@ public class EcorePackageQueryUtils {
         return getQualifiedName(EcorePackage.Literals.ECLASS);
     }
 
+    public static String getEAttributeDataTypeQualifiedName() {
+        return getQualifiedName(EcorePackage.Literals.EATTRIBUTE);
+    }
+
+    public static String getEOperationDataTypeQualifiedName() {
+        return getQualifiedName(EcorePackage.Literals.EOPERATION);
+    }
+
     public static String getEPackageContainmentFeatureName(boolean featurePrefixed) {
         String result = "";
         if (featurePrefixed) {
@@ -48,6 +56,22 @@ public class EcorePackageQueryUtils {
             result = EcorePackageQueryUtils.featurePrefix;
         }
         return result + EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName();
+    }
+
+    public static String getEAttributeContainmentFeatureName(boolean featurePrefixed) {
+        String result = "";
+        if (featurePrefixed) {
+            result = EcorePackageQueryUtils.featurePrefix;
+        }
+        return result + EcorePackage.Literals.ECLASS__EATTRIBUTES.getName();
+    }
+
+    public static String getEOperationContainmentFeatureName(boolean featurePrefixed) {
+        String result = "";
+        if (featurePrefixed) {
+            result = EcorePackageQueryUtils.featurePrefix;
+        }
+        return result + EcorePackage.Literals.ECLASS__EOPERATIONS.getName();
     }
 
     public static String getEClassInterfaceFeatureName(boolean featurePrefixed) {

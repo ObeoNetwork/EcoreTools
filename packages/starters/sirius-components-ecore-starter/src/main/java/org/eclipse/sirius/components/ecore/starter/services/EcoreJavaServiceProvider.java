@@ -15,6 +15,8 @@ package org.eclipse.sirius.components.ecore.starter.services;
 import java.util.List;
 
 import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageQueryUtils;
+import org.eclipse.sirius.components.ecore.starter.services.ecoretools.EAttributeServices;
+import org.eclipse.sirius.components.ecore.starter.services.ecoretools.EOperationServices;
 import org.eclipse.sirius.components.view.View;
 import org.eclipse.sirius.components.view.diagram.DiagramDescription;
 import org.eclipse.sirius.components.view.emf.IJavaServiceProvider;
@@ -33,7 +35,7 @@ public class EcoreJavaServiceProvider implements IJavaServiceProvider {
         boolean isEcoreView = view.getDescriptions().stream().filter(DiagramDescription.class::isInstance).map(DiagramDescription.class::cast)
                 .anyMatch(diagramDescription -> diagramDescription.getDomainType().equals(EcorePackageQueryUtils.getEPackageDataTypeQualifiedName()));
         if (isEcoreView) {
-            return List.of(EcoreService.class);
+            return List.of(EcoreService.class, EcoreTextService.class, EAttributeServices.class, EOperationServices.class);
         }
         return List.of();
     }

@@ -61,7 +61,7 @@ public class EPackageDescriptionProvider implements INodeDescriptionProvider {
                 .labelExpression("aql:self.name")
                 .defaultHeightExpression("aql:150")
                 .defaultWidthExpression("aql:200")
-                .keepAspectRatio(true)
+                .keepAspectRatio(false)
                 .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_EPackage"))
                 .collapsible(true)
                 .synchronizationPolicy(this.synchronizationPolicy)
