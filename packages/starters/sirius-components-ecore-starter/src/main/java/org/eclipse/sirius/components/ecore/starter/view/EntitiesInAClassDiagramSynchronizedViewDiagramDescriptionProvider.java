@@ -19,6 +19,8 @@ import java.util.List;
 import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageQueryUtils;
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.EClassDescriptionProvider;
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.EPackageDescriptionProvider;
+import org.eclipse.sirius.components.ecore.starter.view.descriptions.EReferenceDescriptionProvider;
+import org.eclipse.sirius.components.ecore.starter.view.descriptions.ESuperTypesDescriptionProvider;
 import org.eclipse.sirius.components.view.RepresentationDescription;
 import org.eclipse.sirius.components.view.builder.IViewDiagramElementFinder;
 import org.eclipse.sirius.components.view.builder.generated.DiagramBuilders;
@@ -56,7 +58,9 @@ public class EntitiesInAClassDiagramSynchronizedViewDiagramDescriptionProvider i
         var cache = new ViewDiagramElementFinder();
         var diagramElementDescriptionProviders = List.of(
                 new EPackageDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
-                new EClassDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED)
+                new EClassDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
+                new EReferenceDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
+                new ESuperTypesDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED)
         );
 
         diagramElementDescriptionProviders.stream().map(IDiagramElementDescriptionProvider::create).forEach(cache::put);

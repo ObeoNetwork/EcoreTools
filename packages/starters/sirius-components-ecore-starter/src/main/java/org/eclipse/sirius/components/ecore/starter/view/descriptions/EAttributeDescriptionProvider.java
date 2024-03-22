@@ -74,7 +74,10 @@ public class EAttributeDescriptionProvider implements INodeDescriptionProvider {
     }
 
     private NodePalette createNodePalette() {
-        return this.diagramBuilderHelper.newNodePalette().deleteTool(this.ecoreViewBuilder.createDeleteTool()).labelEditTool(this.ecoreViewBuilder.createLabelEditTool()).build();
+        return this.diagramBuilderHelper.newNodePalette()
+                .deleteTool(this.ecoreViewBuilder.createDeleteTool())
+                .labelEditTool(this.ecoreViewBuilder.createLabelEditEStructuralFeatureNameTool())
+                .build();
     }
 
     private IconLabelNodeStyleDescription getRectangularNodeStyleDescription(String borderColor, String labelColor, String backgroundColor) {

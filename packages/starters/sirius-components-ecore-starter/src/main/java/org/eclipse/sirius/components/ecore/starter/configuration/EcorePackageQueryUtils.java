@@ -42,6 +42,10 @@ public class EcorePackageQueryUtils {
         return getQualifiedName(EcorePackage.Literals.EOPERATION);
     }
 
+    public static String getEReferenceDataTypeQualifiedName() {
+        return getQualifiedName(EcorePackage.Literals.EREFERENCE);
+    }
+
     public static String getEPackageContainmentFeatureName(boolean featurePrefixed) {
         String result = "";
         if (featurePrefixed) {
@@ -74,6 +78,14 @@ public class EcorePackageQueryUtils {
         return result + EcorePackage.Literals.ECLASS__EOPERATIONS.getName();
     }
 
+    public static String getEReferenceContainmentFeatureName(boolean featurePrefixed) {
+        String result = "";
+        if (featurePrefixed) {
+            result = EcorePackageQueryUtils.featurePrefix;
+        }
+        return result + EcorePackage.Literals.ECLASS__EREFERENCES.getName();
+    }
+
     public static String getEClassInterfaceFeatureName(boolean featurePrefixed) {
         String result = "";
         if (featurePrefixed) {
@@ -88,6 +100,14 @@ public class EcorePackageQueryUtils {
             result = EcorePackageQueryUtils.featurePrefix;
         }
         return result + EcorePackage.Literals.ECLASS__ABSTRACT.getName();
+    }
+
+    public static String getEReferenceETypeFeatureName(boolean featurePrefixed) {
+        String result = "";
+        if (featurePrefixed) {
+            result = EcorePackageQueryUtils.featurePrefix;
+        }
+        return result + EcorePackage.Literals.EREFERENCE__EREFERENCE_TYPE.getName();
     }
 
     private static String getQualifiedName(EClass clazz) {

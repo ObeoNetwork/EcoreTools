@@ -52,12 +52,43 @@ public class EcoreViewBuilder {
     }
 
     public LabelEditTool createLabelEditTool() {
-        var callEditService = this.viewBuilderHelper.newChangeContext()
+        var changeContext = this.viewBuilderHelper.newChangeContext()
                 .expression("aql:self.defaultEditLabel(newLabel)");
 
         return this.diagramBuilderHelper.newLabelEditTool()
                 .name("Edit")
-                .body(callEditService.build())
+                .body(changeContext.build())
+                .build();
+    }
+
+    public LabelEditTool createLabelEditNameWithCamelCaseTool() {
+        var setValueService = this.viewBuilderHelper.newSetValue()
+                .featureName("name")
+                .valueExpression("aql:self.toCamelCase(newLabel)");
+
+        return this.diagramBuilderHelper.newLabelEditTool()
+                .name("Edit Name with Camel Case")
+                .body(setValueService.build())
+                .build();
+    }
+
+    public LabelEditTool createLabelEditEStructuralFeatureNameTool() {
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+                .expression("aql:self.performEditAsAttribute(newLabel)");
+
+        return this.diagramBuilderHelper.newLabelEditTool()
+                .name("Edit EStructuralFeature Name")
+                .body(changeContext.build())
+                .build();
+    }
+
+    public LabelEditTool createLabelEditEReferenceOrEOperationNameTool() {
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+                .expression("aql:self.performEdit(newLabel)");
+
+        return this.diagramBuilderHelper.newLabelEditTool()
+                .name("Edit EReference or EOperation Name")
+                .body(changeContext.build())
                 .build();
     }
 

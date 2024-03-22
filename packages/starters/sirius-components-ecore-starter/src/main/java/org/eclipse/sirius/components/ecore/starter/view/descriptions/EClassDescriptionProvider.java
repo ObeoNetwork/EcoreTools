@@ -80,7 +80,10 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
     }
 
     private NodePalette createNodePalette() {
-        return this.diagramBuilderHelper.newNodePalette().deleteTool(this.ecoreViewBuilder.createDeleteTool()).labelEditTool(this.ecoreViewBuilder.createLabelEditTool()).build();
+        return this.diagramBuilderHelper.newNodePalette()
+                .deleteTool(this.ecoreViewBuilder.createDeleteTool())
+                .labelEditTool(this.ecoreViewBuilder.createLabelEditNameWithCamelCaseTool())
+                .build();
     }
 
     private RectangularNodeStyleDescription getRectangularNodeStyleDescription(String borderColor, String labelColor, String backgroundColor) {
