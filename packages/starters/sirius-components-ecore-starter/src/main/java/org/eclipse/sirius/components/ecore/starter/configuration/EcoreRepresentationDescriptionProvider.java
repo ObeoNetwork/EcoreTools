@@ -96,6 +96,14 @@ public class EcoreRepresentationDescriptionProvider implements IEditingContextRe
         colorPalette.getColors().add(this.createFixedColor("Ecore_Black", "#002B3C"));
         colorPalette.getColors().add(this.createFixedColor("Ecore_LightGray", "#F0F0F0"));
 
+        colorPalette.getColors().add(this.createFixedColor("Ecore_Package", "#FFF5B6"));
+        colorPalette.getColors().add(this.createFixedColor("Ecore_EClass", "#FFFCD8"));
+        colorPalette.getColors().add(this.createFixedColor("Ecore_EPackage", "#D9D2DC"));
+        colorPalette.getColors().add(this.createFixedColor("Ecore_EDataType", "#FFFABF"));
+        colorPalette.getColors().add(this.createFixedColor("Ecore_EEnum", "#DDECCA"));
+        colorPalette.getColors().add(this.createFixedColor("Ecore_AbstractEClass", "#E4E4E4"));
+        colorPalette.getColors().add(this.createFixedColor("Ecore_Dark", "#7D7D7D"));
+
         return colorPalette;
     }
 

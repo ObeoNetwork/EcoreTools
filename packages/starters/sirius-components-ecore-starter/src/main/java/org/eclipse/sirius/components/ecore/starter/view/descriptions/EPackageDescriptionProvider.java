@@ -62,7 +62,7 @@ public class EPackageDescriptionProvider implements INodeDescriptionProvider {
                 .defaultHeightExpression("aql:150")
                 .defaultWidthExpression("aql:200")
                 .keepAspectRatio(true)
-                .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black"))//ecoreViewBuilder.createImageNodeStyleDescription(EPACKAGE_SVG_ID, this.colorProvider))
+                .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_EPackage"))
                 .collapsible(true)
                 .synchronizationPolicy(this.synchronizationPolicy)
                 .palette(this.createNodePalette())
@@ -78,20 +78,19 @@ public class EPackageDescriptionProvider implements INodeDescriptionProvider {
     }
 
     private NodePalette createNodePalette() {
-
         return this.diagramBuilderHelper.newNodePalette()
                 .deleteTool(this.ecoreViewBuilder.createDeleteTool())
                 .labelEditTool(this.ecoreViewBuilder.createLabelEditTool())
                 .build();
     }
 
-    private RectangularNodeStyleDescription getRectangularNodeStyleDescription(String borderColor, String labelColor) {
+    private RectangularNodeStyleDescription getRectangularNodeStyleDescription(String borderColor, String labelColor, String backgroundColor) {
         return this.diagramBuilderHelper.newRectangularNodeStyleDescription()
-                .color(this.colorProvider.getColor("Ecore_LightGray"))
+                .color(this.colorProvider.getColor(backgroundColor))
                 .borderColor(this.colorProvider.getColor(borderColor))
                 .labelColor(this.colorProvider.getColor(labelColor))
-                .bold(true)
-                .borderRadius(10)
+                .bold(false)
+                .borderRadius(1)
                 .withHeader(true)
                 .displayHeaderSeparator(true)
                 .showIcon(true)

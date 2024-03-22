@@ -50,7 +50,6 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
         this.synchronizationPolicy = Objects.requireNonNull(synchronizationPolicy);
     }
 
-
     @Override
     public NodeDescription create() {
 
@@ -58,12 +57,16 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
                 .name(NAME)
                 .domainType(EcorePackageQueryUtils.getEClassDataTypeQualifiedName())
                 .semanticCandidatesExpression(EcorePackageQueryUtils.getEClassContainmentFeatureName(true))
-                .childrenLayoutStrategy(DiagramFactory.eINSTANCE.createFreeFormLayoutStrategyDescription())
+                .childrenLayoutStrategy(DiagramFactory.eINSTANCE.createListLayoutStrategyDescription())
                 .labelExpression("aql:self.name")
-                .defaultHeightExpression("aql:150")
-                .defaultWidthExpression("aql:200")
+                .defaultHeightExpression("aql:100")
+                .defaultWidthExpression("aql:120")
                 .keepAspectRatio(true)
-                .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black"))//ecoreViewBuilder.createImageNodeStyleDescription(ECLASS_SVG_ID, this.colorProvider))
+                .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_EClass"))
+                .conditionalStyles(this.diagramBuilderHelper.newConditionalNodeStyle().condition("feature:interface")
+                        .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_AbstractEClass")).build())
+                .conditionalStyles(this.diagramBuilderHelper.newConditionalNodeStyle().condition("feature:abstract")
+                        .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_AbstractEClass")).build())
                 .synchronizationPolicy(this.synchronizationPolicy)
                 .palette(this.createNodePalette())
                 .build();
@@ -75,20 +78,16 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
     }
 
     private NodePalette createNodePalette() {
-
-        return this.diagramBuilderHelper.newNodePalette()
-                .deleteTool(this.ecoreViewBuilder.createDeleteTool())
-                .labelEditTool(this.ecoreViewBuilder.createLabelEditTool())
-                .build();
+        return this.diagramBuilderHelper.newNodePalette().deleteTool(this.ecoreViewBuilder.createDeleteTool()).labelEditTool(this.ecoreViewBuilder.createLabelEditTool()).build();
     }
 
-    private RectangularNodeStyleDescription getRectangularNodeStyleDescription(String borderColor, String labelColor) {
+    private RectangularNodeStyleDescription getRectangularNodeStyleDescription(String borderColor, String labelColor, String backgroundColor) {
         return this.diagramBuilderHelper.newRectangularNodeStyleDescription()
-                .color(this.colorProvider.getColor("Ecore_LightGray"))
+                .color(this.colorProvider.getColor(backgroundColor))
                 .borderColor(this.colorProvider.getColor(borderColor))
                 .labelColor(this.colorProvider.getColor(labelColor))
-                .bold(true)
-                .borderRadius(10)
+                .bold(false)
+                .borderRadius(8)
                 .withHeader(true)
                 .displayHeaderSeparator(true)
                 .showIcon(true)
