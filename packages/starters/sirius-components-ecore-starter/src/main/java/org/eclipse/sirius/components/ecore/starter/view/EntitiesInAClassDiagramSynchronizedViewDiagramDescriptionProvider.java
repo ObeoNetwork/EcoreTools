@@ -12,7 +12,7 @@
  *******************************************************************************/
 package org.eclipse.sirius.components.ecore.starter.view;
 
-import static org.eclipse.sirius.components.ecore.starter.configuration.EcoreRepresentationDescriptionProvider.ECORE_VIEW_DIAGRAM_ID;
+import static org.eclipse.sirius.components.ecore.starter.configuration.EcoreRepresentationDescriptionProvider.ENTITIES_IN_A_CLASS_DIAGRAM_VIEW_DIAGRAM_ID;
 
 import java.util.List;
 
@@ -37,7 +37,7 @@ import org.eclipse.sirius.components.view.diagram.SynchronizationPolicy;
  * @author adieumegard
  */
 @SuppressWarnings("checkstyle:MultipleStringLiterals")
-public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements IRepresentationDescriptionProvider {
+public class EntitiesInAClassDiagramSynchronizedViewDiagramDescriptionProvider implements IRepresentationDescriptionProvider {
 
     private final DiagramBuilders diagramBuilderHelper = new DiagramBuilders();
 
@@ -49,7 +49,7 @@ public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements I
         var diagramDescription = diagramDescriptionBuilder
                 .autoLayout(true)
                 .domainType(EcorePackageQueryUtils.getEPackageDataTypeQualifiedName())
-                .name(ECORE_VIEW_DIAGRAM_ID)
+                .name(ENTITIES_IN_A_CLASS_DIAGRAM_VIEW_DIAGRAM_ID)
                 .titleExpression("Ecore model synchronized").build();
 
 

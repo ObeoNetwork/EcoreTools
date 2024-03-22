@@ -21,7 +21,7 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.sirius.components.core.api.IEditingContext;
 import org.eclipse.sirius.components.core.api.IEditingContextRepresentationDescriptionProvider;
 import org.eclipse.sirius.components.ecore.starter.helper.ColorProvider;
-import org.eclipse.sirius.components.ecore.starter.view.EcorePackageSynchronizedViewDiagramDescriptionProvider;
+import org.eclipse.sirius.components.ecore.starter.view.EntitiesInAClassDiagramSynchronizedViewDiagramDescriptionProvider;
 import org.eclipse.sirius.components.emf.ResourceMetadataAdapter;
 import org.eclipse.sirius.components.emf.services.IDAdapter;
 import org.eclipse.sirius.components.emf.services.JSONResourceFactory;
@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class EcoreRepresentationDescriptionProvider implements IEditingContextRepresentationDescriptionProvider {
 
-    public static final String ECORE_VIEW_DIAGRAM_ID = "Ecore Diagram";
+    public static final String ENTITIES_IN_A_CLASS_DIAGRAM_VIEW_DIAGRAM_ID = "Entities in a Class Diagram";
 
     private final IViewConverter viewConverter;
 
@@ -67,7 +67,7 @@ public class EcoreRepresentationDescriptionProvider implements IEditingContextRe
 
         view.getColorPalettes().add(this.createColorPalette());
 
-        view.getDescriptions().add(new EcorePackageSynchronizedViewDiagramDescriptionProvider().create(colorProvider));
+        view.getDescriptions().add(new EntitiesInAClassDiagramSynchronizedViewDiagramDescriptionProvider().create(colorProvider));
 
         // Add an ID to all view elements
         view.eAllContents().forEachRemaining(eObject -> {
@@ -75,9 +75,9 @@ public class EcoreRepresentationDescriptionProvider implements IEditingContextRe
         });
 
         // All programmatic Views need to be stored in a Resource and registered in IInMemoryViewRegistry
-        String resourcePath = UUID.nameUUIDFromBytes(ECORE_VIEW_DIAGRAM_ID.getBytes()).toString();
+        String resourcePath = UUID.nameUUIDFromBytes(ENTITIES_IN_A_CLASS_DIAGRAM_VIEW_DIAGRAM_ID.getBytes()).toString();
         JsonResource resource = new JSONResourceFactory().createResourceFromPath(resourcePath);
-        resource.eAdapters().add(new ResourceMetadataAdapter(ECORE_VIEW_DIAGRAM_ID));
+        resource.eAdapters().add(new ResourceMetadataAdapter(ENTITIES_IN_A_CLASS_DIAGRAM_VIEW_DIAGRAM_ID));
         resource.getContents().add(view);
         this.inMemoryViewRegistry.register(view);
 

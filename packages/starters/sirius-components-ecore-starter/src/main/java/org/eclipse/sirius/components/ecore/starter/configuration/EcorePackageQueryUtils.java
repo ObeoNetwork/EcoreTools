@@ -50,6 +50,22 @@ public class EcorePackageQueryUtils {
         return result + EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName();
     }
 
+    public static String getEClassInterfaceFeatureName(boolean featurePrefixed) {
+        String result = "";
+        if (featurePrefixed) {
+            result = EcorePackageQueryUtils.featurePrefix;
+        }
+        return result + EcorePackage.Literals.ECLASS__INTERFACE.getName();
+    }
+
+    public static String getEClassAbstractFeatureName(boolean featurePrefixed) {
+        String result = "";
+        if (featurePrefixed) {
+            result = EcorePackageQueryUtils.featurePrefix;
+        }
+        return result + EcorePackage.Literals.ECLASS__ABSTRACT.getName();
+    }
+
     private static String getQualifiedName(EClass clazz) {
         return EcorePackage.eNAME + "::" + clazz.getName();
     }
