@@ -16,7 +16,7 @@ import static org.eclipse.sirius.components.ecore.starter.configuration.EcoreRep
 
 import java.util.List;
 
-import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageUtils;
+import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageQueryUtils;
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.EClassDescriptionProvider;
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.EPackageDescriptionProvider;
 import org.eclipse.sirius.components.view.RepresentationDescription;
@@ -48,7 +48,7 @@ public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements I
         var diagramDescriptionBuilder = this.diagramBuilderHelper.newDiagramDescription();
         var diagramDescription = diagramDescriptionBuilder
                 .autoLayout(true)
-                .domainType(EcorePackageUtils.getEPackageDataTypeQualifiedName())
+                .domainType(EcorePackageQueryUtils.getEPackageDataTypeQualifiedName())
                 .name(ECORE_VIEW_DIAGRAM_ID)
                 .titleExpression("Ecore model synchronized").build();
 
@@ -94,8 +94,8 @@ public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements I
                 .children(setValueName.build());
 
         var createInstance = this.viewBuilderHelper.newCreateInstance()
-                .typeName(EcorePackageUtils.getEPackageDataTypeQualifiedName())
-                .referenceName(EcorePackageUtils.getEPackageContainmentFeatureName(false))
+                .typeName(EcorePackageQueryUtils.getEPackageDataTypeQualifiedName())
+                .referenceName(EcorePackageQueryUtils.getEPackageContainmentFeatureName(false))
                 .variableName("newInstance")
                 .children(changeContextNewInstance.build());
 
@@ -117,8 +117,8 @@ public class EcorePackageSynchronizedViewDiagramDescriptionProvider implements I
                 .children(setValueName.build());
 
         var createInstance = this.viewBuilderHelper.newCreateInstance()
-                .typeName(EcorePackageUtils.getEClassDataTypeQualifiedName())
-                .referenceName(EcorePackageUtils.getEClassContainmentFeatureName(false))
+                .typeName(EcorePackageQueryUtils.getEClassDataTypeQualifiedName())
+                .referenceName(EcorePackageQueryUtils.getEClassContainmentFeatureName(false))
                 .variableName("newInstance")
                 .children(changeContextNewInstance.build());
 

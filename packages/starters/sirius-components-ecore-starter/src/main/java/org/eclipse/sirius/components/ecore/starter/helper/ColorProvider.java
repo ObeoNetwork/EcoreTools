@@ -35,12 +35,6 @@ public class ColorProvider implements IColorProvider {
 
     @Override
     public UserColor getColor(String colorName) {
-        return this.view.getColorPalettes()
-                .stream()
-                .map(ColorPalette::getColors)
-                .flatMap(Collection::stream)
-                .filter(userColor -> userColor.getName().equals(colorName))
-                .findFirst()
-                .orElse(null);
+        return this.view.getColorPalettes().stream().map(ColorPalette::getColors).flatMap(Collection::stream).filter(userColor -> userColor.getName().equals(colorName)).findFirst().orElse(null);
     }
 }

@@ -12,11 +12,9 @@
  *******************************************************************************/
 package org.eclipse.sirius.components.ecore.starter.view.descriptions;
 
-import static org.eclipse.sirius.components.ecore.starter.view.EcoreViewBuilder.ECLASS_SVG_ID;
-
 import java.util.Objects;
 
-import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageUtils;
+import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageQueryUtils;
 import org.eclipse.sirius.components.ecore.starter.view.EcoreViewBuilder;
 import org.eclipse.sirius.components.view.builder.IViewDiagramElementFinder;
 import org.eclipse.sirius.components.view.builder.generated.DiagramBuilders;
@@ -26,10 +24,11 @@ import org.eclipse.sirius.components.view.diagram.DiagramDescription;
 import org.eclipse.sirius.components.view.diagram.DiagramFactory;
 import org.eclipse.sirius.components.view.diagram.NodeDescription;
 import org.eclipse.sirius.components.view.diagram.NodePalette;
+import org.eclipse.sirius.components.view.diagram.RectangularNodeStyleDescription;
 import org.eclipse.sirius.components.view.diagram.SynchronizationPolicy;
 
 /**
- * Used to create the Package node description.
+ * Used to create the EClass node description.
  *
  * @author adieumegard
  */
@@ -57,14 +56,14 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
 
         return this.diagramBuilderHelper.newNodeDescription()
                 .name(NAME)
-                .domainType(EcorePackageUtils.getEClassDataTypeQualifiedName())
-                .semanticCandidatesExpression(EcorePackageUtils.getEClassContainmentFeatureName(true))
+                .domainType(EcorePackageQueryUtils.getEClassDataTypeQualifiedName())
+                .semanticCandidatesExpression(EcorePackageQueryUtils.getEClassContainmentFeatureName(true))
                 .childrenLayoutStrategy(DiagramFactory.eINSTANCE.createFreeFormLayoutStrategyDescription())
                 .labelExpression("aql:self.name")
-                .defaultHeightExpression("aql:15")
-                .defaultWidthExpression("aql:20")
+                .defaultHeightExpression("aql:150")
+                .defaultWidthExpression("aql:200")
                 .keepAspectRatio(true)
-                .style(this.ecoreViewBuilder.createImageNodeStyleDescription(ECLASS_SVG_ID, this.colorProvider))
+                .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black"))//ecoreViewBuilder.createImageNodeStyleDescription(ECLASS_SVG_ID, this.colorProvider))
                 .synchronizationPolicy(this.synchronizationPolicy)
                 .palette(this.createNodePalette())
                 .build();
@@ -80,6 +79,19 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
         return this.diagramBuilderHelper.newNodePalette()
                 .deleteTool(this.ecoreViewBuilder.createDeleteTool())
                 .labelEditTool(this.ecoreViewBuilder.createLabelEditTool())
+                .build();
+    }
+
+    private RectangularNodeStyleDescription getRectangularNodeStyleDescription(String borderColor, String labelColor) {
+        return this.diagramBuilderHelper.newRectangularNodeStyleDescription()
+                .color(this.colorProvider.getColor("Ecore_LightGray"))
+                .borderColor(this.colorProvider.getColor(borderColor))
+                .labelColor(this.colorProvider.getColor(labelColor))
+                .bold(true)
+                .borderRadius(10)
+                .withHeader(true)
+                .displayHeaderSeparator(true)
+                .showIcon(true)
                 .build();
     }
 

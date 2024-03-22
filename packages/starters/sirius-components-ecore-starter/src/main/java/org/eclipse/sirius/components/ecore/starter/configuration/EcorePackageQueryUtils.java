@@ -22,7 +22,7 @@ import org.eclipse.emf.ecore.util.EcoreSwitch;
  *
  * @author adieumegard
  */
-public class EcorePackageUtils {
+public class EcorePackageQueryUtils {
 
     private static String featurePrefix = "feature:";
 
@@ -37,7 +37,7 @@ public class EcorePackageUtils {
     public static String getEPackageContainmentFeatureName(boolean featurePrefixed) {
         String result = "";
         if (featurePrefixed) {
-            result = EcorePackageUtils.featurePrefix;
+            result = EcorePackageQueryUtils.featurePrefix;
         }
         return result + EcorePackage.Literals.EPACKAGE__ESUBPACKAGES.getName();
     }
@@ -45,7 +45,7 @@ public class EcorePackageUtils {
     public static String getEClassContainmentFeatureName(boolean featurePrefixed) {
         String result = "";
         if (featurePrefixed) {
-            result = EcorePackageUtils.featurePrefix;
+            result = EcorePackageQueryUtils.featurePrefix;
         }
         return result + EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName();
     }
