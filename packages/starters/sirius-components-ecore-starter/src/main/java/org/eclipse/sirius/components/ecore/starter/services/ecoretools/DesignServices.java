@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -268,23 +267,7 @@ public class DesignServices extends EReferenceServices {
         return result;
     }
 
-    public Set<EClass> getDirectSuperTypesOrMostSpecificOnes(EClass self) {
-        Set<EClass> result = Sets.newLinkedHashSet();
-        Set<EClass> displayed = new HashSet<>(self.getEPackage().getEClassifiers().stream().filter(EClass.class::isInstance).map(EClass.class::cast).toList());
-        for (EClass directSuperType : self.getESuperTypes()) {
-            if (displayed.contains(directSuperType)) {
-                result.add(directSuperType);
-            } else {
-                Set<EClass> mostSpecificDisplayed = this.findMostSpecificAndVisible(directSuperType.getESuperTypes(), displayed);
-                if (mostSpecificDisplayed != null) {
-                    result.addAll(mostSpecificDisplayed);
-                }
-            }
-        }
-        return result;
-    }
-
-    private Set<EClass> findMostSpecificAndVisible(Collection<EClass> superTypes, Set<EClass> displayed) {
+    public Set<EClass> findMostSpecificAndVisible(Collection<EClass> superTypes, Set<EClass> displayed) {
         Set<EClass> result = Sets.newLinkedHashSet();
         for (EClass eClass : superTypes) {
             if (displayed.contains(eClass)) {

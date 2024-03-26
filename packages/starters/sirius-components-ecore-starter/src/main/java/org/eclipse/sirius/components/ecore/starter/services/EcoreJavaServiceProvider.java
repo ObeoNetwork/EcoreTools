@@ -22,14 +22,14 @@ import org.eclipse.sirius.components.ecore.starter.services.ecoretools.EReferenc
 import org.eclipse.sirius.components.view.View;
 import org.eclipse.sirius.components.view.diagram.DiagramDescription;
 import org.eclipse.sirius.components.view.emf.IJavaServiceProvider;
-import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Used to provide services for the Ecore view.
  *
  * @author adieumegard
  */
-@Service
+@Configuration
 public class EcoreJavaServiceProvider implements IJavaServiceProvider {
 
     @Override
@@ -37,7 +37,7 @@ public class EcoreJavaServiceProvider implements IJavaServiceProvider {
         boolean isEcoreView = view.getDescriptions().stream().filter(DiagramDescription.class::isInstance).map(DiagramDescription.class::cast)
                 .anyMatch(diagramDescription -> diagramDescription.getDomainType().equals(EcorePackageQueryUtils.getEPackageDataTypeQualifiedName()));
         if (isEcoreView) {
-            return List.of(EcoreService.class, EcoreTextService.class, EAttributeServices.class, EOperationServices.class, EReferenceServices.class, DesignServices.class);
+            return List.of(EcoreService.class, EcoreTextService.class, EAttributeServices.class, EOperationServices.class, EReferenceServices.class, DesignServices.class, EcoreDesignServices.class);
         }
         return List.of();
     }

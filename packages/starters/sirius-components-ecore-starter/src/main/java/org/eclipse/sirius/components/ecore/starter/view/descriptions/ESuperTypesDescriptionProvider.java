@@ -52,11 +52,10 @@ public class ESuperTypesDescriptionProvider implements IEdgeDescriptionProvider 
 
     @Override
     public EdgeDescription create() {
-
         EdgeDescription edgeDescription = this.diagramBuilderHelper.newEdgeDescription()
                 .name(NAME)
                 .domainType(EcorePackageQueryUtils.getEClassDataTypeQualifiedName())
-                .targetNodesExpression("aql:self.getDirectSuperTypesOrMostSpecificOnes()")
+                .targetNodesExpression("aql:self.getDirectSuperTypesOrMostSpecificVisibleOnes(editingContext, previousDiagram)")
                 .isDomainBasedEdge(false)
                 .labelExpression("aql:self.superTypesLabel()")
                 .style(this.diagramBuilderHelper.newEdgeStyle()
@@ -67,6 +66,12 @@ public class ESuperTypesDescriptionProvider implements IEdgeDescriptionProvider 
                 .conditionalStyles(this.diagramBuilderHelper.newConditionalEdgeStyle()
                         .condition("aql:semanticEdgeTarget.interface")
                         .lineStyle(LineStyle.DASH)
+                        .color(this.colorProvider.getColor("Ecore_Gray"))
+                        .targetArrowStyle(ArrowStyle.INPUT_CLOSED_ARROW)
+                        .build())
+                .conditionalStyles(this.diagramBuilderHelper.newConditionalEdgeStyle()
+                        .condition("aql:not self.eSuperTypes->includes(semanticEdgeTarget)")
+                        .lineStyle(LineStyle.DOT)
                         .color(this.colorProvider.getColor("Ecore_Gray"))
                         .targetArrowStyle(ArrowStyle.INPUT_CLOSED_ARROW)
                         .build())
