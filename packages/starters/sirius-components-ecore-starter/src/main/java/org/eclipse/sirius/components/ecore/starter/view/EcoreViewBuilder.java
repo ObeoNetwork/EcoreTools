@@ -26,9 +26,6 @@ import org.eclipse.sirius.components.view.diagram.LabelEditTool;
  */
 public class EcoreViewBuilder {
 
-    public static final String EPACKAGE_SVG_ID = "c643d05b-0ae8-3695-85f2-121c865a5e38";
-    public static final String ECLASS_SVG_ID = "693c6af9-2f0e-3deb-8681-ad521fbaea2a";
-
     private final ViewBuilders viewBuilderHelper = new ViewBuilders();
     private final DiagramBuilders diagramBuilderHelper = new DiagramBuilders();
 
