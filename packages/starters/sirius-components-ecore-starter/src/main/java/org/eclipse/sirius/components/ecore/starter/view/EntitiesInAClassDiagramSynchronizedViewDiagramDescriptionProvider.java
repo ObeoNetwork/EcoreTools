@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageQueryUtils;
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.EClassDescriptionProvider;
+import org.eclipse.sirius.components.ecore.starter.view.descriptions.EEnumDescriptionProvider;
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.EPackageDescriptionProvider;
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.EReferenceDescriptionProvider;
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.ESuperTypesDescriptionProvider;
@@ -59,6 +60,7 @@ public class EntitiesInAClassDiagramSynchronizedViewDiagramDescriptionProvider i
         var diagramElementDescriptionProviders = List.of(
                 new EPackageDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
                 new EClassDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
+                new EEnumDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
                 new EReferenceDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
                 new ESuperTypesDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED)
         );
@@ -83,7 +85,8 @@ public class EntitiesInAClassDiagramSynchronizedViewDiagramDescriptionProvider i
         return this.diagramBuilderHelper.newDiagramToolSection()
                 .name("Creation Tools")
                 .nodeTools(this.createNodeToolCreateEPackage(cache),
-                        this.createNodeToolCreateEClass(cache))
+                        this.createNodeToolCreateEClass(cache),
+                        this.createNodeToolCreateEEnum(cache))
                 .build();
     }
 
@@ -129,6 +132,29 @@ public class EntitiesInAClassDiagramSynchronizedViewDiagramDescriptionProvider i
         return this.diagramBuilderHelper.newNodeTool()
                 .name("EClass")
                 .iconURLsExpression("/icons/full/obj16/EClass.gif")
+                .body(createInstance.build())
+                .build();
+    }
+
+    private NodeTool createNodeToolCreateEEnum(IViewDiagramElementFinder cache) {
+
+        var setValueName = this.viewBuilderHelper.newSetValue()
+                .featureName("name")
+                .valueExpression("aql:'EEnum' + self.eContainer().eContents()->filter(ecore::EEnum)->size()");
+
+        var changeContextNewInstance = this.viewBuilderHelper.newChangeContext()
+                .expression("aql:newInstance")
+                .children(setValueName.build());
+
+        var createInstance = this.viewBuilderHelper.newCreateInstance()
+                .typeName(EcorePackageQueryUtils.getEEnumDataTypeQualifiedName())
+                .referenceName(EcorePackageQueryUtils.getEEnumContainmentFeatureName(false))
+                .variableName("newInstance")
+                .children(changeContextNewInstance.build());
+
+        return this.diagramBuilderHelper.newNodeTool()
+                .name("EEnum")
+                .iconURLsExpression("/icons/full/obj16/EEnum.gif")
                 .body(createInstance.build())
                 .build();
     }
