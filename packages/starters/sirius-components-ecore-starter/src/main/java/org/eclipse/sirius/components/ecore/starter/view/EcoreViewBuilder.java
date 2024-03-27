@@ -29,7 +29,7 @@ import org.eclipse.sirius.components.view.diagram.NodeTool;
 public class EcoreViewBuilder {
 
     /**
-     * 
+     *
      */
     private static final String NAME = "name";
     private final ViewBuilders viewBuilderHelper = new ViewBuilders();
@@ -82,6 +82,17 @@ public class EcoreViewBuilder {
 
         return this.diagramBuilderHelper.newLabelEditTool()
                 .name("Edit Name no Camel Case")
+                .body(setValueService.build())
+                .build();
+    }
+
+    public LabelEditTool createLabelEditInstanceClassNameTool() {
+        var setValueService = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getEClassifierInstanceClassNameFeatureName(false))
+                .valueExpression("aql:newLabel");
+
+        return this.diagramBuilderHelper.newLabelEditTool()
+                .name("Edit Name Instance Direct Edit")
                 .body(setValueService.build())
                 .build();
     }
