@@ -87,6 +87,8 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
         return this.diagramBuilderHelper.newNodePalette()
                 .deleteTool(this.ecoreViewBuilder.createDeleteTool())
                 .labelEditTool(this.ecoreViewBuilder.createLabelEditNameWithCamelCaseTool())
+                .nodeTools(this.ecoreViewBuilder.createNodeToolCreateEAttribute())
+                .nodeTools(this.ecoreViewBuilder.createNodeToolCreateEOperation())
                 .build();
     }
 

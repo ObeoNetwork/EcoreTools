@@ -12,8 +12,13 @@
  *******************************************************************************/
 package org.eclipse.sirius.components.ecore.starter.view;
 
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.EcoreFactory;
+import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageQueryUtils;
 import org.eclipse.sirius.components.view.builder.generated.DiagramBuilders;
+import org.eclipse.sirius.components.view.builder.generated.SetValueBuilder;
 import org.eclipse.sirius.components.view.builder.generated.ViewBuilders;
 import org.eclipse.sirius.components.view.builder.providers.IColorProvider;
 import org.eclipse.sirius.components.view.diagram.DeleteTool;
@@ -28,6 +33,14 @@ import org.eclipse.sirius.components.view.diagram.NodeTool;
  */
 public class EcoreViewBuilder {
 
+    /**
+     *
+     */
+    private static final String NEW_INSTANCE = "newInstance";
+    /**
+     *
+     */
+    private static final String AQL_NEW_INSTANCE = "aql:newInstance";
     /**
      *
      */
@@ -117,27 +130,46 @@ public class EcoreViewBuilder {
                 .build();
     }
 
-    public NodeTool createNodeToolCreateEEnumLiteral() {
-
+    private NodeTool createNodeToolCreate(EObject object, EReference containmentRef, SetValueBuilder... valuesBuilders) {
+        String name = object.eClass().getName();
         var setValueName = this.viewBuilderHelper.newSetValue()
-                .featureName(NAME)
-                .valueExpression("aql:'EEnumLiteral' + self.eContainer().eContents()->filter(ecore::EEnumLiteral)->size()");
+                .featureName("name")
+                .valueExpression("aql:'New" + name + "' + self.eContainer().eContents()->filter(ecore::" + name + ")->size()");
 
         var changeContextNewInstance = this.viewBuilderHelper.newChangeContext()
-                .expression("aql:newInstance")
+                .expression(AQL_NEW_INSTANCE)
                 .children(setValueName.build());
 
+        for (SetValueBuilder setValueBuilder : valuesBuilders) {
+            changeContextNewInstance.children(setValueBuilder.build());
+        }
+
         var createInstance = this.viewBuilderHelper.newCreateInstance()
-                .typeName(EcorePackageQueryUtils.getEEnumLiteralDataTypeQualifiedName())
-                .referenceName(EcorePackageQueryUtils.getEEnumLiteralContainmentFeatureName(false))
-                .variableName("newInstance")
+                .typeName("ecore::" + name)
+                .referenceName(containmentRef.getName())
+                .variableName(NEW_INSTANCE)
                 .children(changeContextNewInstance.build());
 
         return this.diagramBuilderHelper.newNodeTool()
-                .name("EEnumLiteral")
-                .iconURLsExpression("/icons/full/obj16/EEnumLiteral.gif")
+                .name(name)
+                .iconURLsExpression("/icons/full/obj16/" + name + ".gif")
                 .body(createInstance.build())
                 .build();
+    }
+
+    public NodeTool createNodeToolCreateEEnumLiteral() {
+        var setValueValue = this.viewBuilderHelper.newSetValue()
+                .featureName("value")
+                .valueExpression("aql:self.eContainer().eContents()->filter(ecore::EEnumLiteral)->size()-1");
+        return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEEnumLiteral(), EcorePackage.Literals.EENUM__ELITERALS, setValueValue);
+    }
+
+    public NodeTool createNodeToolCreateEAttribute() {
+        return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEAttribute(), EcorePackage.Literals.ECLASS__ESTRUCTURAL_FEATURES);
+    }
+
+    public NodeTool createNodeToolCreateEOperation() {
+        return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEOperation(), EcorePackage.Literals.ECLASS__EOPERATIONS);
     }
 
 }
