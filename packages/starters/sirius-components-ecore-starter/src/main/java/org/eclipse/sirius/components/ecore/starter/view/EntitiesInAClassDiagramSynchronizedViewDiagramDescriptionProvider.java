@@ -17,6 +17,7 @@ import static org.eclipse.sirius.components.ecore.starter.configuration.EcoreRep
 import java.util.List;
 
 import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageQueryUtils;
+import org.eclipse.sirius.components.ecore.starter.view.descriptions.BiDirectionalEReferenceDescriptionProvider;
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.EClassDescriptionProvider;
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.EDataTypeDescriptionProvider;
 import org.eclipse.sirius.components.ecore.starter.view.descriptions.EEnumDescriptionProvider;
@@ -63,6 +64,7 @@ public class EntitiesInAClassDiagramSynchronizedViewDiagramDescriptionProvider i
                 new EClassDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
                 new EEnumDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
                 new EDataTypeDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
+                new BiDirectionalEReferenceDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
                 new EReferenceDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED),
                 new ESuperTypesDescriptionProvider(colorProvider, SynchronizationPolicy.SYNCHRONIZED)
         );

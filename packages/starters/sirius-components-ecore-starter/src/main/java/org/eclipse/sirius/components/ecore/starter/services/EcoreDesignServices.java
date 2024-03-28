@@ -14,13 +14,20 @@ package org.eclipse.sirius.components.ecore.starter.services;
 
 import com.google.common.collect.Sets;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EReference;
 import org.eclipse.sirius.components.core.api.IEditingContext;
 import org.eclipse.sirius.components.core.api.IObjectService;
 import org.eclipse.sirius.components.diagrams.Diagram;
@@ -76,6 +83,35 @@ public class EcoreDesignServices {
             }
         }
         return result;
+    }
+
+    public Set<EReference> getEReferencesToDisplay(EPackage root, IEditingContext editingContext, Diagram diagram) {
+        // [diagram.getDisplayedEClasses().oclAsType(ecore::EClass).eAllReferences->flatten()/]
+        Collection<EClass> eClasses = this.getDisplayedEClasses(editingContext, diagram);
+        Set<EReference> eRefs = Sets.newLinkedHashSet();
+        for (EClass clazz : eClasses) {
+            eRefs.addAll(clazz.getEAllReferences());
+        }
+        return eRefs;
+    }
+
+    public List<EReference> getEOppositeEReferences(EPackage context, IEditingContext editingContext, Diagram diagram) {
+        Collection<EClass> eClasses = this.getDisplayedEClasses(editingContext, diagram);
+        Set<EReference> references = Sets.newLinkedHashSet();
+        for (EClass clazz : eClasses) {
+            references.addAll(clazz.getEReferences());
+        }
+        Map<String, EReference> map = new HashMap<>();
+        for (EReference ref : references) {
+            if (ref.getEOpposite() != null) {
+                String key1 = ref.getEOpposite().hashCode() + "" + ref.hashCode();
+                String key2 = ref.hashCode() + "" + ref.getEOpposite().hashCode();
+                if (map.get(key1) == null && map.get(key2) == null) {
+                    map.put(key1, ref);
+                }
+            }
+        }
+        return new ArrayList<>(map.values());
     }
 
 }

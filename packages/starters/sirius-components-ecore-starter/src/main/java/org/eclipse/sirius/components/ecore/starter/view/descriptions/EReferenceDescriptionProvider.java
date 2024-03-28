@@ -28,7 +28,7 @@ import org.eclipse.sirius.components.view.diagram.LineStyle;
 import org.eclipse.sirius.components.view.diagram.SynchronizationPolicy;
 
 /**
- * Used to create the EAttribute node description.
+ * Used to create the EReference edge description for EReferences without eOpposite.
  *
  * @author adieumegard
  */
@@ -56,7 +56,7 @@ public class EReferenceDescriptionProvider implements IEdgeDescriptionProvider {
         return this.diagramBuilderHelper.newEdgeDescription()
                 .name(NAME)
                 .domainType(EcorePackageQueryUtils.getEReferenceDataTypeQualifiedName())
-                .semanticCandidatesExpression("aql:self.getEReferences()")
+                .semanticCandidatesExpression("aql:self.getEReferencesToDisplay(editingContext, previousDiagram)->select(it | it.eOpposite = null)")
                 .targetNodesExpression("aql:self.getEReferenceTarget()")
                 .sourceNodesExpression("feature:eContainer")
                 .isDomainBasedEdge(true)
@@ -66,6 +66,20 @@ public class EReferenceDescriptionProvider implements IEdgeDescriptionProvider {
                         .lineStyle(LineStyle.SOLID)
                         .color(this.colorProvider.getColor("Ecore_Black"))
                         .targetArrowStyle(ArrowStyle.INPUT_ARROW)
+                        .build())
+                .conditionalStyles(this.diagramBuilderHelper.newConditionalEdgeStyle()
+                        .condition("feature:containment")
+                        .lineStyle(LineStyle.SOLID)
+                        .color(this.colorProvider.getColor("Ecore_Black"))
+                        .sourceArrowStyle(ArrowStyle.FILL_DIAMOND)
+                        .targetArrowStyle(ArrowStyle.INPUT_ARROW)
+                        .build())
+                .conditionalStyles(this.diagramBuilderHelper.newConditionalEdgeStyle()
+                        .condition("feature:container")
+                        .lineStyle(LineStyle.SOLID)
+                        .color(this.colorProvider.getColor("Ecore_Black"))
+                        .sourceArrowStyle(ArrowStyle.INPUT_ARROW)
+                        .targetArrowStyle(ArrowStyle.FILL_DIAMOND)
                         .build())
                 .palette(this.createEdgePalette())
                 .synchronizationPolicy(this.synchronizationPolicy)
