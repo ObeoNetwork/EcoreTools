@@ -35,18 +35,10 @@ import org.eclipse.sirius.components.view.diagram.NodeTool;
  */
 public class EcoreViewBuilder {
 
-    /**
-     *
-     */
     private static final String NEW_INSTANCE = "newInstance";
-    /**
-     *
-     */
     private static final String AQL_NEW_INSTANCE = "aql:newInstance";
-    /**
-     *
-     */
     private static final String NAME = "name";
+
     private final ViewBuilders viewBuilderHelper = new ViewBuilders();
     private final DiagramBuilders diagramBuilderHelper = new DiagramBuilders();
 
@@ -135,7 +127,7 @@ public class EcoreViewBuilder {
     private NodeTool createNodeToolCreate(EObject object, EReference containmentRef, SetValueBuilder... valuesBuilders) {
         String name = object.eClass().getName();
         var setValueName = this.viewBuilderHelper.newSetValue()
-                .featureName("name")
+                .featureName(NAME)
                 .valueExpression("aql:'New" + name + "' + self.eContainer().eContents()->filter(ecore::" + name + ")->size()");
 
         var changeContextNewInstance = this.viewBuilderHelper.newChangeContext()
@@ -194,6 +186,66 @@ public class EcoreViewBuilder {
         return this.diagramBuilderHelper.newEdgeTool()
                 .name("SuperType")
                 .iconURLsExpression("/icons/full/ctool16/CreateEClass_eGenericSuperTypes_EGenericType.gif")
+                .targetElementDescriptions(eClassNodeDescription)
+                .body(changeContext.build())
+                .build();
+    }
+
+    /**
+     * Create a Tool to create an EReference.
+     *
+     * @param eClassNodeDescription
+     *            The target node description
+     * @param composition
+     *            Whether of not the created EReferences will be containement
+     * @return
+     */
+    public EdgeTool createEdgeToolCreateEReference(NodeDescription eClassNodeDescription, boolean composition) {
+        /*
+         * setEType service returns void, thus we shall intercept it to avoid problems during tool
+         * execution (thus using "= null")
+         */
+        var sideEffectIf = this.viewBuilderHelper.newIf()
+                .conditionExpression("aql:self.setEType(semanticEdgeTarget) = null");
+
+        var setValueName = this.viewBuilderHelper.newSetValue()
+                .featureName(NAME)
+                .valueExpression("aql:semanticEdgeTarget.name.toLower()");
+
+        var changeContextNewInstance = this.viewBuilderHelper.newChangeContext()
+                .expression(AQL_NEW_INSTANCE)
+                .children(setValueName.build(), sideEffectIf.build());
+
+        if (composition) {
+            var setValueContainment = this.viewBuilderHelper.newSetValue()
+                    .featureName(EcorePackageQueryUtils.getEReferenceAttributeContainmentFeatureName(false))
+                    .valueExpression("aql:true");
+
+            var setValueUpperBound = this.viewBuilderHelper.newSetValue()
+                    .featureName(EcorePackageQueryUtils.getEReferenceUpperBoundFeatureName(false))
+                    .valueExpression("aql:-1");
+
+            changeContextNewInstance.children(setValueContainment.build(), setValueUpperBound.build());
+        }
+
+        var createInstanceERef = this.viewBuilderHelper.newCreateInstance()
+                .typeName(EcorePackageQueryUtils.getEReferenceDataTypeQualifiedName())
+                .referenceName(EcorePackageQueryUtils.getEReferenceContainmentFeatureName(false))
+                .variableName(NEW_INSTANCE)
+                .children(changeContextNewInstance.build());
+
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+                .expression("var:semanticEdgeSource")
+                .children(createInstanceERef.build());
+
+        var toolName = "Reference";
+        if (composition) {
+            toolName = "Composition";
+        }
+
+        return this.diagramBuilderHelper.newEdgeTool()
+                .name(toolName)
+                .iconURLsExpression("/icons/full/ctool16/CreateEClass_eStructuralFeatures_EReference.gif")
                 .targetElementDescriptions(eClassNodeDescription)
                 .body(changeContext.build())
                 .build();

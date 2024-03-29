@@ -95,7 +95,7 @@ public class EcorePackageQueryUtils {
         if (featurePrefixed) {
             result = EcorePackageQueryUtils.featurePrefix;
         }
-        return result + EcorePackage.Literals.ECLASS__EREFERENCES.getName();
+        return result + EcorePackage.Literals.ECLASS__ESTRUCTURAL_FEATURES.getName();
     }
 
     public static String getEEnumContainmentFeatureName(boolean featurePrefixed) {
@@ -146,12 +146,28 @@ public class EcorePackageQueryUtils {
         return result + EcorePackage.Literals.ECLASS__ESUPER_TYPES.getName();
     }
 
+    public static String getEReferenceAttributeContainmentFeatureName(boolean featurePrefixed) {
+        String result = "";
+        if (featurePrefixed) {
+            result = EcorePackageQueryUtils.featurePrefix;
+        }
+        return result + EcorePackage.Literals.EREFERENCE__CONTAINMENT.getName();
+    }
+
     public static String getEReferenceETypeFeatureName(boolean featurePrefixed) {
         String result = "";
         if (featurePrefixed) {
             result = EcorePackageQueryUtils.featurePrefix;
         }
         return result + EcorePackage.Literals.EREFERENCE__EREFERENCE_TYPE.getName();
+    }
+
+    public static String getEReferenceUpperBoundFeatureName(boolean featurePrefixed) {
+        String result = "";
+        if (featurePrefixed) {
+            result = EcorePackageQueryUtils.featurePrefix;
+        }
+        return result + EcorePackage.Literals.ETYPED_ELEMENT__UPPER_BOUND.getName();
     }
 
     public static String getEClassifierInstanceClassNameFeatureName(boolean featurePrefixed) {
