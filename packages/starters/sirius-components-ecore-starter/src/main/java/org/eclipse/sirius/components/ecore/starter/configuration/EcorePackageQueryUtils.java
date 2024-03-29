@@ -138,6 +138,14 @@ public class EcorePackageQueryUtils {
         return result + EcorePackage.Literals.ECLASS__ABSTRACT.getName();
     }
 
+    public static String getEClassESuperTypesFeatureName(boolean featurePrefixed) {
+        String result = "";
+        if (featurePrefixed) {
+            result = EcorePackageQueryUtils.featurePrefix;
+        }
+        return result + EcorePackage.Literals.ECLASS__ESUPER_TYPES.getName();
+    }
+
     public static String getEReferenceETypeFeatureName(boolean featurePrefixed) {
         String result = "";
         if (featurePrefixed) {

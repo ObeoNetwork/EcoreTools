@@ -84,13 +84,13 @@ public class ESuperTypesDescriptionProvider implements IEdgeDescriptionProvider 
 
     @Override
     public void link(DiagramDescription diagramDescription, IViewDiagramElementFinder cache) {
-        var optionalEReferenceEdgeDescription = cache.getEdgeDescription(NAME);
+        var optionalESuperTypeEdgeDescription = cache.getEdgeDescription(NAME);
         var optionalEClassNodeDescription = cache.getNodeDescription(EClassDescriptionProvider.NAME);
 
-        if (optionalEReferenceEdgeDescription.isPresent() && optionalEClassNodeDescription.isPresent()) {
-            diagramDescription.getEdgeDescriptions().add(optionalEReferenceEdgeDescription.get());
-            optionalEReferenceEdgeDescription.get().getSourceNodeDescriptions().add(optionalEClassNodeDescription.get());
-            optionalEReferenceEdgeDescription.get().getTargetNodeDescriptions().add(optionalEClassNodeDescription.get());
+        if (optionalESuperTypeEdgeDescription.isPresent() && optionalEClassNodeDescription.isPresent()) {
+            diagramDescription.getEdgeDescriptions().add(optionalESuperTypeEdgeDescription.get());
+            optionalESuperTypeEdgeDescription.get().getSourceNodeDescriptions().add(optionalEClassNodeDescription.get());
+            optionalESuperTypeEdgeDescription.get().getTargetNodeDescriptions().add(optionalEClassNodeDescription.get());
         }
     }
 

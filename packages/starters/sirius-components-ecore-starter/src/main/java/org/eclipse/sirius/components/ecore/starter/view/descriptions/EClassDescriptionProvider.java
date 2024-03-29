@@ -52,7 +52,6 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
 
     @Override
     public NodeDescription create() {
-
         return this.diagramBuilderHelper.newNodeDescription()
                 .name(NAME)
                 .domainType(EcorePackageQueryUtils.getEClassDataTypeQualifiedName())
@@ -72,7 +71,6 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
                         .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_AbstractEClass"))
                         .build())
                 .synchronizationPolicy(this.synchronizationPolicy)
-                .palette(this.createNodePalette())
                 .childrenDescriptions(new EAttributeDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
                 .childrenDescriptions(new EOperationDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
                 .build();
@@ -80,15 +78,19 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
 
     @Override
     public void link(DiagramDescription diagramDescription, IViewDiagramElementFinder cache) {
-        cache.getNodeDescription(NAME).ifPresent(nodeDescription -> diagramDescription.getNodeDescriptions().add(nodeDescription));
+        cache.getNodeDescription(NAME).ifPresent(nodeDescription -> {
+            diagramDescription.getNodeDescriptions().add(nodeDescription);
+            nodeDescription.setPalette(this.createNodePalette(nodeDescription));
+        });
     }
 
-    private NodePalette createNodePalette() {
+    private NodePalette createNodePalette(NodeDescription eClassNodeDescription) {
         return this.diagramBuilderHelper.newNodePalette()
                 .deleteTool(this.ecoreViewBuilder.createDeleteTool())
                 .labelEditTool(this.ecoreViewBuilder.createLabelEditNameWithCamelCaseTool())
                 .nodeTools(this.ecoreViewBuilder.createNodeToolCreateEAttribute())
                 .nodeTools(this.ecoreViewBuilder.createNodeToolCreateEOperation())
+                .edgeTools(this.ecoreViewBuilder.createEdgeToolCreateSuperType(eClassNodeDescription))
                 .build();
     }
 

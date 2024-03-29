@@ -66,12 +66,7 @@ public class EcoreDesignServices {
 
     public Set<EClass> getDirectSuperTypesOrMostSpecificVisibleOnes(EClass self, IEditingContext editingContext, Diagram diagram) {
         Set<EClass> result = Sets.newLinkedHashSet();
-        Set<EClass> displayed;
-        if (diagram != null) {
-            displayed = this.getDisplayedEClasses(editingContext, diagram);
-        } else {
-            displayed = new HashSet<>(self.getEPackage().getEClassifiers().stream().filter(EClass.class::isInstance).map(EClass.class::cast).toList());
-        }
+        Set<EClass> displayed = this.getDisplayedOrElseAvailableEClasses(self.getEPackage(), editingContext, diagram);
         for (EClass directSuperType : self.getESuperTypes()) {
             if (displayed.contains(directSuperType)) {
                 result.add(directSuperType);
@@ -87,7 +82,7 @@ public class EcoreDesignServices {
 
     public Set<EReference> getEReferencesToDisplay(EPackage root, IEditingContext editingContext, Diagram diagram) {
         // [diagram.getDisplayedEClasses().oclAsType(ecore::EClass).eAllReferences->flatten()/]
-        Collection<EClass> eClasses = this.getDisplayedEClasses(editingContext, diagram);
+        Collection<EClass> eClasses = this.getDisplayedOrElseAvailableEClasses(root, editingContext, diagram);
         Set<EReference> eRefs = Sets.newLinkedHashSet();
         for (EClass clazz : eClasses) {
             eRefs.addAll(clazz.getEAllReferences());
@@ -95,8 +90,8 @@ public class EcoreDesignServices {
         return eRefs;
     }
 
-    public List<EReference> getEOppositeEReferences(EPackage context, IEditingContext editingContext, Diagram diagram) {
-        Collection<EClass> eClasses = this.getDisplayedEClasses(editingContext, diagram);
+    public List<EReference> getEOppositeEReferences(EPackage self, IEditingContext editingContext, Diagram diagram) {
+        Set<EClass> eClasses = this.getDisplayedOrElseAvailableEClasses(self, editingContext, diagram);
         Set<EReference> references = Sets.newLinkedHashSet();
         for (EClass clazz : eClasses) {
             references.addAll(clazz.getEReferences());
@@ -112,6 +107,23 @@ public class EcoreDesignServices {
             }
         }
         return new ArrayList<>(map.values());
+    }
+
+    /**
+     * Retrieve a set of EClasses displayed in the diagram. if the {@code diagram} is null then retrieve all EClasses directly available from {@code self}.
+     * @param context
+     * @param editingContext
+     * @param diagram
+     * @return
+     */
+    private Set<EClass> getDisplayedOrElseAvailableEClasses(EPackage context, IEditingContext editingContext, Diagram diagram) {
+        Set<EClass> eClasses;
+        if (diagram != null) {
+            eClasses = this.getDisplayedEClasses(editingContext, diagram);
+        } else {
+            eClasses = new HashSet<>(context.getEClassifiers().stream().filter(EClass.class::isInstance).map(EClass.class::cast).toList());
+        }
+        return eClasses;
     }
 
 }

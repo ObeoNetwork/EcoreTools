@@ -22,8 +22,10 @@ import org.eclipse.sirius.components.view.builder.generated.SetValueBuilder;
 import org.eclipse.sirius.components.view.builder.generated.ViewBuilders;
 import org.eclipse.sirius.components.view.builder.providers.IColorProvider;
 import org.eclipse.sirius.components.view.diagram.DeleteTool;
+import org.eclipse.sirius.components.view.diagram.EdgeTool;
 import org.eclipse.sirius.components.view.diagram.ImageNodeStyleDescription;
 import org.eclipse.sirius.components.view.diagram.LabelEditTool;
+import org.eclipse.sirius.components.view.diagram.NodeDescription;
 import org.eclipse.sirius.components.view.diagram.NodeTool;
 
 /**
@@ -170,6 +172,31 @@ public class EcoreViewBuilder {
 
     public NodeTool createNodeToolCreateEOperation() {
         return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEOperation(), EcorePackage.Literals.ECLASS__EOPERATIONS);
+    }
+
+    public EdgeTool createEdgeToolCreateSuperType(NodeDescription eClassNodeDescription) {
+        /*
+         * createTypeArgumentsIfNeeded service returns void, thus we shall intercept it to avoid problems during tool
+         * execution (thus using "= null")
+         */
+        var sideEffectIf = this.viewBuilderHelper.newIf()
+                .conditionExpression("aql:self.createTypeArgumentsIfNeeded(semanticEdgeTarget) = null");
+
+        var setESuperTypes = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getEClassESuperTypesFeatureName(false))
+                .valueExpression("var:semanticEdgeTarget")
+                .children(sideEffectIf.build());
+
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+                .expression("var:semanticEdgeSource")
+                .children(setESuperTypes.build());
+
+        return this.diagramBuilderHelper.newEdgeTool()
+                .name("SuperType")
+                .iconURLsExpression("/icons/full/ctool16/CreateEClass_eGenericSuperTypes_EGenericType.gif")
+                .targetElementDescriptions(eClassNodeDescription)
+                .body(changeContext.build())
+                .build();
     }
 
 }
