@@ -185,7 +185,7 @@ public class EcoreViewBuilder {
 
         return this.diagramBuilderHelper.newEdgeTool()
                 .name("SuperType")
-                .iconURLsExpression("/icons/full/ctool16/CreateEClass_eGenericSuperTypes_EGenericType.gif")
+                .iconURLsExpression("/images/Inheritance.gif")
                 .targetElementDescriptions(eClassNodeDescription)
                 .body(changeContext.build())
                 .build();
@@ -197,10 +197,12 @@ public class EcoreViewBuilder {
      * @param eClassNodeDescription
      *            The target node description
      * @param composition
-     *            Whether of not the created EReferences will be containement
+     *            Whether of not the created EReferences will be containment
+     * @param eOpposite
+     *            Whether of not the eOpposite EReferences will be created too and linked
      * @return
      */
-    public EdgeTool createEdgeToolCreateEReference(NodeDescription eClassNodeDescription, boolean composition) {
+    public EdgeTool createEdgeToolCreateEReference(NodeDescription eClassNodeDescription, boolean composition, boolean eOpposite) {
         /*
          * setEType service returns void, thus we shall intercept it to avoid problems during tool
          * execution (thus using "= null")
@@ -210,7 +212,7 @@ public class EcoreViewBuilder {
 
         var setValueName = this.viewBuilderHelper.newSetValue()
                 .featureName(NAME)
-                .valueExpression("aql:semanticEdgeTarget.name.toLower()");
+                .valueExpression("aql:semanticEdgeTarget.name.toLower() + self.eContainer().eContents()->filter(ecore::EReference)->size()");
 
         var changeContextNewInstance = this.viewBuilderHelper.newChangeContext()
                 .expression(AQL_NEW_INSTANCE)
@@ -238,9 +240,50 @@ public class EcoreViewBuilder {
                 .expression("var:semanticEdgeSource")
                 .children(createInstanceERef.build());
 
+        if (eOpposite) {
+            var setValueEOpposite = this.viewBuilderHelper.newSetValue()
+                    .featureName(EcorePackageQueryUtils.getEReferenceEOppositeFeatureName(false))
+                    .valueExpression(AQL_NEW_INSTANCE);
+
+            String eOppPostfix = "eOpp";
+            var setValueEOppositeEOpposite = this.viewBuilderHelper.newSetValue()
+                    .featureName(EcorePackageQueryUtils.getEReferenceEOppositeFeatureName(false))
+                    .valueExpression(AQL_NEW_INSTANCE + eOppPostfix);
+
+            var sideEffectIfEOpposite = this.viewBuilderHelper.newIf()
+                    .conditionExpression("aql:self.setEType(semanticEdgeSource) = null");
+
+            var setValueNameEOpposite = this.viewBuilderHelper.newSetValue()
+                    .featureName(NAME)
+                    .valueExpression("aql:semanticEdgeSource.name.toLower() + self.eContainer().eContents()->filter(ecore::EReference)->size()");
+
+            var changeContextNewInstanceEOpposite = this.viewBuilderHelper.newChangeContext()
+                    .expression(AQL_NEW_INSTANCE + eOppPostfix)
+                    .children(setValueNameEOpposite.build(), sideEffectIfEOpposite.build(), setValueEOpposite.build());
+
+            var changeContextFirstERefInstance = this.viewBuilderHelper.newChangeContext()
+                    .expression(AQL_NEW_INSTANCE)
+                    .children(setValueEOppositeEOpposite.build());
+
+            var createInstanceERefEOpoosite = this.viewBuilderHelper.newCreateInstance()
+                    .typeName(EcorePackageQueryUtils.getEReferenceDataTypeQualifiedName())
+                    .referenceName(EcorePackageQueryUtils.getEReferenceContainmentFeatureName(false))
+                    .variableName(NEW_INSTANCE + eOppPostfix)
+                    .children(changeContextNewInstanceEOpposite.build(), changeContextFirstERefInstance.build());
+
+            var changeContextNewEOppositeInstance = this.viewBuilderHelper.newChangeContext()
+                    .expression("aql:semanticEdgeTarget")
+                    .children(createInstanceERefEOpoosite.build());
+
+            createInstanceERef.children(changeContextNewEOppositeInstance.build());
+        }
+
         var toolName = "Reference";
         if (composition) {
             toolName = "Composition";
+        }
+        if (eOpposite) {
+            toolName += " with Opposite Reference";
         }
 
         return this.diagramBuilderHelper.newEdgeTool()

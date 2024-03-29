@@ -170,6 +170,14 @@ public class EcorePackageQueryUtils {
         return result + EcorePackage.Literals.ETYPED_ELEMENT__UPPER_BOUND.getName();
     }
 
+    public static String getEReferenceEOppositeFeatureName(boolean featurePrefixed) {
+        String result = "";
+        if (featurePrefixed) {
+            result = EcorePackageQueryUtils.featurePrefix;
+        }
+        return result + EcorePackage.Literals.EREFERENCE__EOPPOSITE.getName();
+    }
+
     public static String getEClassifierInstanceClassNameFeatureName(boolean featurePrefixed) {
         String result = "";
         if (featurePrefixed) {

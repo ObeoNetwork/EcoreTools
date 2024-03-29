@@ -91,8 +91,10 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
                 .nodeTools(this.ecoreViewBuilder.createNodeToolCreateEAttribute())
                 .nodeTools(this.ecoreViewBuilder.createNodeToolCreateEOperation())
                 .edgeTools(this.ecoreViewBuilder.createEdgeToolCreateSuperType(eClassNodeDescription))
-                .edgeTools(this.ecoreViewBuilder.createEdgeToolCreateEReference(eClassNodeDescription, false))
-                .edgeTools(this.ecoreViewBuilder.createEdgeToolCreateEReference(eClassNodeDescription, true))
+                .edgeTools(this.ecoreViewBuilder.createEdgeToolCreateEReference(eClassNodeDescription, false, false))
+                .edgeTools(this.ecoreViewBuilder.createEdgeToolCreateEReference(eClassNodeDescription, true, false))
+                .edgeTools(this.ecoreViewBuilder.createEdgeToolCreateEReference(eClassNodeDescription, false, true))
+                .edgeTools(this.ecoreViewBuilder.createEdgeToolCreateEReference(eClassNodeDescription, true, true))
                 .build();
     }
 
