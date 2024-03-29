@@ -64,13 +64,15 @@ public class EEnumLiteralDescriptionProvider implements INodeDescriptionProvider
                 .keepAspectRatio(true)
                 .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_Black"))
                 .synchronizationPolicy(this.synchronizationPolicy)
-                .palette(this.createNodePalette())
                 .build();
     }
 
     @Override
     public void link(DiagramDescription diagramDescription, IViewDiagramElementFinder cache) {
-        cache.getNodeDescription(NAME).ifPresent(nodeDescription -> diagramDescription.getNodeDescriptions().add(nodeDescription));
+        cache.getNodeDescription(NAME).ifPresent(nodeDescription -> {
+            nodeDescription.setPalette(this.createNodePalette());
+            diagramDescription.getNodeDescriptions().add(nodeDescription);
+        });
     }
 
     private NodePalette createNodePalette() {

@@ -83,7 +83,6 @@ public class BiDirectionalEReferenceDescriptionProvider implements IEdgeDescript
                         .sourceArrowStyle(ArrowStyle.INPUT_ARROW)
                         .targetArrowStyle(ArrowStyle.FILL_DIAMOND)
                         .build())
-                .palette(this.createEdgePalette())
                 .synchronizationPolicy(this.synchronizationPolicy)
                 .build();
     }
@@ -95,6 +94,7 @@ public class BiDirectionalEReferenceDescriptionProvider implements IEdgeDescript
 
         if (optionalEReferenceEdgeDescription.isPresent() && optionalEClassNodeDescription.isPresent()) {
             diagramDescription.getEdgeDescriptions().add(optionalEReferenceEdgeDescription.get());
+            optionalEReferenceEdgeDescription.get().setPalette(this.createEdgePalette());
             optionalEReferenceEdgeDescription.get().getSourceNodeDescriptions().add(optionalEClassNodeDescription.get());
             optionalEReferenceEdgeDescription.get().getTargetNodeDescriptions().add(optionalEClassNodeDescription.get());
         }

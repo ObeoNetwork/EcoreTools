@@ -70,7 +70,10 @@ public class EAttributeDescriptionProvider implements INodeDescriptionProvider {
 
     @Override
     public void link(DiagramDescription diagramDescription, IViewDiagramElementFinder cache) {
-        cache.getNodeDescription(NAME).ifPresent(nodeDescription -> diagramDescription.getNodeDescriptions().add(nodeDescription));
+        cache.getNodeDescription(NAME).ifPresent(nodeDescription -> {
+            nodeDescription.setPalette(this.createNodePalette());
+            diagramDescription.getNodeDescriptions().add(nodeDescription);
+        });
     }
 
     private NodePalette createNodePalette() {

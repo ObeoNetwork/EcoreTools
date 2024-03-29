@@ -93,6 +93,7 @@ public class EReferenceDescriptionProvider implements IEdgeDescriptionProvider {
 
         if (optionalEReferenceEdgeDescription.isPresent() && optionalEClassNodeDescription.isPresent()) {
             diagramDescription.getEdgeDescriptions().add(optionalEReferenceEdgeDescription.get());
+            optionalEReferenceEdgeDescription.get().setPalette(this.createEdgePalette());
             optionalEReferenceEdgeDescription.get().getSourceNodeDescriptions().add(optionalEClassNodeDescription.get());
             optionalEReferenceEdgeDescription.get().getTargetNodeDescriptions().add(optionalEClassNodeDescription.get());
         }
