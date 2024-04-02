@@ -56,7 +56,7 @@ public class EDataTypeDescriptionProvider implements INodeDescriptionProvider {
         return this.diagramBuilderHelper.newNodeDescription()
                 .name(NAME)
                 .domainType(EcorePackageQueryUtils.getEDataTypeDataTypeQualifiedName())
-                .semanticCandidatesExpression(EcorePackageQueryUtils.getEDataTypeLiteralContainmentFeatureName(true))
+                .semanticCandidatesExpression("aql:self." + EcorePackageQueryUtils.getEDataTypeLiteralContainmentFeatureName(false) + "->select(it | not it.oclIsTypeOf(ecore::EEnum))")
                 .childrenLayoutStrategy(DiagramFactory.eINSTANCE.createListLayoutStrategyDescription())
                 .labelExpression("aql:self.name")
                 .defaultHeightExpression("aql:60")
