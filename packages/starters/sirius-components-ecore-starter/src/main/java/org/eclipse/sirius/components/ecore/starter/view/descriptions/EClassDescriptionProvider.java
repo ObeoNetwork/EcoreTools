@@ -61,14 +61,14 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
                 .defaultHeightExpression("aql:100")
                 .defaultWidthExpression("aql:120")
                 .keepAspectRatio(false)
-                .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_EClass"))
+                .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_EClass", false, false))
                 .conditionalStyles(this.diagramBuilderHelper.newConditionalNodeStyle()
                         .condition(EcorePackageQueryUtils.getEClassInterfaceFeatureName(true))
-                        .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_AbstractEClass"))
+                        .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_AbstractEClass", true, true))
                         .build())
                 .conditionalStyles(this.diagramBuilderHelper.newConditionalNodeStyle()
                         .condition(EcorePackageQueryUtils.getEClassAbstractFeatureName(true))
-                        .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_AbstractEClass"))
+                        .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_AbstractEClass", false, true))
                         .build())
                 .synchronizationPolicy(this.synchronizationPolicy)
                 .childrenDescriptions(new EAttributeDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
@@ -98,8 +98,8 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
                 .build();
     }
 
-    private RectangularNodeStyleDescription getRectangularNodeStyleDescription(String borderColor, String labelColor, String backgroundColor) {
-        return this.diagramBuilderHelper.newRectangularNodeStyleDescription()
+    private RectangularNodeStyleDescription getRectangularNodeStyleDescription(String borderColor, String labelColor, String backgroundColor, boolean isInterface, boolean isAbstract) {
+        var nodeDescription = this.diagramBuilderHelper.newRectangularNodeStyleDescription()
                 .color(this.colorProvider.getColor(backgroundColor))
                 .borderColor(this.colorProvider.getColor(borderColor))
                 .labelColor(this.colorProvider.getColor(labelColor))
@@ -107,8 +107,15 @@ public class EClassDescriptionProvider implements INodeDescriptionProvider {
                 .borderRadius(8)
                 .withHeader(true)
                 .displayHeaderSeparator(true)
-                .showIcon(true)
-                .build();
+                .showIcon(true);
+
+        if (isAbstract) {
+            nodeDescription.labelIcon("/images/EClass_abstract.gif");
+        }
+        if (isInterface) {
+            nodeDescription.labelIcon("/images/EClass_interface.gif");
+        }
+        return nodeDescription.build();
     }
 
 }
