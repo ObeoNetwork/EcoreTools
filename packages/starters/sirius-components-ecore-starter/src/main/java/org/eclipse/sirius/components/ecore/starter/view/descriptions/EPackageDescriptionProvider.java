@@ -65,6 +65,9 @@ public class EPackageDescriptionProvider implements INodeDescriptionProvider {
                 .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_EPackage"))
                 .collapsible(true)
                 .synchronizationPolicy(this.synchronizationPolicy)
+                .childrenDescriptions(new EClassDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
+                .childrenDescriptions(new EEnumDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
+                .childrenDescriptions(new EDataTypeDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
                 .build();
     }
 
@@ -81,6 +84,10 @@ public class EPackageDescriptionProvider implements INodeDescriptionProvider {
         return this.diagramBuilderHelper.newNodePalette()
                 .deleteTool(this.ecoreViewBuilder.createDeleteTool())
                 .labelEditTool(this.ecoreViewBuilder.createLabelEditTool())
+                .nodeTools(this.ecoreViewBuilder.createNodeToolCreateEClass())
+                .nodeTools(this.ecoreViewBuilder.createNodeToolCreateEEnum())
+                .nodeTools(this.ecoreViewBuilder.createNodeToolCreateEDataType())
+                .nodeTools(this.ecoreViewBuilder.createNodeToolCreateEPackage())
                 .build();
     }
 

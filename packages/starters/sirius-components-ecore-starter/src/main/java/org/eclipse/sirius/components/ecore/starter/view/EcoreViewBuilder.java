@@ -35,6 +35,10 @@ import org.eclipse.sirius.components.view.diagram.NodeTool;
  */
 public class EcoreViewBuilder {
 
+    /**
+     *
+     */
+    private static final String AQL_TRUE = "aql:true";
     private static final String NEW_INSTANCE = "newInstance";
     private static final String AQL_NEW_INSTANCE = "aql:newInstance";
     private static final String NAME = "name";
@@ -173,6 +177,42 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    public NodeTool createNodeToolCreateEPackage() {
+        return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEPackage(), EcorePackage.Literals.EPACKAGE__ESUBPACKAGES);
+    }
+
+    public NodeTool createNodeToolCreateEClass() {
+        return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEClass(), EcorePackage.Literals.EPACKAGE__ECLASSIFIERS);
+    }
+
+    public NodeTool createNodeToolCreateEClassInterface() {
+        var setValueInterface = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getEClassInterfaceFeatureName(false))
+                .valueExpression(AQL_TRUE);
+        var nodeTool = this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEClass(), EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, setValueInterface);
+        nodeTool.setName("Interface");
+        nodeTool.setIconURLsExpression("/images/EClass_interface.gif");
+        return nodeTool;
+    }
+
+    public NodeTool createNodeToolCreateEClassAbstract() {
+        var setValueAbstract = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getEClassAbstractFeatureName(false))
+                .valueExpression(AQL_TRUE);
+        var nodeTool = this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEClass(), EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, setValueAbstract);
+        nodeTool.setName("Abstract EClass");
+        nodeTool.setIconURLsExpression("/images/EClass_abstract.gif");
+        return nodeTool;
+    }
+
+    public NodeTool createNodeToolCreateEEnum() {
+        return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEEnum(), EcorePackage.Literals.EPACKAGE__ECLASSIFIERS);
+    }
+
+    public NodeTool createNodeToolCreateEDataType() {
+        return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEDataType(), EcorePackage.Literals.EPACKAGE__ECLASSIFIERS);
+    }
+
     public NodeTool createNodeToolCreateEEnumLiteral() {
         var setValueValue = this.viewBuilderHelper.newSetValue()
                 .featureName("value")
@@ -243,7 +283,7 @@ public class EcoreViewBuilder {
         if (composition) {
             var setValueContainment = this.viewBuilderHelper.newSetValue()
                     .featureName(EcorePackageQueryUtils.getEReferenceAttributeContainmentFeatureName(false))
-                    .valueExpression("aql:true");
+                    .valueExpression(AQL_TRUE);
 
             var setValueUpperBound = this.viewBuilderHelper.newSetValue()
                     .featureName(EcorePackageQueryUtils.getEReferenceUpperBoundFeatureName(false))

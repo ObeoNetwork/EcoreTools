@@ -27,13 +27,11 @@ import org.eclipse.sirius.components.ecore.starter.view.descriptions.ESuperTypes
 import org.eclipse.sirius.components.view.RepresentationDescription;
 import org.eclipse.sirius.components.view.builder.IViewDiagramElementFinder;
 import org.eclipse.sirius.components.view.builder.generated.DiagramBuilders;
-import org.eclipse.sirius.components.view.builder.generated.ViewBuilders;
 import org.eclipse.sirius.components.view.builder.providers.IColorProvider;
 import org.eclipse.sirius.components.view.builder.providers.IDiagramElementDescriptionProvider;
 import org.eclipse.sirius.components.view.builder.providers.IRepresentationDescriptionProvider;
 import org.eclipse.sirius.components.view.diagram.DiagramPalette;
 import org.eclipse.sirius.components.view.diagram.DiagramToolSection;
-import org.eclipse.sirius.components.view.diagram.NodeTool;
 import org.eclipse.sirius.components.view.diagram.SynchronizationPolicy;
 
 /**
@@ -46,7 +44,7 @@ public class EntitiesInAClassDiagramSynchronizedViewDiagramDescriptionProvider i
 
     private final DiagramBuilders diagramBuilderHelper = new DiagramBuilders();
 
-    private final ViewBuilders viewBuilderHelper = new ViewBuilders();
+    private final EcoreViewBuilder viewBuilder = new EcoreViewBuilder();
 
     @Override
     public RepresentationDescription create(IColorProvider colorProvider) {
@@ -88,102 +86,12 @@ public class EntitiesInAClassDiagramSynchronizedViewDiagramDescriptionProvider i
     private DiagramToolSection createDiagramToolSection(IViewDiagramElementFinder cache) {
         return this.diagramBuilderHelper.newDiagramToolSection()
                 .name("Creation Tools")
-                .nodeTools(this.createNodeToolCreateEPackage(cache),
-                        this.createNodeToolCreateEClass(cache),
-                        this.createNodeToolCreateEEnum(cache),
-                        this.createNodeToolCreateEDataType(cache))
-                .build();
-    }
-
-    private NodeTool createNodeToolCreateEPackage(IViewDiagramElementFinder cache) {
-
-        var setValueName = this.viewBuilderHelper.newSetValue()
-                .featureName("name")
-                .valueExpression("aql:'EPackage' + self.eContainer().eContents()->filter(ecore::EPackage)->size()");
-
-        var changeContextNewInstance = this.viewBuilderHelper.newChangeContext()
-                .expression("aql:newInstance")
-                .children(setValueName.build());
-
-        var createInstance = this.viewBuilderHelper.newCreateInstance()
-                .typeName(EcorePackageQueryUtils.getEPackageDataTypeQualifiedName())
-                .referenceName(EcorePackageQueryUtils.getEPackageContainmentFeatureName(false))
-                .variableName("newInstance")
-                .children(changeContextNewInstance.build());
-
-        return this.diagramBuilderHelper.newNodeTool()
-                .name("EPackage")
-                .iconURLsExpression("/icons/full/obj16/EPackage.gif")
-                .body(createInstance.build())
-                .build();
-    }
-
-    private NodeTool createNodeToolCreateEClass(IViewDiagramElementFinder cache) {
-
-        var setValueName = this.viewBuilderHelper.newSetValue()
-                .featureName("name")
-                .valueExpression("aql:'EClass' + self.eContainer().eContents()->filter(ecore::EClass)->size()");
-
-        var changeContextNewInstance = this.viewBuilderHelper.newChangeContext()
-                .expression("aql:newInstance")
-                .children(setValueName.build());
-
-        var createInstance = this.viewBuilderHelper.newCreateInstance()
-                .typeName(EcorePackageQueryUtils.getEClassDataTypeQualifiedName())
-                .referenceName(EcorePackageQueryUtils.getEClassContainmentFeatureName(false))
-                .variableName("newInstance")
-                .children(changeContextNewInstance.build());
-
-        return this.diagramBuilderHelper.newNodeTool()
-                .name("EClass")
-                .iconURLsExpression("/icons/full/obj16/EClass.gif")
-                .body(createInstance.build())
-                .build();
-    }
-
-    private NodeTool createNodeToolCreateEEnum(IViewDiagramElementFinder cache) {
-
-        var setValueName = this.viewBuilderHelper.newSetValue()
-                .featureName("name")
-                .valueExpression("aql:'EEnum' + self.eContainer().eContents()->filter(ecore::EEnum)->size()");
-
-        var changeContextNewInstance = this.viewBuilderHelper.newChangeContext()
-                .expression("aql:newInstance")
-                .children(setValueName.build());
-
-        var createInstance = this.viewBuilderHelper.newCreateInstance()
-                .typeName(EcorePackageQueryUtils.getEEnumDataTypeQualifiedName())
-                .referenceName(EcorePackageQueryUtils.getEEnumContainmentFeatureName(false))
-                .variableName("newInstance")
-                .children(changeContextNewInstance.build());
-
-        return this.diagramBuilderHelper.newNodeTool()
-                .name("EEnum")
-                .iconURLsExpression("/icons/full/obj16/EEnum.gif")
-                .body(createInstance.build())
-                .build();
-    }
-
-    private NodeTool createNodeToolCreateEDataType(IViewDiagramElementFinder cache) {
-
-        var setValueName = this.viewBuilderHelper.newSetValue()
-                .featureName("name")
-                .valueExpression("aql:'EDataType' + self.eContainer().eContents()->filter(ecore::EDataType)->size()");
-
-        var changeContextNewInstance = this.viewBuilderHelper.newChangeContext()
-                .expression("aql:newInstance")
-                .children(setValueName.build());
-
-        var createInstance = this.viewBuilderHelper.newCreateInstance()
-                .typeName(EcorePackageQueryUtils.getEDataTypeDataTypeQualifiedName())
-                .referenceName(EcorePackageQueryUtils.getEDataTypeLiteralContainmentFeatureName(false))
-                .variableName("newInstance")
-                .children(changeContextNewInstance.build());
-
-        return this.diagramBuilderHelper.newNodeTool()
-                .name("EDataType")
-                .iconURLsExpression("/icons/full/obj16/EDataType.gif")
-                .body(createInstance.build())
+                .nodeTools(this.viewBuilder.createNodeToolCreateEPackage(),
+                        this.viewBuilder.createNodeToolCreateEClass(),
+                        this.viewBuilder.createNodeToolCreateEClassInterface(),
+                        this.viewBuilder.createNodeToolCreateEClassAbstract(),
+                        this.viewBuilder.createNodeToolCreateEEnum(),
+                        this.viewBuilder.createNodeToolCreateEDataType())
                 .build();
     }
 
