@@ -14,6 +14,7 @@ package org.eclipse.sirius.components.ecore.starter.view.descriptions;
 
 import java.util.Objects;
 
+import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageQueryUtils;
 import org.eclipse.sirius.components.ecore.starter.view.EcoreViewBuilder;
 import org.eclipse.sirius.components.view.builder.IViewDiagramElementFinder;
@@ -96,7 +97,7 @@ public class ESuperTypesDescriptionProvider implements IEdgeDescriptionProvider 
 
     private EdgePalette createEdgePalette() {
         return this.diagramBuilderHelper.newEdgePalette()
-                .deleteTool(this.ecoreViewBuilder.createDeleteTool())
+                .deleteTool(this.ecoreViewBuilder.createDeleteToolDeleteEdgeReference(EcorePackage.Literals.ECLASS__ESUPER_TYPES))
                 .build();
     }
 

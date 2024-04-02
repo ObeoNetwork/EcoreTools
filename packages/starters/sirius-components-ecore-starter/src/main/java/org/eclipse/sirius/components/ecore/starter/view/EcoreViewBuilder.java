@@ -61,6 +61,28 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    /**
+     * Create a delete tool unreferencing edge target from edge source.
+     *
+     * @param ref
+     *            The EReference to be navigated
+     * @return
+     */
+    public DeleteTool createDeleteToolDeleteEdgeReference(EReference ref) {
+        var unsetRef = this.viewBuilderHelper.newUnsetValue()
+                .featureName(ref.getName())
+                .elementExpression("aql:semanticEdgeTarget");
+
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+                .expression("aql:semanticEdgeSource")
+                .children(unsetRef.build());
+
+        return this.diagramBuilderHelper.newDeleteTool()
+                .name("Delete from Model")
+                .body(changeContext.build())
+                .build();
+    }
+
     public LabelEditTool createLabelEditTool() {
         var changeContext = this.viewBuilderHelper.newChangeContext()
                 .expression("aql:self.defaultEditLabel(newLabel)");
