@@ -65,6 +65,19 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    public DeleteTool createDeleteClassTool() {
+        var changeContextReferencingERefs = this.viewBuilderHelper.newChangeContext()
+                .expression("aql:self.deleteReferencingEReferences()");
+
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+                .expression("aql:self.defaultDelete()");
+
+        return this.diagramBuilderHelper.newDeleteTool()
+                .name("Delete including referencing EReferences")
+                .body(changeContextReferencingERefs.build(), changeContext.build())
+                .build();
+    }
+
     /**
      * Create a delete tool unreferencing edge target from edge source.
      *
