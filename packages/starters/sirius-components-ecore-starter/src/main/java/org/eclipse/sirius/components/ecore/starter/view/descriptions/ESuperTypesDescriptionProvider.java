@@ -56,7 +56,7 @@ public class ESuperTypesDescriptionProvider implements IEdgeDescriptionProvider 
         EdgeDescription edgeDescription = this.diagramBuilderHelper.newEdgeDescription()
                 .name(NAME)
                 .domainType(EcorePackageQueryUtils.getEClassDataTypeQualifiedName())
-                .targetNodesExpression("aql:self.getDirectSuperTypesOrMostSpecificVisibleOnes(editingContext, previousDiagram)")
+                .targetNodesExpression("aql:self.getDirectSuperTypesOrMostSpecificVisibleOnes(previousDiagram, cache)")
                 .isDomainBasedEdge(false)
                 .labelExpression("aql:self.superTypesLabel()")
                 .style(this.diagramBuilderHelper.newEdgeStyle()

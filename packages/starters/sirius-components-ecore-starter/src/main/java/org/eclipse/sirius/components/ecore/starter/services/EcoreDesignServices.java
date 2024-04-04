@@ -18,22 +18,23 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
+import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
-import org.eclipse.sirius.components.core.api.IEditingContext;
 import org.eclipse.sirius.components.core.api.IObjectService;
 import org.eclipse.sirius.components.diagrams.Diagram;
-import org.eclipse.sirius.components.diagrams.Node;
 import org.eclipse.sirius.components.diagrams.ViewModifier;
+import org.eclipse.sirius.components.diagrams.elements.NodeElementProps;
+import org.eclipse.sirius.components.diagrams.renderer.DiagramRenderingCache;
 import org.eclipse.sirius.components.ecore.starter.services.ecoretools.DesignServices;
+import org.eclipse.sirius.components.representations.Element;
 
 /**
  * Design and Diagram related services.
@@ -48,25 +49,52 @@ public class EcoreDesignServices {
         this.objectService = Objects.requireNonNull(objectService);
     }
 
-    public Set<EClass> getDisplayedEClasses(IEditingContext editingContext, Diagram diagram) {
+    /**
+     * Queries the diagram to get all the EClass elements whose State is not {@link ViewModifier.Hidden}.
+     * @param context
+     *
+     * @param diagram
+     *            The current diagram, provided by the {@code previousDiagram} variable.
+     * @param cache
+     *            The diagram cache, provided by the {@code cache} variable.
+     * @return
+     */
+    public Set<EClass> getDisplayedEClasses(EPackage context, Diagram diagram, DiagramRenderingCache cache) {
         Set<EClass> result = Sets.newLinkedHashSet();
-        Iterator<Node> it = diagram.getNodes().iterator();
-        while (it.hasNext()) {
-            Node dec = it.next();
-            String targetObjectId = dec.getTargetObjectId();
-            Optional<Object> object = this.objectService.getObject(editingContext, targetObjectId);
-            if (object.isPresent()) {
-                if (object.get() instanceof EClass && !dec.getState().equals(ViewModifier.Hidden)) {
-                    result.add((EClass) object.get());
+        TreeIterator<EObject> packageContentsIterator = context.eAllContents();
+        while (packageContentsIterator.hasNext()) {
+            EObject next = packageContentsIterator.next();
+            if (next instanceof EClass clazz) {
+                List<Element> classNodes = cache.getObjectToNodes().get(clazz);
+                for (Element classNode : classNodes) {
+                    if (classNode.getProps() instanceof NodeElementProps props) {
+                        if (!props.getState().equals(ViewModifier.Hidden)) {
+                            result.add(clazz);
+                        }
+                    }
                 }
             }
         }
         return result;
     }
 
-    public Set<EClass> getDirectSuperTypesOrMostSpecificVisibleOnes(EClass self, IEditingContext editingContext, Diagram diagram) {
+    /**
+     * Gets the eSuperTypes of an EClass. If the representation of one of the eSuperTypes is
+     * {@link ViewModifier.Hidden}, computes the "closest" visible eSuperTypes by searching it in the closure of the
+     * eSuperTypes relation.
+     *
+     * @param self
+     *            The EClass used as the context of the search.
+     *
+     * @param diagram
+     *            The current diagram, provided by the {@code previousDiagram} variable.
+     * @param cache
+     *            The diagram cache, provided by the {@code cache} variable.
+     * @return
+     */
+    public Set<EClass> getDirectSuperTypesOrMostSpecificVisibleOnes(EClass self, Diagram diagram, DiagramRenderingCache cache) {
         Set<EClass> result = Sets.newLinkedHashSet();
-        Set<EClass> displayed = this.getDisplayedOrElseAvailableEClasses(self.getEPackage(), editingContext, diagram);
+        Set<EClass> displayed = this.getDisplayedOrElseAvailableEClasses(self.getEPackage(), diagram, cache);
         for (EClass directSuperType : self.getESuperTypes()) {
             if (displayed.contains(directSuperType)) {
                 result.add(directSuperType);
@@ -80,9 +108,22 @@ public class EcoreDesignServices {
         return result;
     }
 
-    public Set<EReference> getEReferencesToDisplay(EPackage root, IEditingContext editingContext, Diagram diagram) {
+    /**
+     * Gets the list of {@link EReference} to be displayed on the {@code diagram} based on the visibility of the
+     * {@code EClass} elements.
+     *
+     * @param root
+     *            The {@link EPackage} used as context of the computation.
+     *
+     * @param diagram
+     *            The current diagram, provided by the {@code previousDiagram} variable.
+     * @param cache
+     *            The diagram cache, provided by the {@code cache} variable.
+     * @return
+     */
+    public Set<EReference> getEReferencesToDisplay(EPackage root, Diagram diagram, DiagramRenderingCache cache) {
         // [diagram.getDisplayedEClasses().oclAsType(ecore::EClass).eAllReferences->flatten()/]
-        Collection<EClass> eClasses = this.getDisplayedOrElseAvailableEClasses(root, editingContext, diagram);
+        Collection<EClass> eClasses = this.getDisplayedOrElseAvailableEClasses(root, diagram, cache);
         Set<EReference> eRefs = Sets.newLinkedHashSet();
         for (EClass clazz : eClasses) {
             eRefs.addAll(clazz.getEAllReferences());
@@ -90,8 +131,21 @@ public class EcoreDesignServices {
         return eRefs;
     }
 
-    public List<EReference> getEOppositeEReferences(EPackage self, IEditingContext editingContext, Diagram diagram) {
-        Set<EClass> eClasses = this.getDisplayedOrElseAvailableEClasses(self, editingContext, diagram);
+    /**
+     * Gets the list of eOpposite {@link EReference} to be displayed on the {@code diagram} based on the visibility of
+     * the {@code EClass} elements.
+     *
+     * @param root
+     *            The {@link EPackage} used as context of the computation.
+     *
+     * @param diagram
+     *            The current diagram, provided by the {@code previousDiagram} variable.
+     * @param cache
+     *            The diagram cache, provided by the {@code cache} variable.
+     * @return
+     */
+    public List<EReference> getEOppositeEReferences(EPackage self, Diagram diagram, DiagramRenderingCache cache) {
+        Set<EClass> eClasses = this.getDisplayedOrElseAvailableEClasses(self, diagram, cache);
         Set<EReference> references = Sets.newLinkedHashSet();
         for (EClass clazz : eClasses) {
             references.addAll(clazz.getEReferences());
@@ -110,16 +164,22 @@ public class EcoreDesignServices {
     }
 
     /**
-     * Retrieve a set of EClasses displayed in the diagram. if the {@code diagram} is null then retrieve all EClasses directly available from {@code self}.
+     * Retrieve a set of EClasses displayed in the diagram. If the {@code diagram} is null then retrieve all
+     * {@link EClass} directly available from {@code context}.
+     *
      * @param context
-     * @param editingContext
+     *            The {@link EPackage} used as context of the computation.
+     *
      * @param diagram
+     *            The current diagram, provided by the {@code previousDiagram} variable.
+     * @param cache
+     *            The diagram cache, provided by the {@code cache} variable.
      * @return
      */
-    private Set<EClass> getDisplayedOrElseAvailableEClasses(EPackage context, IEditingContext editingContext, Diagram diagram) {
+    private Set<EClass> getDisplayedOrElseAvailableEClasses(EPackage context, Diagram diagram, DiagramRenderingCache cache) {
         Set<EClass> eClasses;
-        if (diagram != null) {
-            eClasses = this.getDisplayedEClasses(editingContext, diagram);
+        if (cache != null) {
+            eClasses = this.getDisplayedEClasses(context, diagram, cache);
         } else {
             eClasses = new HashSet<>(context.getEClassifiers().stream().filter(EClass.class::isInstance).map(EClass.class::cast).toList());
         }

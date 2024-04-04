@@ -56,7 +56,7 @@ public class EReferenceDescriptionProvider implements IEdgeDescriptionProvider {
         return this.diagramBuilderHelper.newEdgeDescription()
                 .name(NAME)
                 .domainType(EcorePackageQueryUtils.getEReferenceDataTypeQualifiedName())
-                .semanticCandidatesExpression("aql:self.getEReferencesToDisplay(editingContext, previousDiagram)->select(it | it.eOpposite = null)")
+                .semanticCandidatesExpression("aql:self.getEReferencesToDisplay(previousDiagram, cache)->select(it | it.eOpposite = null)")
                 .targetNodesExpression("aql:self.getEReferenceTarget()")
                 .sourceNodesExpression("feature:eContainer")
                 .isDomainBasedEdge(true)

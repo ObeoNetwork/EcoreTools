@@ -56,7 +56,7 @@ public class BiDirectionalEReferenceDescriptionProvider implements IEdgeDescript
         return this.diagramBuilderHelper.newEdgeDescription()
                 .name(NAME)
                 .domainType(EcorePackageQueryUtils.getEReferenceDataTypeQualifiedName())
-                .semanticCandidatesExpression("aql:self.getEOppositeEReferences(editingContext, previousDiagram)")
+                .semanticCandidatesExpression("aql:self.getEOppositeEReferences(previousDiagram, cache)")
                 .targetNodesExpression("feature:eType")
                 .sourceNodesExpression("feature:eContainer")
                 .isDomainBasedEdge(true)
