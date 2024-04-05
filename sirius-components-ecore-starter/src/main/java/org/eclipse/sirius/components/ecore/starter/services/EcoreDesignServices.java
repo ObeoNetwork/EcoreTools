@@ -186,4 +186,50 @@ public class EcoreDesignServices {
         return eClasses;
     }
 
+    /**
+     * Reconnect the eSuperTypes edge between two EClass elements by DnDing the source end of the edge.
+     *
+     * Adaptation of org.eclipse.emf.ecoretools.design.service.DesignServices.reconnectESuperTypeSource(EObject,
+     * EObject, EObject, EObject, EObject, EObject).
+     *
+     * @param edgeSemanticElement
+     *            The semantic element of the edge (the source of the edge)
+     * @param semanticReconnectionTarget
+     *            The semantic element that will be connected to the reconnected edge
+     * @param semanticReconnectionSource
+     *            The semantic element that was connected to the reconnected edge
+     * @param semanticOtherEnd
+     *            The semantic element of the end of the edge that is not modified
+     * @return
+     */
+    public EObject reconnectESuperTypeSource(EObject edgeSemanticElement, EObject semanticReconnectionTarget, EObject semanticReconnectionSource, EObject semanticOtherEnd) {
+        if (edgeSemanticElement instanceof EClass && semanticReconnectionTarget instanceof EClass && semanticReconnectionSource instanceof EClass) {
+            ((EClass) semanticReconnectionSource).getESuperTypes().remove(semanticOtherEnd);
+            ((EClass) semanticReconnectionTarget).getESuperTypes().add((EClass) semanticOtherEnd);
+        }
+        return edgeSemanticElement;
+    }
+
+    /**
+     * Reconnect the eSuperTypes edge between two EClass elements by DnDing the target end of the edge. Adaptation of
+     * org.eclipse.emf.ecoretools.design.service.DesignServices.reconnectESuperTypeTarget(EObject, EObject, EObject,
+     * EObject, EObject, EObject).
+     *
+     * @param edgeSemanticElement
+     *            The semantic element of the edge (the source of the edge)
+     * @param semanticReconnectionTarget
+     *            The semantic element that will be connected to the reconnected edge
+     * @param semanticReconnectionSource
+     *            The semantic element that was connected to the reconnected edge
+     * @param semanticOtherEnd
+     *            The semantic element of the end of the edge that is not modified
+     * @return
+     */
+    public EObject reconnectESuperTypeTarget(EObject edgeSemanticElement, EObject semanticReconnectionTarget, EObject semanticReconnectionSource, EObject semanticOtherEnd) {
+        if (edgeSemanticElement instanceof EClass && semanticReconnectionTarget instanceof EClass && semanticReconnectionSource instanceof EClass) {
+            ((EClass) semanticOtherEnd).getESuperTypes().remove(semanticReconnectionSource);
+            ((EClass) semanticOtherEnd).getESuperTypes().add((EClass) semanticReconnectionTarget);
+        }
+        return edgeSemanticElement;
+    }
 }

@@ -98,6 +98,8 @@ public class ESuperTypesDescriptionProvider implements IEdgeDescriptionProvider 
     private EdgePalette createEdgePalette() {
         return this.diagramBuilderHelper.newEdgePalette()
                 .deleteTool(this.ecoreViewBuilder.createDeleteToolDeleteEdgeReference(EcorePackage.Literals.ECLASS__ESUPER_TYPES))
+                .edgeReconnectionTools(this.ecoreViewBuilder.createEdgeReconnectESupertypeSource())
+                .edgeReconnectionTools(this.ecoreViewBuilder.createEdgeReconnectESupertypeTarget())
                 .build();
     }
 

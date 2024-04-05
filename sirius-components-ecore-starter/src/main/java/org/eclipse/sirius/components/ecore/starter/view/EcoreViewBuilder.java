@@ -29,6 +29,8 @@ import org.eclipse.sirius.components.view.diagram.ImageNodeStyleDescription;
 import org.eclipse.sirius.components.view.diagram.LabelEditTool;
 import org.eclipse.sirius.components.view.diagram.NodeDescription;
 import org.eclipse.sirius.components.view.diagram.NodeTool;
+import org.eclipse.sirius.components.view.diagram.SourceEdgeEndReconnectionTool;
+import org.eclipse.sirius.components.view.diagram.TargetEdgeEndReconnectionTool;
 
 /**
  * Used to help creating the Ecore views.
@@ -443,6 +445,26 @@ public class EcoreViewBuilder {
                 .name(toolName)
                 .iconURLsExpression("/icons/full/ctool16/CreateEClass_eStructuralFeatures_EReference.gif")
                 .targetElementDescriptions(eClassNodeDescription)
+                .body(changeContext.build())
+                .build();
+    }
+
+    public SourceEdgeEndReconnectionTool createEdgeReconnectESupertypeSource() {
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+            .expression("aql:edgeSemanticElement.reconnectESuperTypeSource(semanticReconnectionTarget, semanticReconnectionSource, semanticOtherEnd)");
+
+        return this.diagramBuilderHelper.newSourceEdgeEndReconnectionTool()
+                .name("Reconnect ESuperType")
+                .body(changeContext.build())
+                .build();
+    }
+
+    public TargetEdgeEndReconnectionTool createEdgeReconnectESupertypeTarget() {
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+            .expression("aql:edgeSemanticElement.reconnectESuperTypeTarget(semanticReconnectionTarget, semanticReconnectionSource, semanticOtherEnd)");
+
+        return this.diagramBuilderHelper.newTargetEdgeEndReconnectionTool()
+                .name("Reconnect ESuperType")
                 .body(changeContext.build())
                 .build();
     }
