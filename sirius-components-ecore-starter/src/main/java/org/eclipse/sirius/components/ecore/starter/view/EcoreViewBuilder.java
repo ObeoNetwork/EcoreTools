@@ -12,7 +12,9 @@
  *******************************************************************************/
 package org.eclipse.sirius.components.ecore.starter.view;
 
+import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EOperation;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EcorePackage;
@@ -35,13 +37,11 @@ import org.eclipse.sirius.components.view.diagram.NodeTool;
  */
 public class EcoreViewBuilder {
 
-    /**
-     *
-     */
     private static final String AQL_TRUE = "aql:true";
     private static final String NEW_INSTANCE = "newInstance";
     private static final String AQL_NEW_INSTANCE = "aql:newInstance";
     private static final String NAME = "name";
+    private static final String AQL_SELF_DEFAULT_DELETE = "aql:self.defaultDelete()";
 
     private final ViewBuilders viewBuilderHelper = new ViewBuilders();
     private final DiagramBuilders diagramBuilderHelper = new DiagramBuilders();
@@ -55,9 +55,14 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    /**
+     * Create a standard delete tool.
+     *
+     * @return
+     */
     public DeleteTool createDeleteTool() {
         var changeContext = this.viewBuilderHelper.newChangeContext()
-                .expression("aql:self.defaultDelete()");
+                .expression(AQL_SELF_DEFAULT_DELETE);
 
         return this.diagramBuilderHelper.newDeleteTool()
                 .name("Delete from Model")
@@ -65,16 +70,41 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    /**
+     * Create a Delete tool that deletes an EClass and the EReferences whose eType is the EClass.
+     *
+     * @return
+     */
     public DeleteTool createDeleteClassTool() {
         var changeContextReferencingERefs = this.viewBuilderHelper.newChangeContext()
                 .expression("aql:self.deleteReferencingEReferences()");
 
         var changeContext = this.viewBuilderHelper.newChangeContext()
-                .expression("aql:self.defaultDelete()");
+                .expression(AQL_SELF_DEFAULT_DELETE);
 
         return this.diagramBuilderHelper.newDeleteTool()
                 .name("Delete including referencing EReferences")
                 .body(changeContextReferencingERefs.build(), changeContext.build())
+                .build();
+    }
+
+    /**
+     * Create a Delete tool that deletes an {@link EReference} and its {@code eOpposite} {@link EReference}. <br/>
+     * Relies on
+     * {@linkplain org.eclipse.sirius.components.ecore.starter.services.EcoreService.deleteEOppositeEReference(EReference)}
+     *
+     * @return
+     */
+    public DeleteTool createDeleteBiDirectionalEReferenceTool() {
+        var changeContextEOppositeERef = this.viewBuilderHelper.newChangeContext()
+                .expression("aql:self.deleteEOppositeEReference()");
+
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+                .expression(AQL_SELF_DEFAULT_DELETE);
+
+        return this.diagramBuilderHelper.newDeleteTool()
+                .name("Delete along with eOpposite")
+                .body(changeContextEOppositeERef.build(), changeContext.build())
                 .build();
     }
 
@@ -95,11 +125,21 @@ public class EcoreViewBuilder {
                 .children(unsetRef.build());
 
         return this.diagramBuilderHelper.newDeleteTool()
-                .name("Delete from Model")
+                .name("Unset reference")
                 .body(changeContext.build())
                 .build();
     }
 
+    /**
+     * Label edit tool setting the value of the Label attribute (computed through the configuration-injected
+     * {@linkplain org.eclipse.sirius.components.emf.services.LabelFeatureProvider.LabelFeatureProvider(String,
+     * Switch<EAttribute>, Switch<Boolean>)}) to the provided input value.
+     * <br/>
+     * Relies on {@linkplain org.eclipse.sirius.components.view.emf.CanonicalServices.defaultEditLabel(EObject,
+     * String)}.
+     *
+     * @return
+     */
     public LabelEditTool createLabelEditTool() {
         var changeContext = this.viewBuilderHelper.newChangeContext()
                 .expression("aql:self.defaultEditLabel(newLabel)");
@@ -110,6 +150,13 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    /**
+     * Label edit tool setting the value of the {@code name} attribute to the provided input value and refactoring the
+     * label value as Camel case. <br/>
+     * Relies on {@linkplain org.eclipse.emf.ecoretools.design.service.DesignServices.toCamelCase(EObject, String)}.
+     *
+     * @return
+     */
     public LabelEditTool createLabelEditNameWithCamelCaseTool() {
         var setValueService = this.viewBuilderHelper.newSetValue()
                 .featureName(NAME)
@@ -121,6 +168,11 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    /**
+     * Label edit tool setting the value of the {@code name} attribute to the provided input value.
+     *
+     * @return
+     */
     public LabelEditTool createLabelEditNameNoCamelCaseTool() {
         var setValueService = this.viewBuilderHelper.newSetValue()
                 .featureName(NAME)
@@ -132,6 +184,11 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    /**
+     * Label edit tool setting the value of the {@code instanceClassName} attribute to the provided input value.
+     *
+     * @return
+     */
     public LabelEditTool createLabelEditInstanceClassNameTool() {
         var setValueService = this.viewBuilderHelper.newSetValue()
                 .featureName(EcorePackageQueryUtils.getEClassifierInstanceClassNameFeatureName(false))
@@ -143,6 +200,12 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    /**
+     * Label edit tool setting the attributes of an {@linkplain EAttribute} based on the provided input. Will allow to
+     * set the {@linkplain EAttribute} dataType and cardinality values.
+     *
+     * @return
+     */
     public LabelEditTool createLabelEditEStructuralFeatureNameTool() {
         var changeContext = this.viewBuilderHelper.newChangeContext()
                 .expression("aql:self.performEditAsAttribute(newLabel)");
@@ -153,6 +216,14 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    /**
+     * Label edit tool setting the attributes of an {@linkplain EOperation} based on the provided input. Will allow to
+     * set the {@linkplain EOperation} dataType, parameters, and cardinality values. <br/>
+     * Relies on {@linkplain org.eclipse.emf.ecoretools.design.service.DesignServices.performEdit(EAttribute, String)}
+     * or {@linkplain org.eclipse.emf.ecoretools.design.service.DesignServices.performEdit(EOperation, String)}.
+     *
+     * @return
+     */
     public LabelEditTool createLabelEditEReferenceOrEOperationNameTool() {
         var changeContext = this.viewBuilderHelper.newChangeContext()
                 .expression("aql:self.performEdit(newLabel)");
@@ -163,6 +234,13 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    /**
+     * Utility method to create a Node creation tool.
+     * @param object
+     * @param containmentRef
+     * @param valuesBuilders
+     * @return
+     */
     private NodeTool createNodeToolCreate(EObject object, EReference containmentRef, SetValueBuilder... valuesBuilders) {
         String name = object.eClass().getName();
         var setValueName = this.viewBuilderHelper.newSetValue()

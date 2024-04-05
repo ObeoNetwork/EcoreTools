@@ -68,6 +68,7 @@ public class EPackageDescriptionProvider implements INodeDescriptionProvider {
                 .childrenDescriptions(new EClassDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
                 .childrenDescriptions(new EEnumDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
                 .childrenDescriptions(new EDataTypeDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
+                .palette(this.createNodePalette())
                 .build();
     }
 

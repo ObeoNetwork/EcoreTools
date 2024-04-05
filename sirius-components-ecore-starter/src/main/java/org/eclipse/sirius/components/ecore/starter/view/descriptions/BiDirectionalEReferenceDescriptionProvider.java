@@ -84,6 +84,7 @@ public class BiDirectionalEReferenceDescriptionProvider implements IEdgeDescript
                         .targetArrowStyle(ArrowStyle.FILL_DIAMOND)
                         .build())
                 .synchronizationPolicy(this.synchronizationPolicy)
+                .palette(this.createEdgePalette())
                 .build();
     }
 
@@ -94,7 +95,6 @@ public class BiDirectionalEReferenceDescriptionProvider implements IEdgeDescript
 
         if (optionalEReferenceEdgeDescription.isPresent() && optionalEClassNodeDescription.isPresent()) {
             diagramDescription.getEdgeDescriptions().add(optionalEReferenceEdgeDescription.get());
-            optionalEReferenceEdgeDescription.get().setPalette(this.createEdgePalette());
             optionalEReferenceEdgeDescription.get().getSourceNodeDescriptions().add(optionalEClassNodeDescription.get());
             optionalEReferenceEdgeDescription.get().getTargetNodeDescriptions().add(optionalEClassNodeDescription.get());
         }
@@ -102,7 +102,7 @@ public class BiDirectionalEReferenceDescriptionProvider implements IEdgeDescript
 
     private EdgePalette createEdgePalette() {
         return this.diagramBuilderHelper.newEdgePalette()
-                .deleteTool(this.ecoreViewBuilder.createDeleteTool())
+                .deleteTool(this.ecoreViewBuilder.createDeleteBiDirectionalEReferenceTool())
                 .endLabelEditTool(this.ecoreViewBuilder.createLabelEditEReferenceOrEOperationNameTool())
                 .build();
     }

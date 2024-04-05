@@ -66,6 +66,21 @@ public class EcoreService {
         return eclass;
     }
 
+    /**
+     * Delete the eOpposite EReference from an EReference.
+     *
+     * @param ref
+     *            The EReference to start from
+     * @return
+     */
+    public EObject deleteEOppositeEReference(EReference ref) {
+        EReference opRef = ref.getEOpposite();
+        if (opRef != null) {
+            this.editService.delete(opRef);
+        }
+        return ref;
+    }
+
     public EObject drop(EObject self, Node selectedNode, IDiagramContext diagramContext, Map<NodeDescription, org.eclipse.sirius.components.diagrams.description.NodeDescription> convertedNodes) {
         var parentElementId = Optional.ofNullable(selectedNode).map(Node::getId).orElse(diagramContext.getDiagram().getId());
 

@@ -77,6 +77,7 @@ public class ESuperTypesDescriptionProvider implements IEdgeDescriptionProvider 
                         .targetArrowStyle(ArrowStyle.INPUT_CLOSED_ARROW)
                         .build())
                 .synchronizationPolicy(this.synchronizationPolicy)
+                .palette(this.createEdgePalette())
                 .build();
 
         return edgeDescription;
@@ -89,7 +90,6 @@ public class ESuperTypesDescriptionProvider implements IEdgeDescriptionProvider 
 
         if (optionalESuperTypeEdgeDescription.isPresent() && optionalEClassNodeDescription.isPresent()) {
             diagramDescription.getEdgeDescriptions().add(optionalESuperTypeEdgeDescription.get());
-            optionalESuperTypeEdgeDescription.get().setPalette(this.createEdgePalette());
             optionalESuperTypeEdgeDescription.get().getSourceNodeDescriptions().add(optionalEClassNodeDescription.get());
             optionalESuperTypeEdgeDescription.get().getTargetNodeDescriptions().add(optionalEClassNodeDescription.get());
         }

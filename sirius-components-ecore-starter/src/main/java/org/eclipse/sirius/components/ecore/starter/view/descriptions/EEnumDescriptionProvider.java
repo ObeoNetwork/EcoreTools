@@ -65,6 +65,7 @@ public class EEnumDescriptionProvider implements INodeDescriptionProvider {
                 .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_EEnum"))
                 .synchronizationPolicy(this.synchronizationPolicy)
                 .childrenDescriptions(new EEnumLiteralDescriptionProvider(this.colorProvider, this.synchronizationPolicy).create())
+                .palette(this.createNodePalette())
                 .build();
     }
 

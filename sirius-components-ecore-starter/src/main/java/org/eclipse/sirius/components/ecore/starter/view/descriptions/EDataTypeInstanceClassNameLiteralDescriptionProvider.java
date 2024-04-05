@@ -64,6 +64,7 @@ public class EDataTypeInstanceClassNameLiteralDescriptionProvider implements INo
                 .keepAspectRatio(true)
                 .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_Black"))
                 .synchronizationPolicy(this.synchronizationPolicy)
+                .palette(this.createNodePalette())
                 .build();
     }
 
