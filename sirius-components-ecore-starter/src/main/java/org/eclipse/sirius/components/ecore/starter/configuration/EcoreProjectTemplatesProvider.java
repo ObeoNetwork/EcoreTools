@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class EcoreProjectTemplatesProvider implements IProjectTemplateProvider {
 
-    public static final String ECORE_TEMPLATE_ID = "ecore-template";
+    public static final String ECORE_TEMPLATE_ID = "Ecore-Template";
 
     @Override
     public List<ProjectTemplate> getProjectTemplates() {

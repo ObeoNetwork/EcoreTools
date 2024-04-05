@@ -42,7 +42,7 @@ public class EcoreStereotypeDescriptionRegistryConfigurer implements IStereotype
 
     public static final String VEHICLE_LABEL = "Ecore - Vehicle";
 
-    public static final String VEHICLE_MODEL_FILE = "vehicle.ecore";
+    public static final String VEHICLE_MODEL_FILE = "Vehicle.ecore";
 
     public static final UUID ECORE_M2_ID = UUID.nameUUIDFromBytes("ecore".getBytes());
 
