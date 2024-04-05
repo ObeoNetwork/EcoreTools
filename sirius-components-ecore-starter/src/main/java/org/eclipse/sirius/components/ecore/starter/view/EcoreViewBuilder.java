@@ -449,22 +449,74 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    /**
+     * Create an Edge Reconnection Tool to reconnect the source end of the ESuperType edge. <br/>
+     * Relies on
+     * {@linkplain org.eclipse.sirius.components.ecore.starter.services.EcoreDesignServices.reconnectESuperTypeSource(EObject,
+     * EObject, EObject, EObject)}
+     *
+     * @return
+     */
     public SourceEdgeEndReconnectionTool createEdgeReconnectESupertypeSource() {
         var changeContext = this.viewBuilderHelper.newChangeContext()
             .expression("aql:edgeSemanticElement.reconnectESuperTypeSource(semanticReconnectionTarget, semanticReconnectionSource, semanticOtherEnd)");
 
         return this.diagramBuilderHelper.newSourceEdgeEndReconnectionTool()
-                .name("Reconnect ESuperType")
+                .name("Reconnect ESuperType from Source")
                 .body(changeContext.build())
                 .build();
     }
 
+    /**
+     * Create an Edge Reconnection Tool to reconnect the target end of the ESuperType edge. <br/>
+     * Relies on
+     * {@linkplain org.eclipse.sirius.components.ecore.starter.services.EcoreDesignServices.reconnectESuperTypeTarget(EObject,
+     * EObject, EObject, EObject)}
+     *
+     * @return
+     */
     public TargetEdgeEndReconnectionTool createEdgeReconnectESupertypeTarget() {
         var changeContext = this.viewBuilderHelper.newChangeContext()
             .expression("aql:edgeSemanticElement.reconnectESuperTypeTarget(semanticReconnectionTarget, semanticReconnectionSource, semanticOtherEnd)");
 
         return this.diagramBuilderHelper.newTargetEdgeEndReconnectionTool()
-                .name("Reconnect ESuperType")
+                .name("Reconnect ESuperType from Target")
+                .body(changeContext.build())
+                .build();
+    }
+
+    /**
+     * Create an Edge Reconnection Tool to reconnect the source end of an EReference edge. <br/>
+     * Relies on
+     * {@linkplain org.eclipse.sirius.components.ecore.starter.services.EcoreDesignServices.reconnectEReferenceEdgeSource(EObject,
+     * EObject)}
+     *
+     * @return
+     */
+    public SourceEdgeEndReconnectionTool createEdgeReconnectEReferenceSource() {
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+            .expression("aql:edgeSemanticElement.reconnectEReferenceEdgeSource(semanticReconnectionTarget)");
+
+        return this.diagramBuilderHelper.newSourceEdgeEndReconnectionTool()
+                .name("Reconnect EReference from Source")
+                .body(changeContext.build())
+                .build();
+    }
+
+    /**
+     * Create an Edge Reconnection Tool to reconnect the target end of an EReference edge. <br/>
+     * Relies on
+     * {@linkplain org.eclipse.sirius.components.ecore.starter.services.EcoreDesignServices.reconnectEReferenceEdgeTarget(EObject,
+     * EObject)}
+     *
+     * @return
+     */
+    public TargetEdgeEndReconnectionTool createEdgeReconnectEReferenceTarget() {
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+            .expression("aql:edgeSemanticElement.reconnectEReferenceEdgeTarget(semanticReconnectionTarget)");
+
+        return this.diagramBuilderHelper.newTargetEdgeEndReconnectionTool()
+                .name("Reconnect EReference from Target")
                 .body(changeContext.build())
                 .build();
     }

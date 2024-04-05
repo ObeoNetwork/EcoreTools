@@ -37,7 +37,7 @@ public class EcoreJavaServiceProvider implements IJavaServiceProvider {
         boolean isEcoreView = view.getDescriptions().stream().filter(DiagramDescription.class::isInstance).map(DiagramDescription.class::cast)
                 .anyMatch(diagramDescription -> diagramDescription.getDomainType().equals(EcorePackageQueryUtils.getEPackageDataTypeQualifiedName()));
         if (isEcoreView) {
-            return List.of(EcoreService.class, EAttributeServices.class, EOperationServices.class, EReferenceServices.class, DesignServices.class, EcoreDesignServices.class);
+            return List.of(EcoreService.class, EAttributeServices.class, EOperationServices.class, EReferenceServices.class, EcoreDesignServices.class, DesignServices.class);
         }
         return List.of();
     }

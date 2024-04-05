@@ -232,4 +232,37 @@ public class EcoreDesignServices {
         }
         return edgeSemanticElement;
     }
+
+    /**
+     * Reconnect the EReference edge between two EClass elements by DnDing the source end of the edge. Adaptation of
+     * org.eclipse.emf.ecoretools.design.service.DesignServices.reconnectEReferenceSource(EObject, EObject) to return a
+     * result and avoid errors on contextChange operation.
+     *
+     * @param edgeSemanticElement
+     *            The edge element {@linkplain EReference}
+     * @param semanticReconnectionTarget
+     *            The element we reconnect on
+     * @return
+     */
+    public EObject reconnectEReferenceEdgeSource(EObject edgeSemanticElement, EObject semanticReconnectionTarget) {
+        new DesignServices().reconnectEReferenceSource(edgeSemanticElement, semanticReconnectionTarget);
+        return edgeSemanticElement;
+    }
+
+    /**
+     * Reconnect the EReference edge between two EClass elements by DnDing the target end of the edge. Adaptation of
+     * org.eclipse.emf.ecoretools.design.service.DesignServices.reconnectEReferenceSource(EObject, EObject) to return a
+     * result and avoid errors on contextChange operation.
+     *
+     * @param edgeSemanticElement
+     *            The edge element {@linkplain EReference}
+     * @param semanticReconnectionTarget
+     *            The element we reconnect on
+     * @return
+     */
+    public EObject reconnectEReferenceEdgeTarget(EObject edgeSemanticElement, EObject semanticReconnectionTarget) {
+        new DesignServices().reconnectEReferenceTarget(edgeSemanticElement, semanticReconnectionTarget);
+        return edgeSemanticElement;
+    }
+
 }

@@ -102,6 +102,8 @@ public class EReferenceDescriptionProvider implements IEdgeDescriptionProvider {
         return this.diagramBuilderHelper.newEdgePalette()
                 .deleteTool(this.ecoreViewBuilder.createDeleteTool())
                 .centerLabelEditTool(this.ecoreViewBuilder.createLabelEditEReferenceOrEOperationNameTool())
+                .edgeReconnectionTools(this.ecoreViewBuilder.createEdgeReconnectEReferenceSource())
+                .edgeReconnectionTools(this.ecoreViewBuilder.createEdgeReconnectEReferenceTarget())
                 .build();
     }
 
