@@ -62,7 +62,11 @@ public class EAttributeDescriptionProvider implements INodeDescriptionProvider {
                 .defaultHeightExpression("aql:100")
                 .defaultWidthExpression("aql:120")
                 .keepAspectRatio(true)
-                .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_Black"))
+                .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_Black", false))
+                .conditionalStyles(this.diagramBuilderHelper.newConditionalNodeStyle()
+                        .condition("aql:self.required")
+                        .style(this.getRectangularNodeStyleDescription("Ecore_Gray", "Ecore_Black", "Ecore_Black", true))
+                        .build())
                 .synchronizationPolicy(this.synchronizationPolicy)
                 .palette(this.createNodePalette())
                 .build();
@@ -83,12 +87,12 @@ public class EAttributeDescriptionProvider implements INodeDescriptionProvider {
                 .build();
     }
 
-    private IconLabelNodeStyleDescription getRectangularNodeStyleDescription(String borderColor, String labelColor, String backgroundColor) {
+    private IconLabelNodeStyleDescription getRectangularNodeStyleDescription(String borderColor, String labelColor, String backgroundColor, boolean bold) {
         return this.diagramBuilderHelper.newIconLabelNodeStyleDescription()
                 .color(this.colorProvider.getColor(backgroundColor))
                 .borderColor(this.colorProvider.getColor(borderColor))
                 .labelColor(this.colorProvider.getColor(labelColor))
-                .bold(false)
+                .bold(bold)
                 .showIcon(true)
                 .build();
     }

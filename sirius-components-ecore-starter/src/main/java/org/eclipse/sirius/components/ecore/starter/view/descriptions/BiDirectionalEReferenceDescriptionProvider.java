@@ -12,14 +12,9 @@
  *******************************************************************************/
 package org.eclipse.sirius.components.ecore.starter.view.descriptions;
 
-import java.util.Objects;
-
 import org.eclipse.sirius.components.ecore.starter.configuration.EcorePackageQueryUtils;
-import org.eclipse.sirius.components.ecore.starter.view.EcoreViewBuilder;
 import org.eclipse.sirius.components.view.builder.IViewDiagramElementFinder;
-import org.eclipse.sirius.components.view.builder.generated.DiagramBuilders;
 import org.eclipse.sirius.components.view.builder.providers.IColorProvider;
-import org.eclipse.sirius.components.view.builder.providers.IEdgeDescriptionProvider;
 import org.eclipse.sirius.components.view.diagram.ArrowStyle;
 import org.eclipse.sirius.components.view.diagram.DiagramDescription;
 import org.eclipse.sirius.components.view.diagram.EdgeDescription;
@@ -33,21 +28,12 @@ import org.eclipse.sirius.components.view.diagram.SynchronizationPolicy;
  * @author adieumegard
  */
 @SuppressWarnings("checkstyle:MultipleStringLiterals")
-public class BiDirectionalEReferenceDescriptionProvider implements IEdgeDescriptionProvider {
+public class BiDirectionalEReferenceDescriptionProvider extends AbstractEReferenceDescriptionProvider {
 
     public static final String NAME = "Bi-Directional EReference Edge";
 
-    private final IColorProvider colorProvider;
-
-    private final DiagramBuilders diagramBuilderHelper = new DiagramBuilders();
-
-    private final EcoreViewBuilder ecoreViewBuilder = new EcoreViewBuilder();
-
-    private final SynchronizationPolicy synchronizationPolicy;
-
     public BiDirectionalEReferenceDescriptionProvider(IColorProvider colorProvider, SynchronizationPolicy synchronizationPolicy) {
-        this.colorProvider = Objects.requireNonNull(colorProvider);
-        this.synchronizationPolicy = Objects.requireNonNull(synchronizationPolicy);
+        super(colorProvider, synchronizationPolicy);
     }
 
     @Override
@@ -69,20 +55,11 @@ public class BiDirectionalEReferenceDescriptionProvider implements IEdgeDescript
                         .targetArrowStyle(ArrowStyle.INPUT_ARROW)
                         .sourceArrowStyle(ArrowStyle.INPUT_ARROW)
                         .build())
-                .conditionalStyles(this.diagramBuilderHelper.newConditionalEdgeStyle()
-                        .condition("feature:containment")
-                        .lineStyle(LineStyle.SOLID)
-                        .color(this.colorProvider.getColor("Ecore_Black"))
-                        .sourceArrowStyle(ArrowStyle.FILL_DIAMOND)
-                        .targetArrowStyle(ArrowStyle.INPUT_ARROW)
-                        .build())
-                .conditionalStyles(this.diagramBuilderHelper.newConditionalEdgeStyle()
-                        .condition("feature:container")
-                        .lineStyle(LineStyle.SOLID)
-                        .color(this.colorProvider.getColor("Ecore_Black"))
-                        .sourceArrowStyle(ArrowStyle.INPUT_ARROW)
-                        .targetArrowStyle(ArrowStyle.FILL_DIAMOND)
-                        .build())
+                .conditionalStyles(this.conditionalEdgeStyle("aql:self.required", ArrowStyle.INPUT_ARROW, ArrowStyle.INPUT_ARROW, true))
+                .conditionalStyles(this.conditionalEdgeStyle("aql:self.containment and not self.required", ArrowStyle.FILL_DIAMOND, ArrowStyle.INPUT_ARROW, false))
+                .conditionalStyles(this.conditionalEdgeStyle("aql:self.container and not self.required", ArrowStyle.INPUT_ARROW, ArrowStyle.FILL_DIAMOND, false))
+                .conditionalStyles(this.conditionalEdgeStyle("aql:self.containment and self.required", ArrowStyle.FILL_DIAMOND, ArrowStyle.INPUT_ARROW, true))
+                .conditionalStyles(this.conditionalEdgeStyle("aql:self.container and self.required", ArrowStyle.INPUT_ARROW, ArrowStyle.FILL_DIAMOND, true))
                 .synchronizationPolicy(this.synchronizationPolicy)
                 .palette(this.createEdgePalette())
                 .build();
