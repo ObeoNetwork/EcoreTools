@@ -303,10 +303,13 @@ public class EcoreViewBuilder {
      * @return
      */
     public NodeTool createNodeToolCreateEClassInterface() {
+        var setValueAbstract = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getEClassAbstractFeatureName(false))
+                .valueExpression(AQL_TRUE);
         var setValueInterface = this.viewBuilderHelper.newSetValue()
                 .featureName(EcorePackageQueryUtils.getEClassInterfaceFeatureName(false))
                 .valueExpression(AQL_TRUE);
-        var nodeTool = this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEClass(), EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, setValueInterface);
+        var nodeTool = this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEClass(), EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, setValueInterface, setValueAbstract);
         nodeTool.setName("Interface");
         nodeTool.setIconURLsExpression("/images/EClass_interface.gif");
         return nodeTool;
