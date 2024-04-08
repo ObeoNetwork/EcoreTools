@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.emf.common.util.TreeIterator;
+import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
@@ -78,6 +79,44 @@ public class EcoreService {
         if (opRef != null) {
             this.editService.delete(opRef);
         }
+        return ref;
+    }
+
+    /**
+     * Reconnects the source of the {@linkplain EReference} to the {@code to} {@linkplain EClass}. Includes the
+     * reconnection of the eOpposite {@linkplain EReference}.
+     *
+     * @param ref
+     *            The EReference to reconnect
+     * @param to
+     *            The EClass to reconnect the source to
+     * @return
+     */
+    public EObject reconnectEReferenceSource(EReference ref, EClass to) {
+        EReference eOpposite = ref.getEOpposite();
+        if (eOpposite != null) {
+            eOpposite.setEType(to);
+        }
+        to.getEStructuralFeatures().add(ref);
+        return ref;
+    }
+
+    /**
+     * Reconnects the target of the {@linkplain EReference} to the {@code to} {@linkplain EClass}. Includes the
+     * reconnection of the eOpposite {@linkplain EReference}.
+     *
+     * @param ref
+     *            The EReference to reconnect
+     * @param to
+     *            The EClass to reconnect the target to
+     * @return
+     */
+    public EObject reconnectEReferenceTarget(EReference ref, EClass to) {
+        EReference eOpposite = ref.getEOpposite();
+        if (eOpposite != null) {
+            to.getEStructuralFeatures().add(eOpposite);
+        }
+        ref.setEType(to);
         return ref;
     }
 

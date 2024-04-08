@@ -39,16 +39,19 @@ import org.eclipse.sirius.components.view.diagram.TargetEdgeEndReconnectionTool;
  */
 public class EcoreViewBuilder {
 
-    private static final String AQL_EDGE_SEMANTIC_ELEMENT = "aql:edgeSemanticElement";
-    private static final String AQL_SEMANTIC_RECONNECTION_TARGET = "aql:semanticReconnectionTarget";
+    private static final String AQL = "aql:";
+    private static final String EDGE_SEMANTIC_ELEMENT = "edgeSemanticElement";
+    private static final String SEMANTIC_RECONNECTION_TARGET = "semanticReconnectionTarget";
+    private static final String AQL_EDGE_SEMANTIC_ELEMENT = AQL + EDGE_SEMANTIC_ELEMENT;
+    private static final String AQL_SEMANTIC_RECONNECTION_TARGET = AQL + SEMANTIC_RECONNECTION_TARGET;
     private static final String AQL_EDGE_SEMANTIC_ELEMENT_E_TYPE = AQL_EDGE_SEMANTIC_ELEMENT + ".eType";
     private static final String AQL_EDGE_SEMANTIC_ELEMENT_NAME = AQL_EDGE_SEMANTIC_ELEMENT + ".name";
     private static final String AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE = AQL_EDGE_SEMANTIC_ELEMENT + ".eOpposite";
-    private static final String AQL_TRUE = "aql:true";
+    private static final String AQL_TRUE = AQL + "true";
     private static final String NEW_INSTANCE = "newInstance";
-    private static final String AQL_NEW_INSTANCE = "aql:newInstance";
+    private static final String AQL_NEW_INSTANCE = AQL + "newInstance";
     private static final String NAME = "name";
-    private static final String AQL_SELF_DEFAULT_DELETE = "aql:self.defaultDelete()";
+    private static final String AQL_SELF_DEFAULT_DELETE = AQL + "self.defaultDelete()";
 
     private final ViewBuilders viewBuilderHelper = new ViewBuilders();
     private final DiagramBuilders diagramBuilderHelper = new DiagramBuilders();
@@ -585,57 +588,9 @@ public class EcoreViewBuilder {
      * @return
      */
     public SourceEdgeEndReconnectionTool createEdgeReconnectBiDirectionalEReferenceSource() {
-        // 2.1-Create duplicate EReference going from new Target (edge reconnection target) to common Source (other end)
-        var setContainer = this.viewBuilderHelper.newSetValue()
-                .featureName(EcorePackageQueryUtils.getEReferenceAttributeContainmentFeatureName(false))
-                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT + ".containment");
 
-        var setEOpposite = this.viewBuilderHelper.newSetValue()
-                .featureName(EcorePackageQueryUtils.getEReferenceEOppositeFeatureName(false))
-                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE);
-
-        var setEType = this.viewBuilderHelper.newSetValue()
-                .featureName(EcorePackageQueryUtils.getETypedElementETypeFeatureName(false))
-                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_E_TYPE);
-
-        var setName = this.viewBuilderHelper.newSetValue()
-                .featureName(NAME)
-                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_NAME);
-
-        var createNewERefChangeContext = this.viewBuilderHelper.newChangeContext()
-                .expression(AQL_NEW_INSTANCE)
-                .children(setName.build(), setEType.build(), setEOpposite.build(), setContainer.build());
-
-        var createNewERef = this.viewBuilderHelper.newCreateInstance()
-                .referenceName(EcorePackageQueryUtils.getEReferenceContainmentFeatureName(false))
-                .typeName(EcorePackageQueryUtils.getEReferenceDataTypeQualifiedName())
-                .variableName(NEW_INSTANCE)
-                .children(createNewERefChangeContext.build());
-
-        // 2.2-Set structural features for eOpposite relation
-        var setEOppositeEOpposite = this.viewBuilderHelper.newSetValue()
-                .featureName(EcorePackageQueryUtils.getEReferenceEOppositeFeatureName(false))
-                .valueExpression(AQL_NEW_INSTANCE);
-
-        var setETypeEOpposite = this.viewBuilderHelper.newSetValue()
-                .featureName(EcorePackageQueryUtils.getETypedElementETypeFeatureName(false))
-                .valueExpression(AQL_SEMANTIC_RECONNECTION_TARGET);
-
-        var changeContextEOpposite = this.viewBuilderHelper.newChangeContext()
-                .expression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE)
-                .children(setETypeEOpposite.build(), setEOppositeEOpposite.build());
-
-        // 2.3-Delete original EReference
-        var deleteElement = this.viewBuilderHelper.newDeleteElement();
-
-        var changeContextElement = this.viewBuilderHelper.newChangeContext()
-                .expression(AQL_EDGE_SEMANTIC_ELEMENT)
-                .children(deleteElement.build());
-
-        // 1-Change context to go to new target
         var changeContext = this.viewBuilderHelper.newChangeContext()
-                .expression(AQL_SEMANTIC_RECONNECTION_TARGET)
-                .children(createNewERef.build(), changeContextEOpposite.build(), changeContextElement.build());
+              .expression("aql:edgeSemanticElement.reconnectEReferenceSource(semanticReconnectionTarget)");
 
         // Build tool
         return this.diagramBuilderHelper.newSourceEdgeEndReconnectionTool()
@@ -650,57 +605,9 @@ public class EcoreViewBuilder {
      * @return
      */
     public TargetEdgeEndReconnectionTool createEdgeReconnectBiDirectionalEReferenceTarget() {
-        // 2.1-Create duplicate EReference going from common Source (other end) to new Target (edge reconnection source)
-        var setContainer = this.viewBuilderHelper.newSetValue()
-                .featureName(EcorePackageQueryUtils.getEReferenceAttributeContainmentFeatureName(false))
-                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE + ".containment");
 
-        var setEOpposite = this.viewBuilderHelper.newSetValue()
-                .featureName(EcorePackageQueryUtils.getEReferenceEOppositeFeatureName(false))
-                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT);
-
-        var setEType = this.viewBuilderHelper.newSetValue()
-                .featureName(EcorePackageQueryUtils.getETypedElementETypeFeatureName(false))
-                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE + ".eType");
-
-        var setName = this.viewBuilderHelper.newSetValue()
-                .featureName(NAME)
-                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE + ".name");
-
-        var createNewERefChangeContext = this.viewBuilderHelper.newChangeContext()
-                .expression(AQL_NEW_INSTANCE)
-                .children(setName.build(), setEType.build(), setEOpposite.build(), setContainer.build());
-
-        var createNewERef = this.viewBuilderHelper.newCreateInstance()
-                .referenceName(EcorePackageQueryUtils.getEReferenceContainmentFeatureName(false))
-                .typeName(EcorePackageQueryUtils.getEReferenceDataTypeQualifiedName())
-                .variableName(NEW_INSTANCE)
-                .children(createNewERefChangeContext.build());
-
-        // 2.2-Delete original eOpposite EReference
-        var deleteElement = this.viewBuilderHelper.newDeleteElement();
-
-        var changeContextElement = this.viewBuilderHelper.newChangeContext()
-                .expression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE)
-                .children(deleteElement.build());
-
-        // 2.3-Set structural features for eOpposite relation
-        var setEOppositeEOpposite = this.viewBuilderHelper.newSetValue()
-                .featureName(EcorePackageQueryUtils.getEReferenceEOppositeFeatureName(false))
-                .valueExpression(AQL_NEW_INSTANCE);
-
-        var setETypeEOpposite = this.viewBuilderHelper.newSetValue()
-                .featureName(EcorePackageQueryUtils.getETypedElementETypeFeatureName(false))
-                .valueExpression(AQL_SEMANTIC_RECONNECTION_TARGET);
-
-        var changeContextEOpposite = this.viewBuilderHelper.newChangeContext()
-                .expression(AQL_EDGE_SEMANTIC_ELEMENT)
-                .children(setETypeEOpposite.build(), setEOppositeEOpposite.build());
-
-        // 1-Change context to go to new target
         var changeContext = this.viewBuilderHelper.newChangeContext()
-                .expression(AQL_SEMANTIC_RECONNECTION_TARGET)
-                .children(createNewERef.build(), changeContextElement.build(), changeContextEOpposite.build());
+              .expression("aql:edgeSemanticElement.reconnectEReferenceTarget(semanticReconnectionTarget)");
 
         // Build tool
         return this.diagramBuilderHelper.newTargetEdgeEndReconnectionTool()
