@@ -162,6 +162,14 @@ public class EcorePackageQueryUtils {
         return result + EcorePackage.Literals.EREFERENCE__EREFERENCE_TYPE.getName();
     }
 
+    public static String getETypedElementETypeFeatureName(boolean featurePrefixed) {
+        String result = "";
+        if (featurePrefixed) {
+            result = EcorePackageQueryUtils.featurePrefix;
+        }
+        return result + EcorePackage.Literals.ETYPED_ELEMENT__ETYPE.getName();
+    }
+
     public static String getEReferenceUpperBoundFeatureName(boolean featurePrefixed) {
         String result = "";
         if (featurePrefixed) {

@@ -104,6 +104,8 @@ public class BiDirectionalEReferenceDescriptionProvider implements IEdgeDescript
         return this.diagramBuilderHelper.newEdgePalette()
                 .deleteTool(this.ecoreViewBuilder.createDeleteBiDirectionalEReferenceTool())
                 .endLabelEditTool(this.ecoreViewBuilder.createLabelEditEReferenceOrEOperationNameTool())
+                .edgeReconnectionTools(this.ecoreViewBuilder.createEdgeReconnectBiDirectionalEReferenceSource())
+                .edgeReconnectionTools(this.ecoreViewBuilder.createEdgeReconnectBiDirectionalEReferenceTarget())
                 .build();
     }
 

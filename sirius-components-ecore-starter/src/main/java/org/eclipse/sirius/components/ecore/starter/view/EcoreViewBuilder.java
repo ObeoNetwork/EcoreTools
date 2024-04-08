@@ -39,6 +39,11 @@ import org.eclipse.sirius.components.view.diagram.TargetEdgeEndReconnectionTool;
  */
 public class EcoreViewBuilder {
 
+    private static final String AQL_EDGE_SEMANTIC_ELEMENT = "aql:edgeSemanticElement";
+    private static final String AQL_SEMANTIC_RECONNECTION_TARGET = "aql:semanticReconnectionTarget";
+    private static final String AQL_EDGE_SEMANTIC_ELEMENT_E_TYPE = AQL_EDGE_SEMANTIC_ELEMENT + ".eType";
+    private static final String AQL_EDGE_SEMANTIC_ELEMENT_NAME = AQL_EDGE_SEMANTIC_ELEMENT + ".name";
+    private static final String AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE = AQL_EDGE_SEMANTIC_ELEMENT + ".eOpposite";
     private static final String AQL_TRUE = "aql:true";
     private static final String NEW_INSTANCE = "newInstance";
     private static final String AQL_NEW_INSTANCE = "aql:newInstance";
@@ -238,9 +243,13 @@ public class EcoreViewBuilder {
 
     /**
      * Utility method to create a Node creation tool.
+     *
      * @param object
+     *            An object whose type is used to define the type of the element to be created by the tool
      * @param containmentRef
+     *            The containment eReference to be used to store the object created by the tool
      * @param valuesBuilders
+     *            SetValueBuilder elements added applied on the object created by the tool
      * @return
      */
     private NodeTool createNodeToolCreate(EObject object, EReference containmentRef, SetValueBuilder... valuesBuilders) {
@@ -270,14 +279,29 @@ public class EcoreViewBuilder {
                 .build();
     }
 
+    /**
+     * Node creation tool for the creation of an EPackage element.
+     *
+     * @return
+     */
     public NodeTool createNodeToolCreateEPackage() {
         return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEPackage(), EcorePackage.Literals.EPACKAGE__ESUBPACKAGES);
     }
 
+    /**
+     * Node creation tool for the creation of an EClass element.
+     *
+     * @return
+     */
     public NodeTool createNodeToolCreateEClass() {
         return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEClass(), EcorePackage.Literals.EPACKAGE__ECLASSIFIERS);
     }
 
+    /**
+     * Node creation tool for the creation of an EClass element set as Interface.
+     *
+     * @return
+     */
     public NodeTool createNodeToolCreateEClassInterface() {
         var setValueInterface = this.viewBuilderHelper.newSetValue()
                 .featureName(EcorePackageQueryUtils.getEClassInterfaceFeatureName(false))
@@ -288,6 +312,12 @@ public class EcoreViewBuilder {
         return nodeTool;
     }
 
+
+    /**
+     * Node creation tool for the creation of an EClass element set as Abstract.
+     *
+     * @return
+     */
     public NodeTool createNodeToolCreateEClassAbstract() {
         var setValueAbstract = this.viewBuilderHelper.newSetValue()
                 .featureName(EcorePackageQueryUtils.getEClassAbstractFeatureName(false))
@@ -298,14 +328,20 @@ public class EcoreViewBuilder {
         return nodeTool;
     }
 
+    /**
+     * Node creation tool for the creation of an EEnum element.
+     *
+     * @return
+     */
     public NodeTool createNodeToolCreateEEnum() {
         return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEEnum(), EcorePackage.Literals.EPACKAGE__ECLASSIFIERS);
     }
 
-    public NodeTool createNodeToolCreateEDataType() {
-        return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEDataType(), EcorePackage.Literals.EPACKAGE__ECLASSIFIERS);
-    }
-
+    /**
+     * Node creation tool for the creation of an EEnumLiteral element.
+     *
+     * @return
+     */
     public NodeTool createNodeToolCreateEEnumLiteral() {
         var setValueValue = this.viewBuilderHelper.newSetValue()
                 .featureName("value")
@@ -313,10 +349,29 @@ public class EcoreViewBuilder {
         return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEEnumLiteral(), EcorePackage.Literals.EENUM__ELITERALS, setValueValue);
     }
 
+    /**
+     * Node creation tool for the creation of an EDataType element.
+     *
+     * @return
+     */
+    public NodeTool createNodeToolCreateEDataType() {
+        return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEDataType(), EcorePackage.Literals.EPACKAGE__ECLASSIFIERS);
+    }
+
+    /**
+     * Node creation tool for the creation of an EAttribute element.
+     *
+     * @return
+     */
     public NodeTool createNodeToolCreateEAttribute() {
         return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEAttribute(), EcorePackage.Literals.ECLASS__ESTRUCTURAL_FEATURES);
     }
 
+    /**
+     * Node creation tool for the creation of an EOperation element.
+     *
+     * @return
+     */
     public NodeTool createNodeToolCreateEOperation() {
         return this.createNodeToolCreate(EcoreFactory.eINSTANCE.createEOperation(), EcorePackage.Literals.ECLASS__EOPERATIONS);
     }
@@ -517,6 +572,136 @@ public class EcoreViewBuilder {
 
         return this.diagramBuilderHelper.newTargetEdgeEndReconnectionTool()
                 .name("Reconnect EReference from Target")
+                .body(changeContext.build())
+                .build();
+    }
+
+    /**
+     * Create an Edge Reconnection Tool to reconnect the source end of a BiDirectionalEReference edge.
+     *
+     * @return
+     */
+    public SourceEdgeEndReconnectionTool createEdgeReconnectBiDirectionalEReferenceSource() {
+        // 2.1-Create duplicate EReference going from new Target (edge reconnection target) to common Source (other end)
+        var setContainer = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getEReferenceAttributeContainmentFeatureName(false))
+                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT + ".containment");
+
+        var setEOpposite = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getEReferenceEOppositeFeatureName(false))
+                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE);
+
+        var setEType = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getETypedElementETypeFeatureName(false))
+                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_E_TYPE);
+
+        var setName = this.viewBuilderHelper.newSetValue()
+                .featureName(NAME)
+                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_NAME);
+
+        var createNewERefChangeContext = this.viewBuilderHelper.newChangeContext()
+                .expression(AQL_NEW_INSTANCE)
+                .children(setName.build(), setEType.build(), setEOpposite.build(), setContainer.build());
+
+        var createNewERef = this.viewBuilderHelper.newCreateInstance()
+                .referenceName(EcorePackageQueryUtils.getEReferenceContainmentFeatureName(false))
+                .typeName(EcorePackageQueryUtils.getEReferenceDataTypeQualifiedName())
+                .variableName(NEW_INSTANCE)
+                .children(createNewERefChangeContext.build());
+
+        // 2.2-Set structural features for eOpposite relation
+        var setEOppositeEOpposite = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getEReferenceEOppositeFeatureName(false))
+                .valueExpression(AQL_NEW_INSTANCE);
+
+        var setETypeEOpposite = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getETypedElementETypeFeatureName(false))
+                .valueExpression(AQL_SEMANTIC_RECONNECTION_TARGET);
+
+        var changeContextEOpposite = this.viewBuilderHelper.newChangeContext()
+                .expression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE)
+                .children(setETypeEOpposite.build(), setEOppositeEOpposite.build());
+
+        // 2.3-Delete original EReference
+        var deleteElement = this.viewBuilderHelper.newDeleteElement();
+
+        var changeContextElement = this.viewBuilderHelper.newChangeContext()
+                .expression(AQL_EDGE_SEMANTIC_ELEMENT)
+                .children(deleteElement.build());
+
+        // 1-Change context to go to new target
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+                .expression(AQL_SEMANTIC_RECONNECTION_TARGET)
+                .children(createNewERef.build(), changeContextEOpposite.build(), changeContextElement.build());
+
+        // Build tool
+        return this.diagramBuilderHelper.newSourceEdgeEndReconnectionTool()
+                .name("Reconnect BiDirectionalEReference from Source")
+                .body(changeContext.build())
+                .build();
+    }
+
+    /**
+     * Create an Edge Reconnection Tool to reconnect the target end of a BiDirectionalEReference edge.
+     *
+     * @return
+     */
+    public TargetEdgeEndReconnectionTool createEdgeReconnectBiDirectionalEReferenceTarget() {
+        // 2.1-Create duplicate EReference going from common Source (other end) to new Target (edge reconnection source)
+        var setContainer = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getEReferenceAttributeContainmentFeatureName(false))
+                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE + ".containment");
+
+        var setEOpposite = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getEReferenceEOppositeFeatureName(false))
+                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT);
+
+        var setEType = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getETypedElementETypeFeatureName(false))
+                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE + ".eType");
+
+        var setName = this.viewBuilderHelper.newSetValue()
+                .featureName(NAME)
+                .valueExpression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE + ".name");
+
+        var createNewERefChangeContext = this.viewBuilderHelper.newChangeContext()
+                .expression(AQL_NEW_INSTANCE)
+                .children(setName.build(), setEType.build(), setEOpposite.build(), setContainer.build());
+
+        var createNewERef = this.viewBuilderHelper.newCreateInstance()
+                .referenceName(EcorePackageQueryUtils.getEReferenceContainmentFeatureName(false))
+                .typeName(EcorePackageQueryUtils.getEReferenceDataTypeQualifiedName())
+                .variableName(NEW_INSTANCE)
+                .children(createNewERefChangeContext.build());
+
+        // 2.2-Delete original eOpposite EReference
+        var deleteElement = this.viewBuilderHelper.newDeleteElement();
+
+        var changeContextElement = this.viewBuilderHelper.newChangeContext()
+                .expression(AQL_EDGE_SEMANTIC_ELEMENT_E_OPPOSITE)
+                .children(deleteElement.build());
+
+        // 2.3-Set structural features for eOpposite relation
+        var setEOppositeEOpposite = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getEReferenceEOppositeFeatureName(false))
+                .valueExpression(AQL_NEW_INSTANCE);
+
+        var setETypeEOpposite = this.viewBuilderHelper.newSetValue()
+                .featureName(EcorePackageQueryUtils.getETypedElementETypeFeatureName(false))
+                .valueExpression(AQL_SEMANTIC_RECONNECTION_TARGET);
+
+        var changeContextEOpposite = this.viewBuilderHelper.newChangeContext()
+                .expression(AQL_EDGE_SEMANTIC_ELEMENT)
+                .children(setETypeEOpposite.build(), setEOppositeEOpposite.build());
+
+        // 1-Change context to go to new target
+        var changeContext = this.viewBuilderHelper.newChangeContext()
+                .expression(AQL_SEMANTIC_RECONNECTION_TARGET)
+                .children(createNewERef.build(), changeContextElement.build(), changeContextEOpposite.build());
+
+        // Build tool
+        return this.diagramBuilderHelper.newTargetEdgeEndReconnectionTool()
+                .name("Reconnect BiDirectionalEReference from Target")
                 .body(changeContext.build())
                 .build();
     }
