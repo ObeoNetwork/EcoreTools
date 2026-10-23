@@ -13,9 +13,10 @@ package fr.obeo.ecore.editor;
 public final class EcoreDiagramStyle {
     public static final String CANVAS = "#f8f9fc";
     public static final String SURFACE = "#ffffff";
+    public static final String HEADER_BACKGROUND = "var(--ecore-header-background, #e9e9f3)";
     public static final String TEXT = "#1e2644";
     public static final String SECONDARY = "#566179";
-    public static final String BORDER = "#858fa3";
+    public static final String BORDER = "#788398";
     public static final String RELATIONSHIP = "#63708a";
     public static final String CLASS = "#6561a8";
     public static final String ENUM = "#16786f";

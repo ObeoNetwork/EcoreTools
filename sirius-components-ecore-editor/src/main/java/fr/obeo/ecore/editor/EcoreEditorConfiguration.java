@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Import;
 /** Import this configuration to install the editor in any Sirius Web application. */
 @Configuration(proxyBeanMethods = false)
 @Import({EcoreJavaServiceProvider.class, EcoreViewEditingContextInitializer.class, EcoreLabelService.class,
-        EcoreOppositeLabelPostProcessor.class, EcoreResourceLoader.class, EcoreResourceToDocumentService.class,
+        EcoreDiagramStylePostProcessor.class, EcoreResourceLoader.class, EcoreResourceToDocumentService.class,
         EcoreConnectorPaletteProvider.class, EcoreReconnectionToolsExecutor.class, EcoreDiagramStyles.class})
 public class EcoreEditorConfiguration {
     @Bean

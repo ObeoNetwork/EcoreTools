@@ -400,7 +400,7 @@ try:
     for text, expected in [("invalid name", "#c62828"), ("/title", "#2d6f9f"),
                            ("/invalid name", "#c62828"), ("title", "#566179")]:
         edit(attribute["insideLabel"]["id"], text)
-        parent_color = "#c62828" if expected == "#c62828" else "#858fa3"
+        parent_color = "#c62828" if expected == "#c62828" else "#788398"
         updated = refreshed(lambda d: next(n for n in d["nodes"] if n["id"] == book["id"])["style"]["borderColor"] == parent_color)
         current_book = next(n for n in updated["nodes"] if n["id"] == book["id"])
         assert current_book["insideLabel"]["style"]["color"] == ("#c62828" if expected == "#c62828" else "#1e2644")
@@ -418,7 +418,7 @@ try:
     annotated = refreshed(lambda d: len(d["nodes"]) == 4)
     note = next(n for n in annotated["nodes"] if n["insideLabel"]["text"] == "New documentation note")
     assert note["style"]["borderSize"] == 1, note
-    assert note["style"]["borderColor"] == "#858fa3", note
+    assert note["style"]["borderColor"] == "#788398", note
     assert note["insideLabel"]["style"]["color"] == "#566179", note
     edit(note["insideLabel"]["id"], "A library book\nWith its title")
     refreshed(lambda d: any(n["insideLabel"]["text"] == "A library book\nWith its title" for n in d["nodes"]))
@@ -482,7 +482,7 @@ try:
     assert parameter["insideLabel"]["style"]["iconURL"] == [], parameter
     assert parameter["insideLabel"]["insideLabelLocation"] == "MIDDLE_CENTER", parameter
     assert (parameter["defaultWidth"], parameter["defaultHeight"]) == (32, 32), parameter
-    assert parameter["style"] == {"borderColor": "#858fa3", "borderSize": 1, "borderStyle": "Dash",
+    assert parameter["style"] == {"borderColor": "#788398", "borderSize": 1, "borderStyle": "Dash",
                                   "background": "#ffffff"}, parameter
     for text, color in [("1", "#c62828"), ("T", "#566179")]:
         edit(parameter["insideLabel"]["id"], text)

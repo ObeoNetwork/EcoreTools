@@ -28,6 +28,10 @@ class EcoreDiagramStyleTests {
             }
             assertThat(contrast(EcoreDiagramStyle.BORDER, background)).isGreaterThanOrEqualTo(3);
         }
+        for (String header : List.of("#e9e9f3", "#deeceb", "#e2ebf2", "#ede8f3")) {
+            assertThat(contrast(EcoreDiagramStyle.TEXT, header)).isGreaterThanOrEqualTo(4.5);
+            assertThat(contrast(EcoreDiagramStyle.BORDER, header)).isGreaterThanOrEqualTo(3);
+        }
         assertThat(contrast(EcoreDiagramStyle.SECONDARY, EcoreDiagramStyle.NOTE)).isGreaterThanOrEqualTo(4.5);
         assertThat(contrast(EcoreDiagramStyle.DATATYPE, EcoreDiagramStyle.CONSTRAINT)).isGreaterThanOrEqualTo(4.5);
     }

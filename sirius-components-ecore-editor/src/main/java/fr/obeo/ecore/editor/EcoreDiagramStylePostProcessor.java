@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.sirius.components.collaborative.diagrams.DiagramContext;
+import org.eclipse.sirius.components.collaborative.diagrams.RectangularNodeAppearanceHandler;
 import org.eclipse.sirius.components.collaborative.diagrams.api.IDiagramPostProcessor;
 import org.eclipse.sirius.components.core.api.IEditingContext;
 import org.eclipse.sirius.components.core.api.IObjectSearchService;
@@ -22,6 +23,10 @@ import org.eclipse.sirius.components.diagrams.Diagram;
 import org.eclipse.sirius.components.diagrams.Edge;
 import org.eclipse.sirius.components.diagrams.Label;
 import org.eclipse.sirius.components.diagrams.LabelStyle;
+import org.eclipse.sirius.components.diagrams.ListLayoutStrategy;
+import org.eclipse.sirius.components.diagrams.Node;
+import org.eclipse.sirius.components.diagrams.RectangularNodeStyle;
+import org.eclipse.sirius.components.diagrams.ViewModifier;
 import org.eclipse.sirius.components.diagrams.renderer.LabelAppearanceHandler;
 import org.eclipse.sirius.components.view.FixedColor;
 import org.eclipse.sirius.components.view.View;
@@ -29,15 +34,15 @@ import org.eclipse.sirius.components.view.diagram.DiagramDescription;
 import org.eclipse.sirius.components.view.emf.diagram.IDiagramIdProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-/** The View model shares one edge style; opposite labels need styles for their own reference. */
-public class EcoreOppositeLabelPostProcessor implements IDiagramPostProcessor {
+/** Styles that depend on the rendered children or on an opposite reference at each endpoint. */
+public class EcoreDiagramStylePostProcessor implements IDiagramPostProcessor {
     private final IObjectSearchService objectSearch;
     private final String diagramDescriptionId;
     private final String oppositeDescriptionId;
     private final Map<String, String> colors;
     private final EcoreServices services = new EcoreServices();
 
-    public EcoreOppositeLabelPostProcessor(@Qualifier("ecoreView") View view, IDiagramIdProvider ids,
+    public EcoreDiagramStylePostProcessor(@Qualifier("ecoreView") View view, IDiagramIdProvider ids,
             IObjectSearchService objectSearch) {
         this.objectSearch = objectSearch;
         var description = (DiagramDescription) view.getDescriptions().getFirst();
@@ -57,7 +62,8 @@ public class EcoreOppositeLabelPostProcessor implements IDiagramPostProcessor {
     @Override
     public Optional<Diagram> postProcess(IEditingContext editingContext, DiagramContext context) {
         var edges = new ArrayList<Edge>();
-        boolean changed = false;
+        var nodes = context.diagram().getNodes().stream().map(this::style).toList();
+        boolean changed = !nodes.equals(context.diagram().getNodes());
         for (var edge : context.diagram().getEdges()) {
             var updated = edge;
             if (this.oppositeDescriptionId.equals(edge.getDescriptionId())) {
@@ -74,7 +80,23 @@ public class EcoreOppositeLabelPostProcessor implements IDiagramPostProcessor {
             }
             edges.add(updated);
         }
-        return changed ? Optional.of(Diagram.newDiagram(context.diagram()).edges(edges).build()) : Optional.empty();
+        return changed ? Optional.of(Diagram.newDiagram(context.diagram()).nodes(nodes).edges(edges).build()) : Optional.empty();
+    }
+
+    Node style(Node node) {
+        var children = node.getChildNodes().stream().map(this::style).toList();
+        var style = node.getStyle();
+        if (style instanceof RectangularNodeStyle rectangle && rectangle.getChildrenLayoutStrategy() instanceof ListLayoutStrategy
+                && !node.getCustomizedStyleProperties().contains(RectangularNodeAppearanceHandler.BACKGROUND)) {
+            // Border ports do not open a content compartment; only displayed children do.
+            String background = children.stream().anyMatch(child -> child.getState() != ViewModifier.Hidden)
+                    ? EcoreDiagramStyle.SURFACE : EcoreDiagramStyle.HEADER_BACKGROUND;
+            if (!background.equals(rectangle.getBackground())) {
+                style = RectangularNodeStyle.newRectangularNodeStyle(rectangle).background(background).build();
+            }
+        }
+        return style != node.getStyle() || !children.equals(node.getChildNodes())
+                ? Node.newNode(node).style(style).childNodes(children).build() : node;
     }
 
     Label style(Label label, EReference reference) {

@@ -3,7 +3,7 @@
 /* The marker comes from the Ecore view's canvas color, including for note-only diagrams. */
 .react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) {
   --ecore-focus: #be1a78;
-  --ecore-type-accent: #858fa3;
+  --ecore-type-accent: #788398;
 }
 
 .react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode:has(
@@ -23,12 +23,16 @@
   --ecore-type-accent: #7b5ba9;
 }
 
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode {
+  --ecore-header-background: color-mix(in srgb, var(--ecore-type-accent) 14%, white);
+}
+
 /* Native label padding is inline; measure the compact labels through the existing layout engine. */
 .react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode [data-testid^="Label - "] {
   padding: 6px 12px !important;
   border-left: 4px solid var(--ecore-type-accent);
   border-radius: 5px 5px 0 0;
-  background: color-mix(in srgb, var(--ecore-type-accent) 7%, white);
+  background: var(--ecore-header-background);
 }
 
 .react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode [data-testid^="Label content - "] > div:has(> img) {
@@ -37,7 +41,7 @@
   min-width: 24px !important;
   min-height: 24px !important;
   border-radius: 5px;
-  background: color-mix(in srgb, var(--ecore-type-accent) 15%, white);
+  background: color-mix(in srgb, var(--ecore-type-accent) 24%, white);
 }
 
 .react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode [data-testid^="Label content - "] img {
@@ -49,8 +53,12 @@
   font-weight: 600 !important;
 }
 
-.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-iconLabelNode [data-testid^="Label - "] {
-  padding: 4px 12px !important;
+/* Sirius measures labels outside React Flow; keep Ecore member measurements equally compact. */
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) [data-svg="rect:compartment"][data-testid^="FreeForm - "] [data-testid^="Label - "],
+#hidden-container [data-testid^="Label - "]:has(
+    img[src$="/icons/ecore/EAttribute.svg"], img[src$="/icons/ecore/EOperation.svg"],
+    img[src$="/icons/ecore/EReference.svg"], img[src$="/icons/ecore/EEnumLiteral.svg"]) {
+  padding: 2px 12px !important;
 }
 
 .react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node, .react-flow__edge):focus-visible {
