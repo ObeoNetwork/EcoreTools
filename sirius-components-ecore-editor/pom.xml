@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<!-- Copyright (c) 2026 Obeo. SPDX-License-Identifier: EPL-2.0 -->
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>fr.obeo.ecore</groupId>
+    <artifactId>ecore-editor-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>sirius-components-ecore-editor</artifactId>
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.sirius</groupId>
+      <artifactId>sirius-components-view-builder</artifactId>
+      <version>${sirius.web.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.sirius</groupId>
+      <artifactId>sirius-components-view-emf</artifactId>
+      <version>${sirius.web.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.sirius</groupId>
+      <artifactId>sirius-web-application</artifactId>
+      <version>${sirius.web.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

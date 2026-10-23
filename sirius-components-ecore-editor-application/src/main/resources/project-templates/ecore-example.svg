@@ -1,0 +1,83 @@
+<!-- Copyright (c) 2026 Obeo. SPDX-License-Identifier: EPL-2.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="220" viewBox="0 0 300 220"
+     role="img" aria-labelledby="title description">
+  <title id="title">Ecore class diagram example</title>
+  <desc id="description">Set with type parameters T and V, Source with attributes, E implementing Interface, and mandatory, derived and containment references.</desc>
+  <defs>
+    <linearGradient id="class" x2="0" y2="1">
+      <stop stop-color="#fffef2"/>
+      <stop offset="1" stop-color="#fffcd8"/>
+    </linearGradient>
+    <linearGradient id="interface" x2="0" y2="1">
+      <stop stop-color="#f7f7f7"/>
+      <stop offset="1" stop-color="#e4e4e4"/>
+    </linearGradient>
+    <linearGradient id="parameter" x2="1" y2="1">
+      <stop stop-color="#fff"/>
+      <stop offset="1" stop-color="#d4e0ee"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 5 3 1 5" fill="none" stroke="#55515e" stroke-width="1.1"/>
+    </marker>
+    <marker id="blue-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 5 3 1 5" fill="none" stroke="#476b99" stroke-width="1.1"/>
+    </marker>
+    <marker id="inheritance" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 9 5 1 9Z" fill="#fff" stroke="#77717f" stroke-width="1.1"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dy="1" stdDeviation="1.1" flood-color="#26203b" flood-opacity=".08"/>
+    </filter>
+  </defs>
+
+  <path fill="#f8f7fa" d="M0 0H300V220H0Z"/>
+
+  <g fill="none" stroke="#77717f" stroke-width="1.2" stroke-linejoin="round">
+    <path d="M76 122V68" marker-end="url(#inheritance)"/>
+    <path d="M246 122V68" stroke-dasharray="4 3" marker-end="url(#inheritance)"/>
+    <path d="M76 18V8H154V37H138" marker-end="url(#arrow)"/>
+  </g>
+
+  <g stroke="#a5a197" stroke-width="1.1" filter="url(#shadow)">
+    <rect x="20" y="18" width="106" height="50" rx="4" fill="url(#class)"/>
+    <rect x="210" y="18" width="72" height="50" rx="4" fill="url(#interface)"/>
+    <rect x="20" y="122" width="114" height="82" rx="4" fill="url(#class)"/>
+    <rect x="210" y="122" width="72" height="82" rx="4" fill="url(#class)"/>
+    <path d="M20 40H126M210 40H282M20 144H134M210 144H282" fill="none"/>
+  </g>
+
+  <g font-family="Arial, Helvetica, sans-serif" fill="#393440">
+    <g font-size="14" font-weight="600" text-anchor="middle">
+      <text x="73" y="34">Set</text>
+      <text x="77" y="138">Source</text>
+      <text x="246" y="138">E</text>
+    </g>
+    <text x="246" y="34" text-anchor="middle" font-size="13" font-style="italic">Interface</text>
+    <text x="89" y="100" font-size="10" font-style="italic" fill="#77717f">&lt;&lt;bind&gt;&gt; C,E</text>
+    <g font-size="10">
+      <text x="31" y="161" font-weight="700">required : EString</text>
+      <text x="31" y="177">optional : EString</text>
+    </g>
+  </g>
+
+  <g fill="url(#parameter)" stroke="#8693a8" stroke-width=".9" stroke-dasharray="2 1.5">
+    <rect x="120" y="29" width="18" height="16" rx="1"/>
+    <rect x="120" y="49" width="18" height="16" rx="1"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="9" fill="#405470" text-anchor="middle">
+    <text x="129" y="40">T</text>
+    <text x="129" y="60">V</text>
+  </g>
+
+  <g fill="none" stroke="#55515e" stroke-width="1.2" marker-end="url(#arrow)">
+    <path d="M134 156H210"/>
+    <path d="M134 195H210"/>
+  </g>
+  <path d="M134 172H210" fill="none" stroke="#476b99" stroke-width="1.2" marker-end="url(#blue-arrow)"/>
+  <path d="M134 195 139 192 144 195 139 198Z" fill="#55515e"/>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="9" fill="#55515e">
+    <text x="140" y="151" font-weight="700">requiredToE</text>
+    <text x="140" y="168" fill="#476b99">/derivedToE</text>
+    <text x="140" y="190">containedToE</text>
+  </g>
+</svg>

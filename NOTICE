@@ -1,0 +1,33 @@
+Ecore Editor for Sirius Web
+SPDX-License-Identifier: EPL-2.0
+
+Project sources and assets are distributed under the Eclipse Public License
+2.0. See LICENSE. New code: Copyright (c) 2026 Obeo.
+
+The classes EAttributeServices, EOperationServices, EReferenceServices and
+EGenericsServices in fr.obeo.ecore.editor.labels are adapted from Eclipse
+EcoreTools, org.eclipse.emf.ecoretools.design, revision
+45e536e8b039d610de0989bede37349295370031.
+https://eclipse.dev/ecoretools/
+Their original copyright and contributor notices are retained. These
+adaptations are distributed under EPL-2.0 using the license's later-version
+provision. They remove Eclipse Desktop/session dependencies and unused
+operations and use JDK collections instead of Guava.
+
+The 14 SVG files named DynamicInstance, EAttribute, EClass, EClass_abstract,
+EClass_interface, EDataType, EEnum, EEnumLiteral, EObject, EOperation, EPackage,
+EParameter, EReference and EcoreModelFile originate from Eclipse EMF,
+org.eclipse.emf.ecore.edit/icons/full/svg. Original SVG metadata is retained.
+https://eclipse.dev/emf/
+EAnnotation, EFactory, EGenericType and ETypeParameter are new vector
+complements under EPL-2.0.
+EcoreClassDiagram.svg adapts the diagram icon from Eclipse Sirius Web
+(diagram-images/diagram.svg), Copyright (c) 2019 Obeo, under EPL-2.0.
+https://eclipse.dev/sirius/sirius-web.html
+
+The view palette and direct-edit semantics are based on Eclipse EcoreTools'
+Design / Entities description in ecore.odesign. The Sirius Web integration
+follows the Java view, Spring configuration and import-tool patterns in
+KEML and the Eclipse Sirius Web Papaya example.
+
+Third-party dependencies retain their own licenses and notices.

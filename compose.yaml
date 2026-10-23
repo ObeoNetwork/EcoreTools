@@ -1,0 +1,18 @@
+# Copyright (c) 2026 Obeo.
+# SPDX-License-Identifier: EPL-2.0
+
+services:
+  database:
+    image: postgres:16
+    ports: ["127.0.0.1:5435:5432"]
+    environment:
+      POSTGRES_DB: ecore-editor
+      POSTGRES_USER: ecore
+      POSTGRES_PASSWORD: ecore
+    volumes: ["ecore-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecore -d ecore-editor"]
+      interval: 5s
+      retries: 10
+volumes:
+  ecore-data:

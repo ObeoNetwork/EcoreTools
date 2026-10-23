@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<!-- Copyright (c) 2026 Obeo. SPDX-License-Identifier: EPL-2.0 -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.0</version>
+    <relativePath/>
+  </parent>
+  <groupId>fr.obeo.ecore</groupId>
+  <artifactId>ecore-editor-parent</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <licenses>
+    <license>
+      <name>Eclipse Public License 2.0</name>
+      <url>https://www.eclipse.org/legal/epl-2.0/</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <properties>
+    <java.version>21</java.version>
+    <sirius.web.version>2026.7.3</sirius.web.version>
+  </properties>
+  <modules>
+    <module>sirius-components-ecore-editor</module>
+    <module>sirius-components-ecore-editor-application</module>
+  </modules>
+  <build>
+    <resources>
+      <resource><directory>src/main/resources</directory></resource>
+      <resource>
+        <directory>..</directory>
+        <targetPath>META-INF</targetPath>
+        <includes>
+          <include>LICENSE</include>
+          <include>NOTICE</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.liquibase</groupId>
+        <artifactId>liquibase-core</artifactId>
+        <version>4.33.0</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <repositories>
+    <repository>
+      <id>github-sirius-web</id>
+      <url>https://maven.pkg.github.com/eclipse-sirius/sirius-web</url>
+    </repository>
+    <repository>
+      <id>github-sirius-emfjson</id>
+      <url>https://maven.pkg.github.com/eclipse-sirius/sirius-emf-json</url>
+    </repository>
+  </repositories>
+</project>

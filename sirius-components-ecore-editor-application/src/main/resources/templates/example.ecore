@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2026 Obeo. SPDX-License-Identifier: EPL-2.0 -->
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    name="example" nsURI="https://example.org/ecore-editor/example" nsPrefix="example">
+  <eClassifiers xsi:type="ecore:EClass" name="Set">
+    <eTypeParameters name="T"/>
+    <eTypeParameters name="V"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="elements" upperBound="-1">
+      <eGenericType eTypeParameter="#//Set/T"/>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Source">
+    <eGenericSuperTypes eClassifier="#//Set">
+      <eTypeArguments eClassifier="#//C"/>
+      <eTypeArguments eClassifier="#//E"/>
+    </eGenericSuperTypes>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="required" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="optional"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="optionalToE" eType="#//E"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="requiredToE" lowerBound="1" eType="#//E"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="derivedToE" eType="#//E"
+        derived="true" transient="true" volatile="true" changeable="false"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="containedToE" upperBound="-1"
+        eType="#//E" containment="true" resolveProxies="false"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="containedDerived" upperBound="-1"
+        eType="#//E" containment="true" resolveProxies="false"
+        derived="true" transient="true" volatile="true" changeable="false"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="source" eType="#//E" eOpposite="#//E/eMany"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="mandatoryE" lowerBound="1"
+        eType="#//E" eOpposite="#//E/e"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="E" eSuperTypes="#//Interface">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="eMany" upperBound="-1"
+        eType="#//Source" eOpposite="#//Source/source"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="e" eType="#//Source"
+        eOpposite="#//Source/mandatoryE"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Interface" abstract="true" interface="true"/>
+  <eClassifiers xsi:type="ecore:EClass" name="SetOfThing">
+    <eTypeParameters name="W"/>
+    <eGenericSuperTypes eClassifier="#//Set">
+      <eTypeArguments eClassifier="#//Thing"/>
+      <eTypeArguments eTypeParameter="#//SetOfThing/W"/>
+    </eGenericSuperTypes>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EDataType" name="SomeDataType" instanceClassName="java.lang.Object">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/Ecore">
+      <details key="constraints" value="hasNoSpecialChar"/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="Enumeration">
+    <eLiterals name="ok"/>
+    <eLiterals name="nok" value="1"/>
+  </eClassifiers>
+  <!-- These binding arguments exist in the model but are deliberately not imported into the diagram. -->
+  <eClassifiers xsi:type="ecore:EClass" name="C"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Thing"/>
+  <eSubpackages name="subPackage" nsURI="https://example.org/ecore-editor/example/subPackage" nsPrefix="subPackage"/>
+</ecore:EPackage>
