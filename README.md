@@ -59,6 +59,8 @@ PostgreSQL runs on local port **5435** with its own persistent volume.
   Neutral cards use colored header accents with the original Ecore SVG icons.
   Relationship labels have transparent backgrounds; selection uses Sirius Web's
   native magenta feedback.
+- Packages contain freely positioned classes, data types, enumerations and
+  nested packages. Use their palette to create or import elements.
 - Add **Documentation** from the background or an element's palette.
   **Assign annotation** attaches a note to an element or reference; reconnect
   its target end to move it. A target that already has documentation is rejected

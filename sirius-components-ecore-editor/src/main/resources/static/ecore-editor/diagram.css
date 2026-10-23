@@ -6,36 +6,48 @@
   --ecore-type-accent: #788398;
 }
 
-.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode:has(
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node-listNode, .react-flow__node-freeFormNode:has(img[src$="/EPackage.svg"])):has(
     img[src$="/EClass.svg"], img[src$="/EClass_interface.svg"], img[src$="/EClass_abstract.svg"]) {
   --ecore-type-accent: #6561a8;
 }
 
-.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode:has(img[src$="/EEnum.svg"]) {
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node-listNode, .react-flow__node-freeFormNode:has(img[src$="/EPackage.svg"])):has(img[src$="/EEnum.svg"]) {
   --ecore-type-accent: #16786f;
 }
 
-.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode:has(img[src$="/EDataType.svg"]) {
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node-listNode, .react-flow__node-freeFormNode:has(img[src$="/EPackage.svg"])):has(img[src$="/EDataType.svg"]) {
   --ecore-type-accent: #2d6f9f;
 }
 
-.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode:has(img[src$="/EPackage.svg"]) {
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node-listNode, .react-flow__node-freeFormNode:has(img[src$="/EPackage.svg"])):has(img[src$="/EPackage.svg"]) {
   --ecore-type-accent: #7b5ba9;
 }
 
-.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode {
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node-listNode, .react-flow__node-freeFormNode:has(img[src$="/EPackage.svg"])) {
+  --ecore-content-background: color-mix(in srgb, var(--ecore-type-accent) 4%, white);
   --ecore-header-background: color-mix(in srgb, var(--ecore-type-accent) 14%, white);
 }
 
 /* Native label padding is inline; measure the compact labels through the existing layout engine. */
-.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode [data-testid^="Label - "] {
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node-listNode, .react-flow__node-freeFormNode:has(img[src$="/EPackage.svg"])) [data-testid^="Label - "] {
   padding: 6px 12px !important;
   border-left: 4px solid var(--ecore-type-accent);
   border-radius: 5px 5px 0 0;
   background: var(--ecore-header-background);
 }
 
-.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode [data-testid^="Label content - "] > div:has(> img) {
+/* The rendered empty-card background also marks when the accent spans the whole card. */
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node-listNode, .react-flow__node-freeFormNode:has(img[src$="/EPackage.svg"])) > [data-svg="rect"][style*="--ecore-header-background"]::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  border-radius: 5px 0 0 5px;
+  background: var(--ecore-type-accent);
+  pointer-events: none;
+}
+
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node-listNode, .react-flow__node-freeFormNode:has(img[src$="/EPackage.svg"])) [data-testid^="Label content - "] > div:has(> img) {
   width: 24px;
   height: 24px;
   min-width: 24px !important;
@@ -44,12 +56,12 @@
   background: color-mix(in srgb, var(--ecore-type-accent) 24%, white);
 }
 
-.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode [data-testid^="Label content - "] img {
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node-listNode, .react-flow__node-freeFormNode:has(img[src$="/EPackage.svg"])) [data-testid^="Label content - "] img {
   top: 4px !important;
   left: 4px !important;
 }
 
-.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode [data-testid^="Label - "][style*="font-weight: bold"] {
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node-listNode, .react-flow__node-freeFormNode:has(img[src$="/EPackage.svg"])) [data-testid^="Label - "][style*="font-weight: bold"] {
   font-weight: 600 !important;
 }
 

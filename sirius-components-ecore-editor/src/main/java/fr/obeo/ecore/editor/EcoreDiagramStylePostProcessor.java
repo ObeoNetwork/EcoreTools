@@ -23,7 +23,6 @@ import org.eclipse.sirius.components.diagrams.Diagram;
 import org.eclipse.sirius.components.diagrams.Edge;
 import org.eclipse.sirius.components.diagrams.Label;
 import org.eclipse.sirius.components.diagrams.LabelStyle;
-import org.eclipse.sirius.components.diagrams.ListLayoutStrategy;
 import org.eclipse.sirius.components.diagrams.Node;
 import org.eclipse.sirius.components.diagrams.RectangularNodeStyle;
 import org.eclipse.sirius.components.diagrams.ViewModifier;
@@ -86,11 +85,11 @@ public class EcoreDiagramStylePostProcessor implements IDiagramPostProcessor {
     Node style(Node node) {
         var children = node.getChildNodes().stream().map(this::style).toList();
         var style = node.getStyle();
-        if (style instanceof RectangularNodeStyle rectangle && rectangle.getChildrenLayoutStrategy() instanceof ListLayoutStrategy
+        if (style instanceof RectangularNodeStyle rectangle && node.getInsideLabel() != null && node.getInsideLabel().isIsHeader()
                 && !node.getCustomizedStyleProperties().contains(RectangularNodeAppearanceHandler.BACKGROUND)) {
             // Border ports do not open a content compartment; only displayed children do.
             String background = children.stream().anyMatch(child -> child.getState() != ViewModifier.Hidden)
-                    ? EcoreDiagramStyle.SURFACE : EcoreDiagramStyle.HEADER_BACKGROUND;
+                    ? EcoreDiagramStyle.CONTENT_BACKGROUND : EcoreDiagramStyle.HEADER_BACKGROUND;
             if (!background.equals(rectangle.getBackground())) {
                 style = RectangularNodeStyle.newRectangularNodeStyle(rectangle).background(background).build();
             }

@@ -11,6 +11,7 @@ package fr.obeo.ecore.editor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.emf.ecore.EClass;
@@ -18,6 +19,7 @@ import org.eclipse.sirius.components.collaborative.diagrams.RectangularNodeAppea
 import org.eclipse.sirius.components.core.api.IObjectSearchService;
 import org.eclipse.sirius.components.diagrams.CollapsingState;
 import org.eclipse.sirius.components.diagrams.FreeFormLayoutStrategy;
+import org.eclipse.sirius.components.diagrams.InsideLabel;
 import org.eclipse.sirius.components.diagrams.Label;
 import org.eclipse.sirius.components.diagrams.LabelStyle;
 import org.eclipse.sirius.components.diagrams.LabelVisibility;
@@ -47,13 +49,17 @@ class EcoreDiagramStylePostProcessorTests {
             var child = Node.newNode(member).state(state).build();
             var populated = processor.style(Node.newNode(empty).childNodes(List.of(child)).build());
             assertThat(((RectangularNodeStyle) populated.getStyle()).getBackground())
-                    .isEqualTo(state == ViewModifier.Hidden ? EcoreDiagramStyle.HEADER_BACKGROUND : EcoreDiagramStyle.SURFACE);
+                    .isEqualTo(state == ViewModifier.Hidden ? EcoreDiagramStyle.HEADER_BACKGROUND : EcoreDiagramStyle.CONTENT_BACKGROUND);
             assertThat(((RectangularNodeStyle) populated.getStyle()).getBorderColor()).isEqualTo(EcoreDiagramStyle.ERROR);
             var cleared = processor.style(Node.newNode(populated).childNodes(List.of()).build());
             assertThat(((RectangularNodeStyle) cleared.getStyle()).getBackground()).isEqualTo(EcoreDiagramStyle.HEADER_BACKGROUND);
         }
-        var nested = processor.style(Node.newNode(node("package", true)).childNodes(List.of(card)).build());
-        assertThat(((RectangularNodeStyle) nested.getStyle()).getBackground()).isEqualTo(EcoreDiagramStyle.SURFACE);
+        var pack = node("package", true);
+        pack = Node.newNode(pack).type("freeFormNode").style(RectangularNodeStyle.newRectangularNodeStyle((RectangularNodeStyle) pack.getStyle())
+                .childrenLayoutStrategy(new FreeFormLayoutStrategy()).build()).build();
+        assertThat(((RectangularNodeStyle) processor.style(pack).getStyle()).getBackground()).isEqualTo(EcoreDiagramStyle.HEADER_BACKGROUND);
+        var nested = processor.style(Node.newNode(pack).childNodes(List.of(card)).build());
+        assertThat(((RectangularNodeStyle) nested.getStyle()).getBackground()).isEqualTo(EcoreDiagramStyle.CONTENT_BACKGROUND);
         assertThat(((RectangularNodeStyle) nested.getChildNodes().getFirst().getStyle()).getBackground())
                 .isEqualTo(EcoreDiagramStyle.HEADER_BACKGROUND);
         var customized = Node.newNode(card).style(RectangularNodeStyle.newRectangularNodeStyle((RectangularNodeStyle) card.getStyle())
@@ -63,7 +69,9 @@ class EcoreDiagramStylePostProcessorTests {
     }
 
     private Node node(String id, boolean card) {
-        return Node.newNode(id).type(card ? "listNode" : "freeFormNode").targetObjectId(id).targetObjectKind("ecore")
+        var header = mock(InsideLabel.class);
+        when(header.isIsHeader()).thenReturn(card);
+        return Node.newNode(id).insideLabel(header).type(card ? "listNode" : "freeFormNode").targetObjectId(id).targetObjectKind("ecore")
                 .targetObjectLabel(id).descriptionId(id).initialBorderNodePosition(BorderNodePosition.NONE)
                 .state(ViewModifier.Normal).modifiers(Set.of()).collapsingState(CollapsingState.EXPANDED)
                 .outsideLabels(List.of()).borderNodes(List.of()).childNodes(List.of()).decorators(List.of())

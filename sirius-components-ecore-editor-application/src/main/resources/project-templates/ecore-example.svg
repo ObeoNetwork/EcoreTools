@@ -4,6 +4,60 @@
   <title id="title">Ecore class diagram example</title>
   <desc id="description">Set with type parameters T and V, Source with attributes, E implementing Interface, and mandatory, derived and containment references.</desc>
   <defs>
+    <!-- Original Ecore SVG icons, embedded so the thumbnail works as a standalone image. -->
+    <symbol xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="class-icon" viewBox="0 0 6.3499998 6.3499998">
+      <defs id="class-icon-defs2">
+        <linearGradient id="class-icon-linearGradient872">
+          <stop style="stop-color:#fcfcd0;stop-opacity:1" offset="0" id="class-icon-stop868" />
+          <stop style="stop-color:#fdfeff;stop-opacity:1" offset="1" id="class-icon-stop870" />
+        </linearGradient>
+        <linearGradient xlink:href="#class-icon-linearGradient872" id="class-icon-linearGradient874" x1="144.28606" y1="144.28606" x2="23.45978" y2="3.8806121" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.02544138,0,0,0.03435642,1.1855102,0.85122205)" />
+      </defs>
+      <g id="class-icon-layer1">
+        <g id="class-icon-g882">
+          <path id="class-icon-rect881" style="fill:url(#class-icon-linearGradient874);fill-opacity:1;stroke:#8c7539;stroke-width:0.26458333;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" d="M 1.7823593,0.98454601 H 4.8563469 V 5.8083742 H 1.7823593 Z" />
+          <path style="fill:#000000;fill-opacity:0;stroke:#8c7539;stroke-width:0.21166667;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 1.7626992,4.2339398 H 4.8276546" id="class-icon-path883" />
+          <path style="fill:#000000;fill-opacity:0;stroke:#8c7539;stroke-width:0.21166667;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 1.74062,2.6567217 H 4.818146" id="class-icon-path883-3" />
+          <rect style="fill:#4b7eb0;fill-opacity:0;stroke:none;stroke-width:0.157499;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.827451" id="class-icon-rect840" width="4.7432852" height="3.2324598" x="0.93108135" y="0.15395889" />
+        </g>
+      </g>
+    </symbol>
+    <symbol xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="interface-icon" viewBox="0 0 6.3499998 6.3499998">
+      <defs id="interface-icon-defs2">
+        <linearGradient id="interface-icon-linearGradient872">
+          <stop style="stop-color:#fcfcd0;stop-opacity:1" offset="0" id="interface-icon-stop868" />
+          <stop style="stop-color:#fdfeff;stop-opacity:1" offset="1" id="interface-icon-stop870" />
+        </linearGradient>
+        <linearGradient xlink:href="#interface-icon-linearGradient872" id="interface-icon-linearGradient874" x1="144.28606" y1="144.28606" x2="23.45978" y2="3.8806121" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.02544138,0,0,0.03435642,1.1855102,0.85122205)" />
+      </defs>
+      <g id="interface-icon-layer1">
+        <g id="interface-icon-g882">
+          <path id="interface-icon-rect881" style="fill:url(#interface-icon-linearGradient874);fill-opacity:1;stroke:#8c7539;stroke-width:0.264583;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" d="M 1.7823593,0.98454601 H 4.8563469 V 5.8083742 H 1.7823593 Z" />
+          <path style="fill:#000000;fill-opacity:0;stroke:#8c7539;stroke-width:0.211667;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 1.7626992,4.2339398 H 4.8276546" id="interface-icon-path883" />
+          <path style="fill:#000000;fill-opacity:0;stroke:#8c7539;stroke-width:0.211667;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 1.74062,2.6567217 H 4.818146" id="interface-icon-path883-3" />
+          <rect style="fill:#4b7eb0;fill-opacity:0;stroke:none;stroke-width:0.157499;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.827451" id="interface-icon-rect840" width="4.7432852" height="3.2324598" x="0.93108135" y="0.15395889" />
+          <g aria-label="I" transform="matrix(1.7576206,0,0,0.94605771,-0.89133753,0.16834018)" id="interface-icon-text841-3" style="font-style:normal;font-weight:normal;font-size:3.04647px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.18958897;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+            <path d="M 0.95584597,2.6946313 V 2.5562907 l 0.0282631,-0.00149 q 0.16809133,-0.010413 0.18296663,-0.041651 0.01785,-0.029751 0.019338,-0.1026399 l 0.00744,-0.1472659 V 0.92297817 L 1.1864138,0.77719983 Q 1.1834387,0.67455997 1.1462503,0.6581971 1.1105495,0.64034669 0.98410912,0.63142148 l -0.0282631,-0.001488 V 0.49308081 H 1.8915049 v 0.13685314 l -0.026776,0.001488 q -0.1725539,0.0133878 -0.1844542,0.041651 -0.019338,0.0282632 -0.019338,0.10412739 l -0.00744,0.14577834 V 2.2632464 l 0.00744,0.1472659 q 0.00297,0.1041274 0.041651,0.1204903 0.038676,0.014875 0.1621412,0.023801 l 0.026776,0.00149 v 0.1383406 z" style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.04647px;font-family:'Luxi Serif';-inkscape-font-specification:'Luxi Serif';fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.18958897;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" id="interface-icon-path889" />
+          </g>
+        </g>
+      </g>
+    </symbol>
+    <symbol xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="attribute-icon" viewBox="0 0 6.3499998 6.3499998">
+      <defs id="attribute-icon-defs2">
+        <linearGradient id="attribute-icon-linearGradient872">
+          <stop style="stop-color:#fcfcd0;stop-opacity:1" offset="0" id="attribute-icon-stop868" />
+          <stop style="stop-color:#fdfeff;stop-opacity:1" offset="1" id="attribute-icon-stop870" />
+        </linearGradient>
+        <linearGradient xlink:href="#attribute-icon-linearGradient872" id="attribute-icon-linearGradient874" x1="144.28606" y1="144.28606" x2="23.45978" y2="3.8806121" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.02544138,0,0,0.03435642,1.1855102,0.85122205)" />
+      </defs>
+      <g id="attribute-icon-layer1">
+        <g id="attribute-icon-g882">
+          <path id="attribute-icon-rect881" style="fill:url(#attribute-icon-linearGradient874);fill-opacity:1;stroke:#8c7539;stroke-width:0.26458333;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" d="M 1.7823593,2.6324779 H 4.8563469 V 4.1266974 H 1.7823593 Z" />
+          <rect style="fill:#4b7eb0;fill-opacity:0;stroke:none;stroke-width:0.157499;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.827451" id="attribute-icon-rect840" width="4.7432852" height="3.2324598" x="0.93108135" y="0.15395889" />
+        </g>
+      </g>
+    </symbol>
+
     <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="userSpaceOnUse">
       <path d="M1 1 5 3 1 5" fill="none" stroke="#63708a" stroke-width="1.1"/>
     </marker>
@@ -15,7 +69,7 @@
     </marker>
   </defs>
 
-  <path fill="#f8f9fc" d="M0 0H300V220H0Z"/>
+  <path fill="#ffffff" d="M0 0H300V220H0Z"/>
 
   <g fill="none" stroke="#63708a" stroke-width="1.2" stroke-linejoin="round">
     <path d="M76 122V68" marker-end="url(#inheritance)"/>
@@ -26,7 +80,7 @@
   <g stroke="#788398" stroke-width="1.1">
     <rect x="20" y="18" width="106" height="50" rx="4" fill="#e9e9f3"/>
     <rect x="210" y="18" width="72" height="50" rx="4" fill="#e9e9f3"/>
-    <rect x="20" y="122" width="114" height="82" rx="4" fill="#ffffff"/>
+    <rect x="20" y="122" width="114" height="82" rx="4" fill="#f9f9fc"/>
     <rect x="210" y="122" width="72" height="82" rx="4" fill="#e9e9f3"/>
   </g>
 
@@ -36,20 +90,33 @@
     <path d="M24 122H130Q134 122 134 126V144H20V126Q20 122 24 122Z"/>
     <path d="M214 122H278Q282 122 282 126V144H210V126Q210 122 214 122Z"/>
   </g>
-  <path d="M22 21V39M212 21V39M22 125V143M212 125V143" stroke="#6561a8" stroke-width="3"/>
+  <path d="M22 21V67M212 21V67M22 125V143M212 125V203" stroke="#6561a8" stroke-width="3"/>
   <path d="M20 144H134" fill="none" stroke="#788398" stroke-width="1.1"/>
 
+  <g fill="#dad9ea">
+    <rect x="28" y="22" width="16" height="16" rx="4"/>
+    <rect x="216" y="22" width="16" height="16" rx="4"/>
+    <rect x="28" y="126" width="16" height="16" rx="4"/>
+    <rect x="216" y="126" width="16" height="16" rx="4"/>
+  </g>
+  <use href="#class-icon" x="30" y="24" width="12" height="12"/>
+  <use href="#interface-icon" x="218" y="24" width="12" height="12"/>
+  <use href="#class-icon" x="30" y="128" width="12" height="12"/>
+  <use href="#class-icon" x="218" y="128" width="12" height="12"/>
+  <use href="#attribute-icon" x="28" y="151" width="10" height="10"/>
+  <use href="#attribute-icon" x="28" y="167" width="10" height="10"/>
+
   <g font-family="Roboto, Arial, sans-serif" fill="#1e2644">
-    <g font-size="14" font-weight="600" text-anchor="middle">
-      <text x="73" y="34">Set</text>
-      <text x="77" y="138">Source</text>
-      <text x="246" y="138">E</text>
+    <g font-size="12" font-weight="600">
+      <text x="49" y="34">Set</text>
+      <text x="49" y="138">Source</text>
+      <text x="237" y="138">E</text>
     </g>
-    <text x="246" y="34" text-anchor="middle" font-size="13" font-style="italic">Interface</text>
+    <text x="236" y="34" font-size="10" font-weight="600" font-style="italic">Interface</text>
     <text x="89" y="100" font-size="10" font-style="italic" fill="#63708a">&lt;&lt;bind&gt;&gt; C,E</text>
-    <g font-size="10">
-      <text x="31" y="161" font-weight="700">required : EString</text>
-      <text x="31" y="177">optional : EString</text>
+    <g font-size="9" fill="#566179">
+      <text x="42" y="161" font-weight="700">required : EString</text>
+      <text x="42" y="177">optional : EString</text>
     </g>
   </g>
 

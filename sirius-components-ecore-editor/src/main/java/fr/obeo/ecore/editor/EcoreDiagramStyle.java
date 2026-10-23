@@ -11,8 +11,9 @@ package fr.obeo.ecore.editor;
 
 /** Ecore-specific visual tokens; the Sirius renderer supplies fonts and interaction states. */
 public final class EcoreDiagramStyle {
-    public static final String CANVAS = "#f8f9fc";
+    public static final String CANVAS = "#ffffff";
     public static final String SURFACE = "#ffffff";
+    public static final String CONTENT_BACKGROUND = "var(--ecore-content-background, #f9f9fc)";
     public static final String HEADER_BACKGROUND = "var(--ecore-header-background, #e9e9f3)";
     public static final String TEXT = "#1e2644";
     public static final String SECONDARY = "#566179";

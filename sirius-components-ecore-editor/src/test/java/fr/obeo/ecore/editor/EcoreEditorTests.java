@@ -17,6 +17,7 @@ import org.eclipse.emf.ecore.*;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.sirius.components.interpreter.AQLInterpreter;
 import org.eclipse.sirius.components.interpreter.Status;
+import org.eclipse.sirius.components.interpreter.Result;
 import org.eclipse.sirius.components.view.*;
 import org.eclipse.sirius.components.view.diagram.*;
 import org.junit.jupiter.api.Test;
@@ -477,6 +478,25 @@ class EcoreEditorTests {
     }
 
     @Test
+    void packagesKeepFreeFormContentsAndCreationToolsInEveryValidationState() {
+        var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
+        var pack = diagram.getNodeDescriptions().stream().filter(n -> "EPackage".equals(n.getName())).findFirst().orElseThrow();
+        assertThat(pack.getStyle().getChildrenLayoutStrategy()).isInstanceOf(FreeFormLayoutStrategyDescription.class);
+        assertThat(pack.getConditionalStyles()).allSatisfy(style ->
+                assertThat(style.getStyle().getChildrenLayoutStrategy()).isInstanceOf(FreeFormLayoutStrategyDescription.class));
+        assertThat(pack.getReusedChildNodeDescriptions()).containsExactlyElementsOf(diagram.getNodeDescriptions().subList(0, 4));
+        for (var type : List.of("EClass", "EEnum", "EDataType", "EPackage")) {
+            var tool = pack.getPalette().getNodeTools().stream().filter(t -> t.getName().equals("New " + type)).findFirst().orElseThrow();
+            var change = (ChangeContext) tool.getBody().getFirst();
+            var created = evaluate(this.pack, change.getExpression()).asObject().orElseThrow();
+            assertThat(((org.eclipse.emf.ecore.EObject) created).eContainer()).isSameAs(this.pack);
+            var createView = (CreateView) change.getChildren().getFirst();
+            assertThat(createView.getElementDescription().getName()).isEqualTo(type);
+            assertThat(createView.getParentViewExpression()).isEqualTo("aql:selectedNode");
+        }
+    }
+
+    @Test
     void semanticAqlAndCreationToolsResolveAndIconsArePackaged() {
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
         evaluate(pack, diagram.getTitleExpression());
@@ -626,11 +646,12 @@ class EcoreEditorTests {
         }
     }
 
-    private void evaluate(Object self, String expression) {
+    private Result evaluate(Object self, String expression) {
         var diagram = mock(org.eclipse.sirius.components.diagrams.Diagram.class);
         when(diagram.getNodes()).thenReturn(List.of());
         var context = new org.eclipse.sirius.components.collaborative.diagrams.DiagramContext(diagram);
         var result = interpreter.evaluateExpression(Map.of("self", self, "diagramContext", context), expression);
         assertThat(result.getStatus()).as("%s: %s", expression, result).isEqualTo(Status.OK);
+        return result;
     }
 }

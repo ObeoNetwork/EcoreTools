@@ -21,7 +21,8 @@ import org.springframework.web.servlet.function.ServerRequest;
 class EcoreDiagramStyleTests {
     @Test
     void paletteMeetsTextAndNonTextContrastOnDiagramSurfaces() {
-        for (String background : List.of(EcoreDiagramStyle.SURFACE, EcoreDiagramStyle.CANVAS)) {
+        for (String background : List.of(EcoreDiagramStyle.SURFACE, EcoreDiagramStyle.CANVAS,
+                "#f9f9fc", "#f6fafa", "#f7f9fb", "#faf8fc")) {
             for (String text : List.of(EcoreDiagramStyle.TEXT, EcoreDiagramStyle.SECONDARY, EcoreDiagramStyle.RELATIONSHIP,
                     EcoreDiagramStyle.CLASS, EcoreDiagramStyle.ENUM, EcoreDiagramStyle.DATATYPE, EcoreDiagramStyle.PACKAGE, EcoreDiagramStyle.ERROR)) {
                 assertThat(contrast(text, background)).as("%s on %s", text, background).isGreaterThanOrEqualTo(4.5);
@@ -48,11 +49,12 @@ class EcoreDiagramStyleTests {
             assertThat(((FixedColor) style.getBackground()).getValue()).isEqualTo(EcoreDiagramStyle.SURFACE);
             assertThat(style.getBorderSize()).isEqualTo(1);
             assertThat(style.getBorderRadius()).isEqualTo(6);
-            assertThat(style.getChildrenLayoutStrategy()).isInstanceOf(ListLayoutStrategyDescription.class);
+            assertThat(style.getChildrenLayoutStrategy()).isInstanceOf("EPackage".equals(node.getName())
+                    ? FreeFormLayoutStrategyDescription.class : ListLayoutStrategyDescription.class);
             assertThat(node.getInsideLabel().getPosition()).isEqualTo(InsideLabelPosition.TOP_LEFT);
             assertThat(node.getInsideLabel().getStyle().getFontSize()).isEqualTo(14);
             assertThat(node.getInsideLabel().getStyle().isBold()).isTrue();
-            assertThat(Integer.parseInt(node.getDefaultHeightExpression())).isLessThanOrEqualTo(44);
+            assertThat(Integer.parseInt(node.getDefaultHeightExpression())).isLessThanOrEqualTo("EPackage".equals(node.getName()) ? 240 : 44);
             for (var member : node.getChildrenDescriptions()) {
                 assertThat(member.getInsideLabel().getStyle().getFontSize()).isEqualTo(13);
                 assertThat(member.getInsideLabel().getStyle().isBold()).isFalse();

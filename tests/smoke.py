@@ -106,12 +106,12 @@ subscription = """
 subscription($input:DiagramEventInput!) {
  diagramEvent(input:$input) { __typename
   ... on DiagramRefreshedEventPayload { diagram {
-   id nodes { NODE childNodes { NODE } borderNodes { NODE } } edges {
+   id nodes { NODE childNodes { NODE childNodes { NODE } } borderNodes { NODE } } edges {
     id descriptionId sourceId targetId targetObjectId centerLabel { id text style { bold color } }
     beginLabel { id text style { bold color } } endLabel { id text style { bold color } }
     style { sourceArrow targetArrow lineStyle }
    }
-   layoutData { nodeLayoutData { id size { width height } resizedByUser } }
+   layoutData { nodeLayoutData { id position { x y } size { width height } resizedByUser } }
   }}
   ... on ErrorPayload { messages { body } }
  }
@@ -443,7 +443,7 @@ try:
         invoke("New EEnumLiteral", enumeration["id"])
         updated = refreshed(lambda d: len(next(n for n in d["nodes"] if n["id"] == enumeration["id"])["childNodes"]) == count)
     enumeration = next(n for n in updated["nodes"] if n["id"] == enumeration["id"])
-    assert enumeration["style"]["background"] == "#ffffff", enumeration
+    assert enumeration["style"]["background"] == "var(--ecore-content-background, #f9f9fc)", enumeration
     assert all(n["style"]["background"] == "transparent" for n in enumeration["childNodes"]), enumeration
     result = graphql("""
     mutation($input:LayoutDiagramInput!) { layoutDiagram(input:$input) { __typename
@@ -461,7 +461,7 @@ try:
     bounds = next(n for n in resized["layoutData"]["nodeLayoutData"] if n["id"] == enumeration["id"])
     assert bounds["size"] == {"width": 400, "height": 280}, bounds
     enumeration = next(n for n in resized["nodes"] if n["id"] == enumeration["id"])
-    assert enumeration["style"]["background"] == "#ffffff", enumeration
+    assert enumeration["style"]["background"] == "var(--ecore-content-background, #f9f9fc)", enumeration
     assert all(n["style"]["background"] == "transparent" for n in enumeration["childNodes"]), enumeration
     invoke("Constraints", book["id"])
     with_constraints = refreshed(lambda d: len(d["nodes"]) == 7)
@@ -720,7 +720,49 @@ try:
         current = refreshed(lambda d: not any(e["targetObjectId"] in pair_ids for e in d["edges"])
                             and not any(c["targetObjectId"] in pair_ids for n in d["nodes"] for c in n["childNodes"]))
         assert {r["id"] for r in objects("aql:editingContext.allContents()->filter(ecore::EReference)")} == reference_ids_before
-    print("PASS: SVG, project, diagram, contextual related-element dialogs/imports, untyped reference rows and retyping, reference rows/edges, editable opposite endpoint labels with independent styles, remove/reimport, red borders/labels, mandatory bold and derived blue labels, operations, distinct comment/constraint styles, datatype editing, enum resize backgrounds, type parameter ports, reference/composition creation targeting T, background documentation, annotation assignment/reconnection, source/target reconnection for references, generic ports, compositions, opposites and supertypes, rejected cycles and invalid endpoints, initialized supertype arguments, dotted indirect inheritance, bidirectional reference creation and paired deletion from edges and rows")
+    invoke("New EPackage")
+    current = refreshed(lambda d: any(n["insideLabel"]["text"] == "NewPackage" for n in d["nodes"]))
+    package = next(n for n in current["nodes"] if n["insideLabel"]["text"] == "NewPackage")
+    assert package["defaultWidth"] == 360 and package["defaultHeight"] == 240, package
+    edit(package["insideLabel"]["id"], "nested")
+    current = refreshed(lambda d: any(n["id"] == package["id"] and n["insideLabel"]["text"] == "nested" for n in d["nodes"]))
+    children = {}
+    for kind in ("EClass", "EDataType", "EEnum", "EPackage"):
+        invoke("New " + kind, package["id"])
+        current = refreshed(lambda d: len(next(n for n in d["nodes"] if n["id"] == package["id"])["childNodes"]) == len(children) + 1)
+        parent = next(n for n in current["nodes"] if n["id"] == package["id"])
+        child = next(n for n in parent["childNodes"] if n["insideLabel"]["text"] == "New" + kind[1:])
+        children[kind] = child
+        assert child["targetObjectId"] in {o["id"] for o in objects(
+            "aql:editingContext.allContents()->filter(ecore::EPackage)->select(p | p.name = 'nested').eContents()")}, child
+        assert parent["style"]["background"] == "var(--ecore-content-background, #f9f9fc)", parent
+    invoke("New EAttribute", children["EClass"]["id"])
+    current = refreshed(lambda d: any(c["childNodes"] for n in d["nodes"] if n["id"] == package["id"]
+                                     for c in n["childNodes"] if c["id"] == children["EClass"]["id"]))
+    invoke("New EClass", children["EPackage"]["id"])
+    current = refreshed(lambda d: any(c["childNodes"] for n in d["nodes"] if n["id"] == package["id"]
+                                     for c in n["childNodes"] if c["id"] == children["EPackage"]["id"]))
+    # Reimporting keeps the semantic owner and restores the child inside its package.
+    invoke("Remove from diagram", children["EDataType"]["id"])
+    current = refreshed(lambda d: len(next(n for n in d["nodes"] if n["id"] == package["id"])["childNodes"]) == 3)
+    invoke("Import existing elements", package["id"], selected=[children["EDataType"]["targetObjectId"]])
+    current = refreshed(lambda d: len(next(n for n in d["nodes"] if n["id"] == package["id"])["childNodes"]) == 4)
+    parent = next(n for n in current["nodes"] if n["id"] == package["id"])
+    children["EDataType"] = next(n for n in parent["childNodes"] if n["targetObjectId"] == children["EDataType"]["targetObjectId"])
+    positions = {"EClass": (30, 70), "EDataType": (260, 70), "EEnum": (30, 200), "EPackage": (260, 200)}
+    result = graphql("""mutation($input:LayoutDiagramInput!) { layoutDiagram(input:$input) { __typename
+     ... on ErrorPayload { messages { body } }
+    }}""", input={"id": uid(), "editingContextId": context, "representationId": diagram, "cause": "layout",
+                  "diagramLayoutData": {"nodeLayoutData": [{"id": child["id"],
+                      "position": {"x": positions[kind][0], "y": positions[kind][1]},
+                      "size": {"width": 200, "height": 110}, "resizedByUser": True, "movedByUser": True,
+                      "handleLayoutData": [], "minComputedSize": {"width": 0, "height": 0}}
+                      for kind, child in children.items()],
+                      "edgeLayoutData": [], "labelLayoutData": [], "autoLayoutState": "UNCHANGED"}})["layoutDiagram"]
+    assert result["__typename"] == "SuccessPayload", result
+    current = refreshed(lambda d: all(any(n["id"] == child["id"] and n["position"] == {"x": positions[kind][0], "y": positions[kind][1]}
+                                         for n in d["layoutData"]["nodeLayoutData"]) for kind, child in children.items()))
+    print("PASS: SVG, project, diagram, contextual related-element dialogs/imports, untyped reference rows and retyping, reference rows/edges, editable opposite endpoint labels with independent styles, remove/reimport, red borders/labels, mandatory bold and derived blue labels, operations, distinct comment/constraint styles, datatype editing, enum resize backgrounds, type parameter ports, reference/composition creation targeting T, background documentation, annotation assignment/reconnection, source/target reconnection for references, generic ports, compositions, opposites and supertypes, rejected cycles and invalid endpoints, initialized supertype arguments, dotted indirect inheritance, bidirectional reference creation and paired deletion from edges and rows, package creation/import with free-form child positions and nested packages")
     print(BASE + "/projects/" + project["project"]["id"] + "/edit/" + diagram)
 finally:
     ws.close()

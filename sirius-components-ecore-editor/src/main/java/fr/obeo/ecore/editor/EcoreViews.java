@@ -112,6 +112,10 @@ public class EcoreViews {
         instance.getPalette().setDeleteTool(d.newDeleteTool().name("Keep datatype").preconditionExpression("aql:false").build());
         data.getChildrenDescriptions().add(instance);
         var pack = node("EPackage", "aql:self.eSubpackages", packageColor, true);
+        pack.setDefaultWidthExpression("360");
+        pack.setDefaultHeightExpression("240");
+        pack.getStyle().setChildrenLayoutStrategy(d.newFreeFormLayoutStrategyDescription().build());
+        pack.getConditionalStyles().forEach(s -> s.getStyle().setChildrenLayoutStrategy(d.newFreeFormLayoutStrategyDescription().build()));
         pack.getReusedChildNodeDescriptions().addAll(List.of(clazz, enumeration, data, pack));
         var top = List.of(clazz, enumeration, data, pack);
         var note = node("EStringToStringMapEntry", "aql:self.ecoreNotes(diagramContext)", noteColor, false);
