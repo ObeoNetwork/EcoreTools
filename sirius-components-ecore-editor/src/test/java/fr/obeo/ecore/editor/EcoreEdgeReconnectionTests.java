@@ -114,9 +114,8 @@ class EcoreEdgeReconnectionTests {
         services.ecoreCreate(book, "ETypeParameter");
         services.ecoreSuperType(library, book);
         var binding = library.getEGenericSuperTypes().getFirst();
-        var argument = EcoreFactory.eINSTANCE.createEGenericType();
+        var argument = binding.getETypeArguments().getFirst();
         argument.setEClassifier(EcorePackage.Literals.ESTRING);
-        binding.getETypeArguments().add(argument);
         reconnect(2, true, library, library, book, other);
         assertThat(library.getEGenericSuperTypes()).isEmpty();
         assertThat(other.getEGenericSuperTypes()).containsExactly(binding);

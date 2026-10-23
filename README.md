@@ -45,10 +45,15 @@ PostgreSQL runs on local port **5435** with its own persistent volume.
   `[0..*] children`, or `find(query : EString) : Book`. Both ends of an opposite
   reference have independently editable labels. References can target generic
   type parameter ports such as `T`.
+- **Bidirectional reference** creates both opposite references in one action.
+  Deleting a reference, whether shown as an edge or a class member, also deletes
+  its opposite. Both owners must be editable.
 - Reconnect either end of a reference or inheritance edge by dragging its
   endpoint. Opposite references move together. Inheritance cycles, duplicate
   supertypes, and edits to read-only elements are rejected. For an inheritance
   edge projected through a hidden parent, import the direct parent first.
+  These indirect inheritance links are dotted. New supertype links initialize
+  one generic argument per target type parameter, displayed as `?` until set.
 - Mandatory attributes and references use bold labels; derived features use
   a `/` prefix and blue labels. EMF validation errors turn borders and labels red.
   The diagram uses SVG icons and EcoreTools-inspired colors.

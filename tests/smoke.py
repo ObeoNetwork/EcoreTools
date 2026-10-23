@@ -109,7 +109,7 @@ subscription($input:DiagramEventInput!) {
    id nodes { NODE childNodes { NODE } borderNodes { NODE } } edges {
     id descriptionId sourceId targetId targetObjectId centerLabel { id text style { bold color } }
     beginLabel { id text style { bold color } } endLabel { id text style { bold color } }
-    style { sourceArrow }
+    style { sourceArrow targetArrow lineStyle }
    }
    layoutData { nodeLayoutData { id size { width height } resizedByUser } }
   }}
@@ -155,7 +155,8 @@ def palette(element):
 
 
 def tools(element):
-    entries = palette(element)["paletteEntries"]
+    available = palette(element)
+    entries = available["paletteEntries"] + available["quickAccessTools"]
     return {tool["label"]: tool["id"] for entry in entries for tool in entry.get("tools", [entry]) if "label" in tool}
 
 
@@ -671,7 +672,55 @@ try:
         assert refused["__typename"] == "ErrorPayload" and any(message in m["body"] for m in refused["messages"]), refused
     assert objects("aql:editingContext.allContents()->filter(ecore::EClass)->select(c | c.name = 'Book').eSuperTypes")[0]["id"] == library["targetObjectId"]
     assert [c["id"] for c in objects("aql:editingContext.allContents()->filter(ecore::EClass)->select(c | c.name = 'ReconnectA' and c.eSuperTypes->isEmpty())")] == [reconnect_a["targetObjectId"]]
-    print("PASS: SVG, project, diagram, contextual related-element dialogs/imports, untyped reference rows and retyping, reference rows/edges, editable opposite endpoint labels with independent styles, remove/reimport, red borders/labels, mandatory bold and derived blue labels, operations, distinct comment/constraint styles, datatype editing, enum resize backgrounds, type parameter ports, reference/composition creation targeting T, background documentation, annotation assignment/reconnection, source/target reconnection for references, generic ports, compositions, opposites and supertypes, rejected cycles and invalid endpoints")
+    for name in ("T", "U"):
+        previous_ports = {p["id"] for n in current["nodes"] for p in n["borderNodes"]}
+        invoke("New ETypeParameter", reconnect_b["id"])
+        current = refreshed(lambda d: any(p["id"] not in previous_ports for n in d["nodes"] for p in n["borderNodes"]))
+        port = next(p for n in current["nodes"] for p in n["borderNodes"] if p["id"] not in previous_ports)
+        if name != "T":
+            edit(port["insideLabel"]["id"], name)
+            current = refreshed(lambda d: any(p["insideLabel"]["text"] == name for n in d["nodes"] if n["id"] == reconnect_b["id"] for p in n["borderNodes"]))
+    invoke_edge("Supertype", reconnect_a, reconnect_b)
+    current = refreshed(lambda d: any(e["sourceId"] == reconnect_a["id"] and e["targetId"] == reconnect_b["id"] for e in d["edges"]))
+    generic_inheritance = next(e for e in current["edges"] if e["sourceId"] == reconnect_a["id"] and e["targetId"] == reconnect_b["id"])
+    assert generic_inheritance["centerLabel"]["text"] == "<<bind>> ?,?", generic_inheritance
+    assert generic_inheritance["style"]["lineStyle"] == "Solid", generic_inheritance
+    arguments = objects("aql:editingContext.allContents()->filter(ecore::EClass)->select(c | c.name = 'ReconnectA').eGenericSuperTypes.eTypeArguments")
+    assert len(arguments) == 2, arguments
+    invoke_edge("Supertype", reconnect_b, source)
+    current = refreshed(lambda d: any(e["sourceId"] == reconnect_b["id"] and e["targetId"] == source["id"] for e in d["edges"]))
+    invoke("Remove from diagram", reconnect_b["id"])
+    current = refreshed(lambda d: all(n["id"] != reconnect_b["id"] for n in d["nodes"]))
+    projected = next((e for e in current["edges"] if e["sourceId"] == reconnect_a["id"] and e["targetId"] == source["id"]), None)
+    assert projected is not None, {"nodes": [(n["id"], n["insideLabel"]["text"]) for n in current["nodes"]],
+                                   "edges": [(e["sourceId"], e["targetId"], e["descriptionId"]) for e in current["edges"]]}
+    assert projected["style"]["lineStyle"] == "Dot", projected
+    invoke("Import existing elements", selected=[reconnect_b["targetObjectId"]])
+    current = refreshed(lambda d: any(e["sourceId"] == reconnect_a["id"] and e["targetId"] == reconnect_b["id"] for e in d["edges"]))
+    assert next(e for e in current["edges"] if e["sourceId"] == reconnect_a["id"] and e["targetId"] == reconnect_b["id"])["style"]["lineStyle"] == "Solid"
+    assert objects("aql:editingContext.allContents()->filter(ecore::EClass)->select(c | c.name = 'ReconnectA').eGenericSuperTypes.eTypeArguments") == arguments
+    reference_ids_before = {r["id"] for r in objects("aql:editingContext.allContents()->filter(ecore::EReference)")}
+    for as_row in (False, True):
+        invoke_edge("Bidirectional reference", reconnect_a, reconnect_b)
+        pair_ids = {r["id"] for r in objects("aql:editingContext.allContents()->filter(ecore::EReference)")} - reference_ids_before
+        assert len(pair_ids) == 2, pair_ids
+        current = refreshed(lambda d: any(e["targetObjectId"] in pair_ids for e in d["edges"]))
+        rendered = [e for e in current["edges"] if e["targetObjectId"] in pair_ids]
+        assert len(rendered) == 1, rendered
+        paired_edge = rendered[0]
+        assert paired_edge["beginLabel"] and paired_edge["endLabel"], paired_edge
+        assert paired_edge["style"]["sourceArrow"] == paired_edge["style"]["targetArrow"] == "InputArrow", paired_edge
+        element_id = paired_edge["id"]
+        if as_row:
+            invoke("Remove from diagram", reconnect_b["id"])
+            current = refreshed(lambda d: all(n["id"] != reconnect_b["id"] for n in d["nodes"]))
+            row = next(c for n in current["nodes"] if n["id"] == reconnect_a["id"] for c in n["childNodes"] if c["targetObjectId"] in pair_ids)
+            element_id = row["id"]
+        invoke("Delete from model", element_id)
+        current = refreshed(lambda d: not any(e["targetObjectId"] in pair_ids for e in d["edges"])
+                            and not any(c["targetObjectId"] in pair_ids for n in d["nodes"] for c in n["childNodes"]))
+        assert {r["id"] for r in objects("aql:editingContext.allContents()->filter(ecore::EReference)")} == reference_ids_before
+    print("PASS: SVG, project, diagram, contextual related-element dialogs/imports, untyped reference rows and retyping, reference rows/edges, editable opposite endpoint labels with independent styles, remove/reimport, red borders/labels, mandatory bold and derived blue labels, operations, distinct comment/constraint styles, datatype editing, enum resize backgrounds, type parameter ports, reference/composition creation targeting T, background documentation, annotation assignment/reconnection, source/target reconnection for references, generic ports, compositions, opposites and supertypes, rejected cycles and invalid endpoints, initialized supertype arguments, dotted indirect inheritance, bidirectional reference creation and paired deletion from edges and rows")
     print(BASE + "/projects/" + project["project"]["id"] + "/edit/" + diagram)
 finally:
     ws.close()

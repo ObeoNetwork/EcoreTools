@@ -29,5 +29,10 @@ The view palette and direct-edit semantics are based on Eclipse EcoreTools'
 Design / Entities description in ecore.odesign. The Sirius Web integration
 follows the Java view, Spring configuration and import-tool patterns in
 KEML and the Eclipse Sirius Web Papaya example.
+Paired reference deletion, bidirectional reference creation, indirect
+inheritance styling and generic supertype initialization adapt behaviors from
+ObeoNetwork/EcoreTools, revision 450bb371111c1e4f37c9a370a42afe5970769742,
+Copyright (c) 2024 Obeo, distributed here under EPL-2.0.
+https://github.com/ObeoNetwork/EcoreTools
 
 Third-party dependencies retain their own licenses and notices.

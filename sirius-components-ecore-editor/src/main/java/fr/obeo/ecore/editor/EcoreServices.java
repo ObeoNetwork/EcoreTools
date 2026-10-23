@@ -57,13 +57,22 @@ public class EcoreServices {
 
     public List<EObject> ecoreNotes(EObject self, DiagramContext context) {
         var visible = visibleObjects(context);
+        var visibleReferences = new HashSet<String>();
+        if (context != null) {
+            var deleted = context.viewDeletionRequests().stream().map(request -> request.getElementId()).collect(java.util.stream.Collectors.toSet());
+            context.diagram().getEdges().stream().filter(edge -> !deleted.contains(edge.getId()))
+                    .forEach(edge -> visibleReferences.add(edge.getTargetObjectId()));
+        }
         var ids = new EObjectIDManager();
         var result = new ArrayList<EObject>();
         if (self instanceof EModelElement model) collectNotes(model, result);
         for (var element : ecoreImportCandidates(self)) {
             if (element instanceof EModelElement model && visible.contains(ids.findId(model).orElse(""))) collectNotes(model, result);
             element.eAllContents().forEachRemaining(child -> {
-                if (child instanceof EModelElement model && visible.contains(ids.findId(model).orElse(""))) collectNotes(model, result);
+                if (child instanceof EModelElement model) {
+                    String id = ids.findId(model).orElse("");
+                    if (visible.contains(id) || child instanceof EReference && visibleReferences.contains(id)) collectNotes(model, result);
+                }
             });
         }
         return result.stream().distinct().toList();
@@ -160,8 +169,6 @@ public class EcoreServices {
         Set<String> deleted = new HashSet<>();
         context.viewDeletionRequests().forEach(request -> deleted.add(request.getElementId()));
         collectVisible(context.diagram().getNodes(), deleted, result);
-        context.diagram().getEdges().stream().filter(edge -> !deleted.contains(edge.getId()))
-                .forEach(edge -> result.add(edge.getTargetObjectId()));
         context.viewCreationRequests().forEach(request -> result.add(request.getTargetObjectId()));
         return result;
     }
@@ -318,9 +325,26 @@ public class EcoreServices {
         return reference;
     }
 
+    public EReference ecoreBidirectionalReference(EClass source, EObject target) {
+        if (!(target instanceof EClass type)) throw toolError("A bidirectional reference must connect two EClasses");
+        if (isReadOnly(source) || isReadOnly(type)) throw toolError("Both reference owners must be editable");
+        return ecoreCreateOpposite(ecoreReference(source, type, false));
+    }
+
+    public List<EReference> ecoreReferencesToDelete(EReference reference) {
+        var opposite = reference.getEOpposite();
+        var references = opposite == null || opposite == reference ? List.of(reference) : List.of(opposite, reference);
+        if (references.stream().anyMatch(this::isReadOnly)) throw toolError("Both references must be editable before deleting the pair");
+        return references;
+    }
+
     public EClass ecoreSuperType(EClass source, EObject target) {
         if (target instanceof EClass type && source != type && !source.isSuperTypeOf(type)
-                && !source.getESuperTypes().contains(type)) source.getESuperTypes().add(type);
+                && !source.getESuperTypes().contains(type)) {
+            var generic = EcoreFactory.eINSTANCE.createEGenericType();
+            retargetGenericType(generic, type);
+            source.getEGenericSuperTypes().add(generic);
+        }
         return source;
     }
 

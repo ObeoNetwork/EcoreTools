@@ -346,8 +346,16 @@ class EcoreEditorTests {
         when(visible.getTargetObjectId()).thenReturn(ancestorId);
         var diagram = mock(org.eclipse.sirius.components.diagrams.Diagram.class);
         when(diagram.getNodes()).thenReturn(List.of(visible));
+        String parentId = java.util.UUID.randomUUID().toString();
+        ids.setId(parent, parentId);
+        var oldInheritance = mock(org.eclipse.sirius.components.diagrams.Edge.class);
+        when(oldInheritance.getId()).thenReturn("parent-inheritance");
+        when(oldInheritance.getTargetObjectId()).thenReturn(parentId);
+        when(diagram.getEdges()).thenReturn(List.of(oldInheritance));
         var context = new org.eclipse.sirius.components.collaborative.diagrams.DiagramContext(diagram);
         assertThat(services.ecoreVisibleSuperTypes(book, context)).containsExactly(ancestor);
+        services.ecoreNote(parent, false);
+        assertThat(services.ecoreNotes(pack, context)).isEmpty();
         assertThat(services.ecoreReferenceRows(parent, context)).hasSize(1);
         String bookId = java.util.UUID.randomUUID().toString();
         ids.setId(book, bookId);

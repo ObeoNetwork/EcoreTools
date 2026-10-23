@@ -89,6 +89,7 @@ public class EcoreViews {
         referenceRow.getPalette().setLabelEditTool(d.newLabelEditTool().name("Edit reference as attribute")
                 .initialDirectEditLabelExpression("aql:self.ecoreReferenceRowLabel()")
                 .body(v.newChangeContext().expression("aql:self.ecoreEditReferenceRow(newLabel)").build()).build());
+        referenceRow.getPalette().setDeleteTool(deleteReference());
         clazz.getChildrenDescriptions().addAll(List.of(attribute, operation, referenceRow));
         clazz.getBorderNodesDescriptions().add(parameter);
         clazz.getPalette().getNodeTools().addAll(List.of(createTool("EAttribute", null), createTool("EOperation", null), createTool("ETypeParameter", null), createTool("EReference", null)));
@@ -169,6 +170,9 @@ public class EcoreViews {
         }
         clazz.getPalette().getEdgeTools().add(d.newEdgeTool().name("Supertype").targetElementDescriptions(clazz)
                 .body(v.newChangeContext().expression("aql:semanticEdgeSource.ecoreSuperType(semanticEdgeTarget)").build()).build());
+        clazz.getPalette().getEdgeTools().add(d.newEdgeTool().name("Bidirectional reference")
+                .iconURLsExpression("/icons/ecore/EReference.svg").targetElementDescriptions(clazz)
+                .body(v.newChangeContext().expression("aql:semanticEdgeSource.ecoreBidirectionalReference(semanticEdgeTarget)").build()).build());
         var reference = d.newEdgeDescription().name("EReference").domainType("ecore::EReference")
                 .semanticCandidatesExpression("aql:self.ecoreReferences()")
                 .preconditionExpression("aql:self.eOpposite = null")
@@ -177,7 +181,7 @@ public class EcoreViews {
                 .centerLabelExpression("aql:self.ecoreLabel()")
                 .style(edgeStyle(ink, ArrowStyle.NONE, ArrowStyle.INPUT_ARROW))
                 .conditionalStyles(referenceStyles("self.lowerBound > 0", "self.derived", "self.ecoreHasError()", ArrowStyle.NONE))
-                .palette(d.newEdgePalette().centerLabelEditTool(edit()).deleteTool(delete()).edgeReconnectionTools(
+                .palette(d.newEdgePalette().centerLabelEditTool(edit()).deleteTool(deleteReference()).edgeReconnectionTools(
                         d.newSourceEdgeEndReconnectionTool().name("Reconnect reference source")
                                 .body(v.newChangeContext().expression("aql:edgeSemanticElement.ecoreReconnectReference(semanticReconnectionTarget, true)").build()).build(),
                         d.newTargetEdgeEndReconnectionTool().name("Reconnect reference target")
@@ -220,6 +224,10 @@ public class EcoreViews {
                                         .body(v.newChangeContext().expression("aql:edgeSemanticElement.ecoreReconnectSuperType(semanticReconnectionSource, semanticReconnectionTarget, false)").build()).build())
                         .build()).build();
         inheritance.getStyle().setItalic(true);
+        inheritance.getConditionalStyles().add(d.newConditionalEdgeStyle().condition("aql:not self.eSuperTypes->includes(semanticEdgeTarget)")
+                .color(ink).borderColor(ink).borderSize(0).edgeWidth(1).fontSize(13).italic(true)
+                .sourceArrowStyle(ArrowStyle.NONE).targetArrowStyle(ArrowStyle.INPUT_CLOSED_ARROW)
+                .edgeType(EdgeType.MANHATTAN).lineStyle(LineStyle.DOT).showIcon(false).build());
         inheritance.getConditionalStyles().add(d.newConditionalEdgeStyle().condition("aql:semanticEdgeTarget.interface")
                 .color(ink).borderColor(ink).borderSize(0).edgeWidth(1).fontSize(13).italic(true)
                 .sourceArrowStyle(ArrowStyle.NONE).targetArrowStyle(ArrowStyle.INPUT_CLOSED_ARROW)
@@ -308,6 +316,11 @@ public class EcoreViews {
     }
     private DeleteTool delete() {
         return d.newDeleteTool().name("Delete from model").body(v.newDeleteElement().build()).build();
+    }
+    private DeleteTool deleteReference() {
+        return d.newDeleteTool().name("Delete reference and opposite")
+                .body(v.newFor().expression("aql:self.ecoreReferencesToDelete()").iteratorName("reference")
+                        .children(v.newChangeContext().expression("aql:reference").children(v.newDeleteElement().build()).build()).build()).build();
     }
     private NodeTool createTool(String type, NodeDescription description) {
         var change = v.newChangeContext().expression("aql:self.ecoreCreate('" + type + "')");
