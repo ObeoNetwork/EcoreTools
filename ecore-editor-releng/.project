@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2026 Obeo. SPDX-License-Identifier: EPL-2.0 -->
+<projectDescription>
+  <name>ecore-editor-releng</name>
+  <comment/>
+  <projects/>
+  <buildSpec>
+    <buildCommand>
+      <name>org.eclipse.m2e.core.maven2Builder</name>
+      <arguments/>
+    </buildCommand>
+  </buildSpec>
+  <natures>
+    <nature>org.eclipse.m2e.core.maven2Nature</nature>
+  </natures>
+</projectDescription>

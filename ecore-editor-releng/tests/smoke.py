@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: EPL-2.0
 
 """Exercise a running application through its public GraphQL API.
-Usage: python3.13 tests/smoke.py http://localhost:8083
+Usage (from ecore-editor-releng): python3.13 tests/smoke.py http://localhost:8083
 Requires requests and websocket-client. Creates a dedicated verification project.
 """
 import json

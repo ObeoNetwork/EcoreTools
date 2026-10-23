@@ -12,13 +12,13 @@ reusable editor component plus a standalone application to try it out.
 You need JDK 21+, Maven, and Docker with Compose. The project currently uses
 Sirius Web **2026.7.3** and Spring Boot **4.1.0**.
 Sirius dependencies come from GitHub Packages; configure Maven credentials
-for the repository IDs declared in [pom.xml](pom.xml).
+for the repository IDs declared in [the releng POM](ecore-editor-releng/pom.xml).
 
 From the repository root:
 
 ```sh
-mvn clean verify
-docker compose up -d --wait
+mvn -f ecore-editor-releng/pom.xml clean verify
+docker compose -f ecore-editor-releng/compose.yaml up -d --wait
 java -jar sirius-components-ecore-editor-application/target/ecore-editor.jar \
   --spring.profiles.active=dev --server.port=8083
 ```
@@ -28,9 +28,19 @@ Open [localhost:8083](http://localhost:8083) and create a project using the
 classes, generics, references, opposites, an enum, and a constraint.
 
 PostgreSQL runs on local port **5435** with its own persistent volume.
-`docker compose stop` keeps your data. Outside the `dev` profile, set
+`docker compose -f ecore-editor-releng/compose.yaml stop` keeps your data.
+Outside the `dev` profile, set
 `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and
 `SPRING_DATASOURCE_PASSWORD` for your database.
+
+## Import into Eclipse
+
+Use **File → Import → Maven → Existing Maven Projects**, select the repository
+root, and import all three projects. The releng project owns the parent POM;
+m2e configures the Java projects from their POMs. Java 21 and m2e are required.
+For an existing workspace, remove the old `ecore-editor-parent` entry without
+deleting its files, import `ecore-editor-releng`, then run **Maven → Update
+Project** on all three projects.
 
 ## Work with a diagram
 
@@ -73,11 +83,12 @@ PostgreSQL runs on local port **5435** with its own persistent volume.
 
 | Module | Purpose |
 | --- | --- |
+| `ecore-editor-releng` | Parent POM, complete Maven reactor, Docker Compose, and API checks |
 | `sirius-components-ecore-editor` | View descriptions, AQL services, label editing, validation styles, and SVG icons |
 | `sirius-components-ecore-editor-application` | Spring Boot application with the standard Sirius Web frontend and Example template |
 
-Run `mvn install` from the root, then add the component to a compatible
-Sirius Web application:
+Run `mvn -f ecore-editor-releng/pom.xml install` from the root, then add the
+component to a compatible Sirius Web application:
 
 ```xml
 <dependency>
@@ -98,10 +109,12 @@ registers the Ecore metamodel, EMF Edit support, views, services, and icons.
 
 ## Tests
 
-`mvn verify` runs the Java tests across the whole reactor. With the application
-running, exercise the public GraphQL API and Example template:
+`mvn -f ecore-editor-releng/pom.xml verify` runs the Java tests across the whole
+reactor. With the application running, exercise the public GraphQL API and Example
+template from the releng project:
 
 ```sh
+cd ecore-editor-releng
 python3.13 -m venv .venv
 .venv/bin/pip install -r tests/requirements.txt
 .venv/bin/python tests/smoke.py http://localhost:8083

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: EPL-2.0
 
 """Verify that the Example template includes its model and a saved, laid-out diagram.
-Usage: python3.13 tests/example.py http://localhost:8083
+Usage (from ecore-editor-releng): python3.13 tests/example.py http://localhost:8083
 """
 import json
 import sys

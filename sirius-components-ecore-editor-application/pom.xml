@@ -4,8 +4,9 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>fr.obeo.ecore</groupId>
-    <artifactId>ecore-editor-parent</artifactId>
+    <artifactId>ecore-editor-releng</artifactId>
     <version>0.1.0-SNAPSHOT</version>
+    <relativePath>../ecore-editor-releng/pom.xml</relativePath>
   </parent>
   <artifactId>sirius-components-ecore-editor-application</artifactId>
   <dependencies>

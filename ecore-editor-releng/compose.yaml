@@ -1,6 +1,8 @@
 # Copyright (c) 2026 Obeo.
 # SPDX-License-Identifier: EPL-2.0
 
+name: ecore-editor
+
 services:
   database:
     image: postgres:16

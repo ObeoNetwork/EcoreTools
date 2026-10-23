@@ -7,6 +7,5 @@
 .env
 .venv/
 __pycache__/
-**/.project
 **/.classpath
 **/.settings/

@@ -9,9 +9,11 @@
     <relativePath/>
   </parent>
   <groupId>fr.obeo.ecore</groupId>
-  <artifactId>ecore-editor-parent</artifactId>
+  <artifactId>ecore-editor-releng</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
+  <name>Ecore Editor releng</name>
+  <description>Parent and complete Maven reactor for the Ecore Editor.</description>
   <licenses>
     <license>
       <name>Eclipse Public License 2.0</name>
@@ -24,8 +26,8 @@
     <sirius.web.version>2026.7.3</sirius.web.version>
   </properties>
   <modules>
-    <module>sirius-components-ecore-editor</module>
-    <module>sirius-components-ecore-editor-application</module>
+    <module>../sirius-components-ecore-editor</module>
+    <module>../sirius-components-ecore-editor-application</module>
   </modules>
   <build>
     <resources>
