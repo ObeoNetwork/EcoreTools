@@ -144,7 +144,7 @@ class EcoreEditorTests {
                             .filter(s -> interpreter.evaluateExpression(Map.of("self", feature), s.getCondition()).asBoolean().orElseThrow())
                             .map(ConditionalInsideLabelStyle::getStyle).findFirst().orElse(label.getStyle());
                     assertThat(style.isBold()).isEqualTo(bold);
-                    assertThat(style.getLabelColor().getName()).isEqualTo(invalid ? "Error" : derived ? "Derived" : "Ink");
+                    assertThat(style.getLabelColor().getName()).isEqualTo(invalid ? "Error" : derived ? "Derived" : "Secondary");
                 }
                 for (boolean containment : List.of(false, true)) {
                     reference.setContainment(containment);
@@ -152,7 +152,7 @@ class EcoreEditorTests {
                             .filter(s -> interpreter.evaluateExpression(Map.of("self", reference), s.getCondition()).asBoolean().orElseThrow())
                             .map(EdgeStyle.class::cast).findFirst().orElse(edge.getStyle());
                     assertThat(style.isBold()).isEqualTo(bold);
-                    assertThat(style.getColor().getName()).isEqualTo(invalid ? "Error" : derived ? "Derived" : "Ink");
+                    assertThat(style.getColor().getName()).isEqualTo(invalid ? "Error" : derived ? "Derived" : "Relationship");
                     assertThat(style.getSourceArrowStyle()).isEqualTo(containment ? ArrowStyle.FILL_DIAMOND : ArrowStyle.NONE);
                 }
             }
@@ -199,7 +199,7 @@ class EcoreEditorTests {
     }
 
     @ParameterizedTest
-    @CsvSource({"false,false,false,Ink", "true,false,false,Derived", "false,true,false,Derived", "true,true,false,Derived",
+    @CsvSource({"false,false,false,Relationship", "true,false,false,Derived", "false,true,false,Derived", "true,true,false,Derived",
             "false,true,true,Error"})
     void oppositeLinkPreservesDerivedAndErrorColors(boolean derived, boolean oppositeDerived, boolean invalid, String color) {
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();

@@ -25,6 +25,11 @@
       <version>${sirius.web.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.eclipse.sirius</groupId>
+      <artifactId>sirius-web-infrastructure</artifactId>
+      <version>${sirius.web.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>

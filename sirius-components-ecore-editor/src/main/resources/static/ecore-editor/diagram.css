@@ -1,0 +1,59 @@
+/* Copyright (c) 2026 Obeo. SPDX-License-Identifier: EPL-2.0 */
+
+/* The marker comes from the Ecore view's canvas color, including for note-only diagrams. */
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) {
+  --ecore-focus: #be1a78;
+  --ecore-type-accent: #858fa3;
+}
+
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode:has(
+    img[src$="/EClass.svg"], img[src$="/EClass_interface.svg"], img[src$="/EClass_abstract.svg"]) {
+  --ecore-type-accent: #6561a8;
+}
+
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode:has(img[src$="/EEnum.svg"]) {
+  --ecore-type-accent: #16786f;
+}
+
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode:has(img[src$="/EDataType.svg"]) {
+  --ecore-type-accent: #2d6f9f;
+}
+
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode:has(img[src$="/EPackage.svg"]) {
+  --ecore-type-accent: #7b5ba9;
+}
+
+/* Native label padding is inline; measure the compact labels through the existing layout engine. */
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode [data-testid^="Label - "] {
+  padding: 6px 12px !important;
+  border-left: 4px solid var(--ecore-type-accent);
+  border-radius: 5px 5px 0 0;
+  background: color-mix(in srgb, var(--ecore-type-accent) 7%, white);
+}
+
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode [data-testid^="Label content - "] > div:has(> img) {
+  width: 24px;
+  height: 24px;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--ecore-type-accent) 15%, white);
+}
+
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode [data-testid^="Label content - "] img {
+  top: 4px !important;
+  left: 4px !important;
+}
+
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-listNode [data-testid^="Label - "][style*="font-weight: bold"] {
+  font-weight: 600 !important;
+}
+
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) .react-flow__node-iconLabelNode [data-testid^="Label - "] {
+  padding: 4px 12px !important;
+}
+
+.react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) :is(.react-flow__node, .react-flow__edge):focus-visible {
+  outline: 2px solid var(--ecore-focus);
+  outline-offset: 4px;
+}

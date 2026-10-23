@@ -36,7 +36,7 @@ class EcoreOppositeLabelPostProcessorTests {
         var processor = new EcoreOppositeLabelPostProcessor(new EcoreViews().create(),
                 new IDiagramIdProvider.NoOp(), mock(IObjectSearchService.class));
         var original = new Label("label", "edge", "text", LabelStyle.newLabelStyle()
-                .color("#323232").fontSize(17).italic(true).underline(true).iconURL(List.of())
+                .color("#63708a").fontSize(17).italic(true).underline(true).iconURL(List.of())
                 .background("transparent").borderColor("transparent").borderStyle(LineStyle.Solid)
                 .visibility(LabelVisibility.visible).build(), Set.of());
         for (boolean derived : new boolean[]{false, true}) {
@@ -46,9 +46,9 @@ class EcoreOppositeLabelPostProcessorTests {
                 var begin = processor.style(original, opposite);
                 var end = processor.style(original, reference);
                 assertThat(begin.style().isBold()).isFalse();
-                assertThat(begin.style().getColor()).isEqualTo(invalid ? "#c62828" : derived ? "#274c72" : "#323232");
+                assertThat(begin.style().getColor()).isEqualTo(invalid ? "#c62828" : derived ? "#2d6f9f" : "#63708a");
                 assertThat(end.style().isBold()).isTrue();
-                assertThat(end.style().getColor()).isEqualTo("#323232");
+                assertThat(end.style().getColor()).isEqualTo("#63708a");
                 assertThat(begin.style().getFontSize()).isEqualTo(17);
                 assertThat(begin.style().isItalic()).isTrue();
                 assertThat(begin.style().isUnderline()).isTrue();

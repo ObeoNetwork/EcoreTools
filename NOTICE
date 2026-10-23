@@ -17,7 +17,8 @@ operations and use JDK collections instead of Guava.
 The 14 SVG files named DynamicInstance, EAttribute, EClass, EClass_abstract,
 EClass_interface, EDataType, EEnum, EEnumLiteral, EObject, EOperation, EPackage,
 EParameter, EReference and EcoreModelFile originate from Eclipse EMF,
-org.eclipse.emf.ecore.edit/icons/full/svg. Original SVG metadata is retained.
+org.eclipse.emf.ecore.edit/icons/full/svg. Original SVG metadata, glyph
+geometry and colors are retained.
 https://eclipse.dev/emf/
 EAnnotation, EFactory, EGenericType and ETypeParameter are new vector
 complements under EPL-2.0.

@@ -56,7 +56,9 @@ PostgreSQL runs on local port **5435** with its own persistent volume.
   one generic argument per target type parameter, displayed as `?` until set.
 - Mandatory attributes and references use bold labels; derived features use
   a `/` prefix and blue labels. EMF validation errors turn borders and labels red.
-  The diagram uses SVG icons and EcoreTools-inspired colors.
+  Neutral cards use colored header accents with the original Ecore SVG icons.
+  Relationship labels have transparent backgrounds; selection uses Sirius Web's
+  native magenta feedback.
 - Add **Documentation** from the background or an element's palette.
   **Assign annotation** attaches a note to an element or reference; reconnect
   its target end to move it. A target that already has documentation is rejected

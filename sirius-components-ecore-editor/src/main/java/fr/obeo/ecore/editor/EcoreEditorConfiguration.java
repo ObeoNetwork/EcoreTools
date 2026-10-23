@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Import;
 @Configuration(proxyBeanMethods = false)
 @Import({EcoreJavaServiceProvider.class, EcoreViewEditingContextInitializer.class, EcoreLabelService.class,
         EcoreOppositeLabelPostProcessor.class, EcoreResourceLoader.class, EcoreResourceToDocumentService.class,
-        EcoreConnectorPaletteProvider.class, EcoreReconnectionToolsExecutor.class})
+        EcoreConnectorPaletteProvider.class, EcoreReconnectionToolsExecutor.class, EcoreDiagramStyles.class})
 public class EcoreEditorConfiguration {
     @Bean
     org.eclipse.emf.ecore.EPackage ecoreMetamodel() { return org.eclipse.emf.ecore.EcorePackage.eINSTANCE; }

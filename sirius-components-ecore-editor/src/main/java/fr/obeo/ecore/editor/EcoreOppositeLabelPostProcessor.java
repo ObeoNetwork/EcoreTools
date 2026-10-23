@@ -81,7 +81,7 @@ public class EcoreOppositeLabelPostProcessor implements IDiagramPostProcessor {
         if (label == null) return null;
         var previous = label.style();
         String color = label.customizedStyleProperties().contains(LabelAppearanceHandler.COLOR) ? previous.getColor()
-                : this.colors.get(this.services.ecoreHasError(reference) ? "Error" : reference.isDerived() ? "Derived" : "Ink");
+                : this.colors.get(this.services.ecoreHasError(reference) ? "Error" : reference.isDerived() ? "Derived" : "Relationship");
         boolean bold = label.customizedStyleProperties().contains(LabelAppearanceHandler.BOLD) ? previous.isBold()
                 : reference.getLowerBound() > 0;
         if (color.equals(previous.getColor()) && bold == previous.isBold()) return label;

@@ -30,27 +30,31 @@ public class EcoreViews {
     private final DiagramBuilders d = new DiagramBuilders();
     private final ViewBuilders v = new ViewBuilders();
     private final List<FixedColor> colors = new ArrayList<>();
-    private final FixedColor ink = color("Ink", "#323232");
-    private final FixedColor error = color("Error", "#c62828");
-    private final FixedColor white = color("White", "#ffffff");
-    private final FixedColor classColor = color("EClass", "linear-gradient(180deg, #fffef2 0%, #fffcd8 100%) #fffcd8");
-    private final FixedColor abstractColor = color("Abstract EClass", "linear-gradient(180deg, #f7f7f7 0%, #e4e4e4 100%) #e4e4e4");
-    private final FixedColor enumColor = color("EEnum", "linear-gradient(180deg, #f2f7e9 0%, #ddecca 100%) #ddecca");
-    private final FixedColor dataColor = color("EDataType", "linear-gradient(180deg, #fffdeb 0%, #fffabf 100%) #fffabf");
-    private final FixedColor packageColor = color("EPackage", "linear-gradient(180deg, #f2eef4 0%, #d9d2dc 100%) #d9d2dc");
-    private final FixedColor noteColor = color("Documentation", "linear-gradient(180deg, #f2f7e7 0%, #dceab7 100%) #dceab7");
+    private final FixedColor ink = color("Ink", EcoreDiagramStyle.TEXT);
+    private final FixedColor secondary = color("Secondary", EcoreDiagramStyle.SECONDARY);
+    private final FixedColor border = color("Border", EcoreDiagramStyle.BORDER);
+    private final FixedColor relationship = color("Relationship", EcoreDiagramStyle.RELATIONSHIP);
+    private final FixedColor canvas = color("Canvas", "var(--ecore-canvas, " + EcoreDiagramStyle.CANVAS + ")");
+    private final FixedColor error = color("Error", EcoreDiagramStyle.ERROR);
+    private final FixedColor white = color("White", EcoreDiagramStyle.SURFACE);
+    private final FixedColor classColor = color("EClass", EcoreDiagramStyle.SURFACE);
+    private final FixedColor abstractColor = color("Abstract EClass", EcoreDiagramStyle.SURFACE);
+    private final FixedColor enumColor = color("EEnum", EcoreDiagramStyle.SURFACE);
+    private final FixedColor dataColor = color("EDataType", EcoreDiagramStyle.SURFACE);
+    private final FixedColor packageColor = color("EPackage", EcoreDiagramStyle.SURFACE);
+    private final FixedColor noteColor = color("Documentation", EcoreDiagramStyle.NOTE);
     private final FixedColor transparent = color("Transparent", "transparent");
-    private final FixedColor commentBorder = color("Comment border", "#888888");
-    private final FixedColor constraintColor = color("Constraints", "linear-gradient(180deg, #4676a6 0%, #35628f 100%) #35628f");
-    private final FixedColor constraintBorder = color("Constraint border", "#274c72");
-    private final FixedColor typeParameterColor = color("Type parameter", "linear-gradient(135deg, #ffffff 0%, #d4e0ee 100%) #d4e0ee");
-    private final FixedColor typeParameterBorder = color("Type parameter border", "#5e637a");
-    private final FixedColor derivedColor = color("Derived", "#274c72");
+    private final FixedColor commentBorder = color("Comment border", EcoreDiagramStyle.BORDER);
+    private final FixedColor constraintColor = color("Constraints", EcoreDiagramStyle.CONSTRAINT);
+    private final FixedColor constraintBorder = color("Constraint border", EcoreDiagramStyle.DATATYPE);
+    private final FixedColor typeParameterColor = color("Type parameter", EcoreDiagramStyle.SURFACE);
+    private final FixedColor typeParameterBorder = color("Type parameter border", EcoreDiagramStyle.BORDER);
+    private final FixedColor derivedColor = color("Derived", EcoreDiagramStyle.DATATYPE);
 
     public View create() {
         var clazz = node("EClass", "aql:self.ecoreImportCandidates()->filter(ecore::EClass)", classColor, true);
         clazz.getConditionalStyles().add(d.newConditionalNodeStyle().condition("aql:self.abstract or self.interface")
-                .style(style(abstractColor, ink, true)).build());
+                .style(style(abstractColor, border, true)).build());
         var abstractLabel = labelStyle(ink, true);
         abstractLabel.setItalic(true);
         clazz.getInsideLabel().getConditionalStyles().add(d.newConditionalInsideLabelStyle()
@@ -70,7 +74,7 @@ public class EcoreViews {
         parameter.getInsideLabel().getConditionalStyles().forEach(s -> s.getStyle().setShowIconExpression("aql:false"));
         var referenceRow = node("EReference", "aql:self.ecoreReferenceRows(diagramContext)", transparent, false);
         for (var feature : List.of(attribute, referenceRow)) {
-            var mandatory = labelStyle(ink, false);
+            var mandatory = labelStyle(secondary, false);
             mandatory.setBold(true);
             var mandatoryError = labelStyle(error, false);
             mandatoryError.setBold(true);
@@ -117,14 +121,17 @@ public class EcoreViews {
         var commentStyle = (RectangularNodeStyleDescription) note.getStyle();
         commentStyle.setBorderColor(commentBorder);
         commentStyle.setBorderSize(1);
+        commentStyle.setBorderRadius(EcoreDiagramStyle.RADIUS);
+        commentStyle.setBorderLineStyle(LineStyle.DASH);
         var constraintStyle = style(constraintColor, constraintBorder, false);
         constraintStyle.setBorderSize(1);
+        constraintStyle.setBorderRadius(EcoreDiagramStyle.RADIUS);
         note.getConditionalStyles().add(d.newConditionalNodeStyle().condition("aql:self.key = 'constraints'")
                 .style(constraintStyle).build());
         note.getInsideLabel().setLabelExpression("aql:self.value");
         note.getInsideLabel().setOverflowStrategy(LabelOverflowStrategy.WRAP);
         note.getInsideLabel().getStyle().setShowIconExpression("aql:false");
-        var constraintLabel = labelStyle(white, false);
+        var constraintLabel = labelStyle(constraintBorder, false);
         constraintLabel.setShowIconExpression("aql:false");
         note.getInsideLabel().getConditionalStyles().add(d.newConditionalInsideLabelStyle()
                 .condition("aql:self.key = 'constraints'").style(constraintLabel).build());
@@ -150,7 +157,7 @@ public class EcoreViews {
                 .isDomainBasedEdge(true).semanticCandidatesExpression("aql:self.ecoreNotes(diagramContext)")
                 .sourceDescriptions(note).targetDescriptions(noteTargets.toArray(NodeDescription[]::new))
                 .sourceExpression("aql:self").targetExpression("aql:self.eContainer().eModelElement")
-                .style(edgeStyle(ink, ArrowStyle.NONE, ArrowStyle.NONE))
+                .style(edgeStyle(relationship, ArrowStyle.NONE, ArrowStyle.NONE))
                 .palette(d.newEdgePalette().edgeReconnectionTools(d.newTargetEdgeEndReconnectionTool().name("Reassign annotation")
                         .body(v.newChangeContext().expression("aql:edgeSemanticElement.ecoreAssignNote(semanticReconnectionTarget)").build()).build()).build()).build();
         noteLink.getStyle().setLineStyle(LineStyle.DASH);
@@ -179,7 +186,7 @@ public class EcoreViews {
                 .isDomainBasedEdge(true).sourceDescriptions(clazz).targetDescriptions(clazz, parameter)
                 .sourceExpression("aql:self.eContainingClass").targetExpression("aql:self.ecoreReferenceTarget()")
                 .centerLabelExpression("aql:self.ecoreLabel()")
-                .style(edgeStyle(ink, ArrowStyle.NONE, ArrowStyle.INPUT_ARROW))
+                .style(edgeStyle(relationship, ArrowStyle.NONE, ArrowStyle.INPUT_ARROW))
                 .conditionalStyles(referenceStyles("self.lowerBound > 0", "self.derived", "self.ecoreHasError()", ArrowStyle.NONE))
                 .palette(d.newEdgePalette().centerLabelEditTool(edit()).deleteTool(deleteReference()).edgeReconnectionTools(
                         d.newSourceEdgeEndReconnectionTool().name("Reconnect reference source")
@@ -214,7 +221,7 @@ public class EcoreViews {
         var inheritance = d.newEdgeDescription().name("ESuperTypes").domainType("ecore::EClass")
                 .centerLabelExpression("aql:self.ecoreSuperTypeLabel(semanticEdgeTarget)")
                 .isDomainBasedEdge(false).sourceDescriptions(clazz).targetDescriptions(clazz)
-                .targetExpression("aql:self.ecoreVisibleSuperTypes(diagramContext)").style(edgeStyle(ink, ArrowStyle.NONE, ArrowStyle.INPUT_CLOSED_ARROW))
+                .targetExpression("aql:self.ecoreVisibleSuperTypes(diagramContext)").style(edgeStyle(relationship, ArrowStyle.NONE, ArrowStyle.INPUT_CLOSED_ARROW))
                 .palette(d.newEdgePalette().deleteTool(d.newDeleteTool().name("Remove supertype")
                         .body(v.newChangeContext().expression("aql:semanticEdgeSource.ecoreRemoveSuperType(semanticEdgeTarget)").build()).build())
                         .edgeReconnectionTools(
@@ -225,16 +232,16 @@ public class EcoreViews {
                         .build()).build();
         inheritance.getStyle().setItalic(true);
         inheritance.getConditionalStyles().add(d.newConditionalEdgeStyle().condition("aql:not self.eSuperTypes->includes(semanticEdgeTarget)")
-                .color(ink).borderColor(ink).borderSize(0).edgeWidth(1).fontSize(13).italic(true)
+                .color(relationship).background(transparent).borderColor(relationship).borderSize(0).edgeWidth(1).fontSize(EcoreDiagramStyle.EDGE_SIZE).italic(true)
                 .sourceArrowStyle(ArrowStyle.NONE).targetArrowStyle(ArrowStyle.INPUT_CLOSED_ARROW)
                 .edgeType(EdgeType.MANHATTAN).lineStyle(LineStyle.DOT).showIcon(false).build());
         inheritance.getConditionalStyles().add(d.newConditionalEdgeStyle().condition("aql:semanticEdgeTarget.interface")
-                .color(ink).borderColor(ink).borderSize(0).edgeWidth(1).fontSize(13).italic(true)
+                .color(relationship).background(transparent).borderColor(relationship).borderSize(0).edgeWidth(1).fontSize(EcoreDiagramStyle.EDGE_SIZE).italic(true)
                 .sourceArrowStyle(ArrowStyle.NONE).targetArrowStyle(ArrowStyle.INPUT_CLOSED_ARROW)
                 .edgeType(EdgeType.MANHATTAN).lineStyle(LineStyle.DASH).showIcon(false).build());
         var diagram = d.newDiagramDescription().name(DIAGRAM_NAME).domainType("ecore::EPackage")
                 .iconExpression("aql:'/icons/ecore/EcoreClassDiagram.svg'")
-                .style(d.newDiagramStyleDescription().background(white).build())
+                .style(d.newDiagramStyleDescription().background(canvas).build())
                 .toolbar(d.newDiagramToolbar().expandedByDefault(true).build())
                 .titleExpression("aql:self.name + ' class diagram'")
                 .nodeDescriptions(clazz, enumeration, data, pack, note).edgeDescriptions(reference, opposite, inheritance, noteLink)
@@ -257,29 +264,29 @@ public class EcoreViews {
     }
     private RectangularNodeStyleDescription style(FixedColor background, FixedColor border, boolean container) {
         var style = d.newRectangularNodeStyleDescription().background(background).borderColor(border)
-                .borderSize(container || border == error ? 1 : 0).borderRadius(container ? 5 : 0);
+                .borderSize(container || border == error ? 1 : 0).borderRadius(container ? EcoreDiagramStyle.RADIUS : 0);
         if (container) style.childrenLayoutStrategy(d.newListLayoutStrategyDescription().areChildNodesDraggableExpression("aql:false").build());
         return style.build();
     }
     private InsideLabelStyle labelStyle(FixedColor color, boolean header) {
-        return d.newInsideLabelStyle().labelColor(color).borderColor(color).borderSize(0).fontSize(14)
+        return d.newInsideLabelStyle().labelColor(color).borderColor(color).borderSize(0).fontSize(header ? EcoreDiagramStyle.TITLE_SIZE : EcoreDiagramStyle.MEMBER_SIZE)
                 .showIconExpression("aql:true")
                 .withHeader(header).bold(header).headerSeparatorDisplayMode(HeaderSeparatorDisplayMode.IF_CHILDREN).build();
     }
     private NodeDescription node(String type, String candidates, FixedColor background, boolean container) {
         return d.newNodeDescription().name(type).domainType("ecore::" + type).semanticCandidatesExpression(candidates)
                 .synchronizationPolicy(container ? SynchronizationPolicy.UNSYNCHRONIZED : SynchronizationPolicy.SYNCHRONIZED)
-                .defaultWidthExpression(container ? "220" : "180").defaultHeightExpression(container ? "70" : "28")
-                .style(style(background, ink, container))
+                .defaultWidthExpression(container ? "180" : "0").defaultHeightExpression(container ? "44" : "0")
+                .style(style(background, border, container))
                 .conditionalStyles(d.newConditionalNodeStyle().condition("aql:self.ecoreHasError()").style(style(background, error, container)).build())
                 .insideLabel(d.newInsideLabelDescription().labelExpression("aql:self.ecoreLabel()")
-                        .position(container ? InsideLabelPosition.TOP_CENTER : InsideLabelPosition.MIDDLE_LEFT)
-                        .style(labelStyle(ink, container))
+                        .position(container ? InsideLabelPosition.TOP_LEFT : InsideLabelPosition.MIDDLE_LEFT)
+                        .style(labelStyle(container ? ink : secondary, container))
                         .conditionalStyles(d.newConditionalInsideLabelStyle().condition("aql:self.ecoreHasError()").style(labelStyle(error, container)).build()).build())
                 .palette(d.newNodePalette().labelEditTool(edit()).deleteTool(delete()).build()).build();
     }
     private EdgeStyle edgeStyle(FixedColor color, ArrowStyle source, ArrowStyle target) {
-        return d.newEdgeStyle().color(color).borderColor(color).borderSize(0).edgeWidth(1).fontSize(13)
+        return d.newEdgeStyle().color(color).background(transparent).borderColor(color).borderSize(0).edgeWidth(1).fontSize(EcoreDiagramStyle.EDGE_SIZE)
                 .sourceArrowStyle(source).targetArrowStyle(target).edgeType(EdgeType.MANHATTAN).showIcon(false).build();
     }
     private ConditionalEdgeStyle[] referenceStyles(String mandatory, String derived, String invalid, ArrowStyle source) {
@@ -295,14 +302,14 @@ public class EcoreViews {
             conditionalEdge(derivedCondition + " and self.containment", derivedColor, ArrowStyle.FILL_DIAMOND, false),
             conditionalEdge(derivedCondition + " and (" + mandatory + ")", derivedColor, source, true),
             conditionalEdge(derivedCondition, derivedColor, source, false),
-            conditionalEdge(required + " and self.containment", ink, ArrowStyle.FILL_DIAMOND, true),
-            conditionalEdge("aql:self.containment", ink, ArrowStyle.FILL_DIAMOND, false),
-            conditionalEdge(required, ink, source, true)
+            conditionalEdge(required + " and self.containment", relationship, ArrowStyle.FILL_DIAMOND, true),
+            conditionalEdge("aql:self.containment", relationship, ArrowStyle.FILL_DIAMOND, false),
+            conditionalEdge(required, relationship, source, true)
         };
     }
     private ConditionalEdgeStyle conditionalEdge(String condition, FixedColor color, ArrowStyle source, boolean bold) {
-        return d.newConditionalEdgeStyle().condition(condition).color(color).borderColor(color).borderSize(0)
-                .edgeWidth(1).fontSize(13).bold(bold).sourceArrowStyle(source).targetArrowStyle(ArrowStyle.INPUT_ARROW)
+        return d.newConditionalEdgeStyle().condition(condition).color(color).background(transparent).borderColor(color).borderSize(0)
+                .edgeWidth(1).fontSize(EcoreDiagramStyle.EDGE_SIZE).bold(bold).sourceArrowStyle(source).targetArrowStyle(ArrowStyle.INPUT_ARROW)
                 .edgeType(EdgeType.MANHATTAN).showIcon(false).build();
     }
     private LabelEditTool edit() {

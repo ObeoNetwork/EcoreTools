@@ -91,7 +91,7 @@ try:
     assert {"<<bind>> C,E", "<<bind>> Thing,W", "[0..*] elements", "[0..1] optionalToE", "[1..1] requiredToE", "[0..1] /derivedToE", "[0..*] containedToE", "[0..*] /containedDerived"} <= labels.keys(), labels.keys()
     assert labels["[0..*] elements"]["targetId"] == nodes["Set"]["borderNodes"][0]["id"]
     assert labels["[1..1] requiredToE"]["centerLabel"]["style"]["bold"]
-    assert labels["[0..1] /derivedToE"]["centerLabel"]["style"]["color"] == "#274c72"
+    assert labels["[0..1] /derivedToE"]["centerLabel"]["style"]["color"] == "#2d6f9f"
     opposite_labels = {(e["beginLabel"]["text"], e["endLabel"]["text"]) for e in diagram["edges"] if e["beginLabel"]}
     assert opposite_labels == {("[0..*] eMany", "[0..1] source"), ("[0..1] e", "[1..1] mandatoryE")}, opposite_labels
     for n in diagram["nodes"]:
@@ -103,7 +103,7 @@ try:
                 assert edge[field]["style"]["color"] != "#c62828", edge
     bounds = next(n for n in diagram["layoutData"]["nodeLayoutData"] if n["id"] == nodes["Source"]["id"])
     assert bounds["position"] == {"x": 330, "y": 250}, bounds
-    assert bounds["size"] == {"width": 240, "height": 340}, bounds
+    assert bounds["size"] == {"width": 240, "height": 280}, bounds
     assert bounds["movedByUser"] and bounds["resizedByUser"], bounds
     assert len(diagram["layoutData"]["edgeLayoutData"]) == len(diagram["edges"])
     print("PASS: Example template, .ecore document name and XML download, valid semantic styles, generic ports/bindings, references/opposites and saved diagram layout")
