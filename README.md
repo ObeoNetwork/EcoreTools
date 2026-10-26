@@ -13,14 +13,14 @@ Creating and editing Ecore models in the browser (2× speed).
 ## Compatibility
 
 **The current Ecore Editor code is built and tested against Sirius Web
-2026.7.3. Use exactly Sirius Web 2026.7.3 in the application embedding it.**
+2026.9.0. Use exactly Sirius Web 2026.9.0 in the application embedding it.**
 
 | Ecore Editor version | Sirius Web version | Spring Boot version | Java |
 | --- | --- | --- | --- |
-| `0.1.0-SNAPSHOT` | **`2026.7.3`** | `4.1.0` | `21` or newer |
+| `0.1.0-SNAPSHOT` | **`2026.9.0`** | `4.1.0` | `21` or newer |
 
 This applies to both the reusable component and the standalone application.
-Keep all Sirius Web backend artifacts and the Sirius Web frontend on `2026.7.3`;
+Keep all Sirius Web backend artifacts and the Sirius Web frontend on `2026.9.0`;
 mixing Sirius Web versions is unsupported. Compatibility with other `2026.x`
 versions has not been established. The source of truth for these versions is
 [the reactor POM](ecore-editor-releng/pom.xml).
@@ -43,8 +43,11 @@ java -jar sirius-components-ecore-editor-application/target/ecore-editor.jar \
 Open [localhost:8083](http://localhost:8083) and create a project using the
 **Example** template. It includes a model and a ready-to-edit diagram with
 classes, generics, references, opposites, an enum, and a constraint.
-Studio is enabled for all projects, including existing ones. The standard
-**Studio** and **Blank Studio** templates are also available.
+Studio capabilities follow Sirius Web's default rules: projects with the Studio
+nature, including **Example**, **Studio**, and **Blank Studio**, support Domain/View
+authoring. Ordinary **Blank Project** projects support Ecore editing and instances
+without loading Studio's internal color palette. Existing projects containing
+Studio Domain/View models can still be recognized as Studio-capable by Sirius Web.
 
 To create instances, save an Ecore model with a unique package namespace URI,
 then open an instance project. Use **+ → New model** and select
@@ -52,8 +55,9 @@ the **package name** in **Model type**. If several packages share a name, their
 labels also include their namespace URI. This creates an empty document. Use its
 **New root object** action to select the domain (package namespace URI) and a
 concrete class, following Sirius Web's standard root creation flow.
-**Ecore model**, **Domain**, and **View** create their corresponding
-documents; use View documents to describe representations for your instances.
+**Ecore model** creates a new metamodel in any project. In Studio-capable projects,
+**Domain** and **View** create their corresponding documents; use View documents
+to describe representations for your instances.
 Metamodels are loaded from saved Ecore documents when a project opens. Reopen
 the instance project after editing a metamodel; existing instances are not
 automatically migrated after structural changes.
@@ -173,7 +177,7 @@ repository from source. This follows the
 
 Use the following Maven configuration in your Sirius Web host application.
 If you already have a POM, merge these repositories and dependencies into it,
-keeping its Sirius Web version at **`2026.7.3`** and Spring Boot at **`4.1.0`**.
+keeping its Sirius Web version at **`2026.9.0`** and Spring Boot at **`4.1.0`**.
 Keep the **Liquibase `4.33.0`** pin as well: it matches this application's
 configuration and overrides Spring Boot 4.1.0's default Liquibase 5 version.
 The example assumes that `0.1.0-SNAPSHOT` has been published successfully.
@@ -192,7 +196,7 @@ The example assumes that `0.1.0-SNAPSHOT` has been published successfully.
   <version>1.0.0-SNAPSHOT</version>
   <properties>
     <java.version>21</java.version>
-    <sirius.web.version>2026.7.3</sirius.web.version>
+    <sirius.web.version>2026.9.0</sirius.web.version>
     <liquibase.version>4.33.0</liquibase.version>
   </properties>
   <repositories>

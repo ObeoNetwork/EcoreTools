@@ -23,7 +23,7 @@
   </licenses>
   <properties>
     <java.version>21</java.version>
-    <sirius.web.version>2026.7.3</sirius.web.version>
+    <sirius.web.version>2026.9.0</sirius.web.version>
   </properties>
   <modules>
     <module>../sirius-components-ecore-editor</module>

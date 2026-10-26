@@ -57,6 +57,14 @@ try:
                 "expression": "aql:editingContext.allContents()->filter(ecore::EPackage)->select(p | p.name = 'example')->first().eSet('nsURI', '" + namespace + "')"})["evaluateExpression"]
     assert renamed["__typename"] == "EvaluateExpressionSuccessPayload", renamed
     context = project("blank-project")
+    # The expression API represents an empty collection as StringsExpressionResult.
+    blank_resources = graphql("""mutation($input:EvaluateExpressionInput!) {
+      evaluateExpression(input:$input) { ... on EvaluateExpressionSuccessPayload {
+        result { ... on StringsExpressionResult { value } }
+      } }
+    }""", input={"id": str(uuid.uuid4()), "editingContextId": context, "selectedObjectIds": [],
+                "expression": "aql:editingContext.allContents().eResource()->asSet()"})["evaluateExpression"]["result"]
+    assert blank_resources == {"value": []}, blank_resources
     model_types = graphql("""query($ctx:ID!) { viewer { editingContext(editingContextId:$ctx) {
       stereotypes { edges { node { id label } } }
       actions { edges { node { id } } }
@@ -64,9 +72,10 @@ try:
     types = {e["node"]["id"]: e["node"]["label"] for e in model_types["stereotypes"]["edges"]}
     instance_id = "ecore-editor:instance:" + namespace
     assert types[instance_id] in {"example", "example (" + namespace + ")"}, types
-    assert {"domain", "view", "ecore-editor:ecore"} <= types.keys(), types
+    assert "ecore-editor:ecore" in types, types
+    assert not {"domain", "view"} & types.keys(), types
     assert not any(type_id.startswith(instance_id + "#//") for type_id in types), types
-    assert {"empty_domain", "empty_view"} <= {e["node"]["id"] for e in model_types["actions"]["edges"]}
+    assert not {"empty_domain", "empty_view"} & {e["node"]["id"] for e in model_types["actions"]["edges"]}
     instance = create(context, instance_id, "Instances")
     roots = graphql("""query($ctx:ID!, $domain:ID!) { viewer { editingContext(editingContextId:$ctx) {
       rootObjectCreationDescriptions(domainId:$domain, suggested:false) { id label }
@@ -87,15 +96,22 @@ try:
     document.raise_for_status()
     assert ET.fromstring(document.content).tag == "{" + namespace + "}E", document.text
     assert create(context, "ecore-editor:ecore", "New metamodel")["name"] == "New metamodel.ecore"
-    assert create(context, "view", "Views")["name"] == "Views"
-    assert create(context, "domain", "Domain")["name"] == "Domain"
-    # A fresh context makes native Studio reload the project containing both View and instance documents.
+    studio = project("blank-studio-template")
+    studio_types = graphql("""query($ctx:ID!) { viewer { editingContext(editingContextId:$ctx) {
+      stereotypes { edges { node { id } } }
+      actions { edges { node { id } } }
+    } } }""", ctx=studio)["viewer"]["editingContext"]
+    assert {"domain", "view"} <= {e["node"]["id"] for e in studio_types["stereotypes"]["edges"]}, studio_types
+    assert {"empty_domain", "empty_view"} <= {e["node"]["id"] for e in studio_types["actions"]["edges"]}, studio_types
+    assert create(studio, "view", "Views")["name"] == "Views"
+    assert create(studio, "domain", "Domain")["name"] == "Domain"
+    # Opening a fresh project reloads saved metamodels and Studio View documents.
     fresh = project("blank-project")
     available = graphql("""query($ctx:ID!) { viewer { editingContext(editingContextId:$ctx) {
       stereotypes { edges { node { id } } }
     } } }""", ctx=fresh)["viewer"]["editingContext"]["stereotypes"]["edges"]
     assert instance_id in {e["node"]["id"] for e in available}, available
-    print("PASS: package-level model types, native root class selection/creation, instance XML export, .ecore creation, and native Domain/View creation")
+    print("PASS: Blank projects exclude Studio palettes/actions, package-level model types and instance XML export work, and Studio projects retain Domain/View creation")
 finally:
     for project_id in reversed(projects):
         result = graphql("""mutation($input:DeleteProjectInput!) {
