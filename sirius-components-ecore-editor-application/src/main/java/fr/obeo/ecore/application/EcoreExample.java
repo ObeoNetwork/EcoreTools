@@ -23,10 +23,11 @@ import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl;
 final class EcoreExample {
     private EcoreExample() { }
 
+    /** Loads a fresh, resolved example whose root remains attached to its temporary resource. */
     static EPackage load() {
-        var resources = new ResourceSetImpl();
+        var resourceSet = new ResourceSetImpl();
         var resource = new EcoreResourceFactoryImpl().createResource(URI.createURI("classpath:/templates/example.ecore"));
-        resources.getResources().add(resource);
+        resourceSet.getResources().add(resource);
         try (var input = Objects.requireNonNull(EcoreExample.class.getResourceAsStream("/templates/example.ecore"))) {
             resource.load(input, Map.of());
             EcoreUtil.resolveAll(resource);

@@ -16,6 +16,8 @@ import java.util.List;
 
 import org.eclipse.sirius.web.application.project.services.api.IProjectTemplateProvider;
 import org.eclipse.sirius.web.application.project.services.api.ProjectTemplate;
+import org.eclipse.sirius.web.application.project.services.api.ProjectTemplateNature;
+import org.eclipse.sirius.web.application.studio.services.StudioProjectTemplateProvider;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,6 +30,7 @@ public class EcoreProjectTemplateProvider implements IProjectTemplateProvider {
 
     @Override
     public List<ProjectTemplate> getProjectTemplates() {
-        return List.of(new ProjectTemplate(TEMPLATE_ID, "Example", "/project-templates/ecore-example.svg", List.of()));
+        return List.of(new ProjectTemplate(TEMPLATE_ID, "Example", "/project-templates/ecore-example.svg",
+                List.of(new ProjectTemplateNature(StudioProjectTemplateProvider.STUDIO_NATURE))));
     }
 }

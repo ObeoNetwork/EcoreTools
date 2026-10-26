@@ -24,67 +24,66 @@ import org.eclipse.emf.ecore.ETypeParameter;
 import org.eclipse.emf.ecore.ETypedElement;
 import org.eclipse.emf.ecore.EcoreFactory;
 
+/** Resolves classifier/type-parameter targets and creates their generic type bindings. */
 public class EGenericsServices {
 
-	public static String getETypeLabel(ETypedElement attr) {
+	public static String getETypeLabel(ETypedElement typedElement) {
 		String typeName = null;
-		if (attr.getEType() != null && attr.getEType().getName() != null) {
-			typeName = attr.getEType().getName();
+		if (typedElement.getEType() != null && typedElement.getEType().getName() != null) {
+			typeName = typedElement.getEType().getName();
 		}
-		if (attr.getEGenericType() != null
-				&& attr.getEGenericType().getETypeParameter() != null) {
-			typeName = attr.getEGenericType().getETypeParameter().getName();
+		if (typedElement.getEGenericType() != null
+				&& typedElement.getEGenericType().getETypeParameter() != null) {
+			typeName = typedElement.getEGenericType().getETypeParameter().getName();
 		}
 		return typeName;
 	}
 
-	public static EObject getETypeOrParameter(ETypedElement attr) {
-		if (attr.getEGenericType() != null
-				&& attr.getEGenericType().getETypeParameter() != null) {
-			return attr.getEGenericType().getETypeParameter();
+	public static EObject getETypeOrParameter(ETypedElement typedElement) {
+		if (typedElement.getEGenericType() != null
+				&& typedElement.getEGenericType().getETypeParameter() != null) {
+			return typedElement.getEGenericType().getETypeParameter();
 		}
-		if (attr.getEType() != null) {
-			return attr.getEType();
-		}
-		return null;
+		return typedElement.getEType();
 	}
 
-	public static Object findGenericType(ENamedElement attr, String typePart) {
-		EClass parentClass = null;
-		if (attr instanceof EStructuralFeature) {
-			parentClass = ((EStructuralFeature) attr).getEContainingClass();
-		} else if (attr instanceof EOperation) {
-			parentClass = ((EOperation) attr).getEContainingClass();
-		} else if (attr instanceof EParameter) {
-			parentClass = ((EParameter) attr).getEOperation()
+	/** Returns the last exact name match among the containing class's own parameters, or null. */
+	public static Object findGenericType(ENamedElement namedElement, String typePart) {
+		EClass containingClass = null;
+		if (namedElement instanceof EStructuralFeature feature) {
+			containingClass = feature.getEContainingClass();
+		} else if (namedElement instanceof EOperation operation) {
+			containingClass = operation.getEContainingClass();
+		} else if (namedElement instanceof EParameter parameter) {
+			containingClass = parameter.getEOperation()
 					.getEContainingClass();
 		}
-		Object value = null;
-		if (parentClass != null && typePart != null) {
-			for (ETypeParameter typeParam : parentClass.getETypeParameters()) {
+		ETypeParameter matchingParameter = null;
+		if (containingClass != null && typePart != null) {
+			for (ETypeParameter typeParam : containingClass.getETypeParameters()) {
 				if (typePart.equals(typeParam.getName())) {
-					value = typeParam;
+					matchingParameter = typeParam;
 				}
 			}
 		}
-		return value;
+		return matchingParameter;
 	}
 
-	public static void setETypeWithGenerics(ETypedElement typed, Object value) {
-		EGenericType eGenericType = null;
-		if (value instanceof EClassifier) {
-			EClassifier eClassifier = (EClassifier) value;
-			eGenericType = EcoreFactory.eINSTANCE.createEGenericType();
-			eGenericType.setEClassifier(eClassifier);
-			for (int i = 0, size = eClassifier.getETypeParameters().size(); i < size; ++i) {
-				eGenericType.getETypeArguments().add(
+	/** Replaces the binding with a fresh generic type and unbound arguments; unsupported values leave it unchanged. */
+	public static void setETypeWithGenerics(ETypedElement typedElement, Object resolvedType) {
+		EGenericType genericType;
+		if (resolvedType instanceof EClassifier classifier) {
+			genericType = EcoreFactory.eINSTANCE.createEGenericType();
+			genericType.setEClassifier(classifier);
+			for (int i = 0, size = classifier.getETypeParameters().size(); i < size; ++i) {
+				genericType.getETypeArguments().add(
 						EcoreFactory.eINSTANCE.createEGenericType());
 			}
-			typed.setEGenericType(eGenericType);
-		} else if (value instanceof ETypeParameter) {
-			eGenericType = EcoreFactory.eINSTANCE.createEGenericType();
-			eGenericType.setETypeParameter((ETypeParameter) value);
-			typed.setEGenericType(eGenericType);
+			typedElement.setEGenericType(genericType);
+		} else if (resolvedType instanceof ETypeParameter typeParameter) {
+			genericType = EcoreFactory.eINSTANCE.createEGenericType();
+			genericType.setETypeParameter(typeParameter);
+			typedElement.setEGenericType(genericType);
 		}
 	}
 }

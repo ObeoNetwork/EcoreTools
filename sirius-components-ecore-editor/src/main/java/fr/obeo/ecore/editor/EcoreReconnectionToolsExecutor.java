@@ -27,31 +27,31 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
-/** Sirius 2026.7's reconnection executor drops feedback messages on failure. */
+/** Preserves failure feedback from Ecore reconnection tools that Sirius 2026.7 otherwise drops. */
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class EcoreReconnectionToolsExecutor implements IReconnectionToolsExecutor {
     private final ViewReconnectionToolsExecutor delegate;
-    private final IFeedbackMessageService feedback;
-    private final String descriptionId;
+    private final IFeedbackMessageService feedbackMessageService;
+    private final String ecoreDiagramDescriptionId;
 
-    public EcoreReconnectionToolsExecutor(ViewReconnectionToolsExecutor delegate, IFeedbackMessageService feedback,
-            @Qualifier("ecoreView") View view, IDiagramIdProvider ids) {
+    public EcoreReconnectionToolsExecutor(ViewReconnectionToolsExecutor delegate, IFeedbackMessageService feedbackMessageService,
+            @Qualifier("ecoreView") View view, IDiagramIdProvider diagramIdProvider) {
         this.delegate = delegate;
-        this.feedback = feedback;
-        this.descriptionId = ids.getId((org.eclipse.sirius.components.view.diagram.DiagramDescription) view.getDescriptions().getFirst());
+        this.feedbackMessageService = feedbackMessageService;
+        this.ecoreDiagramDescriptionId = diagramIdProvider.getId((org.eclipse.sirius.components.view.diagram.DiagramDescription) view.getDescriptions().getFirst());
     }
 
     @Override
     public boolean canExecute(DiagramDescription description) {
-        return descriptionId.equals(description.getId());
+        return this.ecoreDiagramDescriptionId.equals(description.getId());
     }
 
     @Override
-    public IStatus execute(IEditingContext editingContext, ReconnectionToolInterpreterData data, Edge edge,
-            EdgeDescription edgeDescription, ReconnectEdgeKind kind, DiagramDescription description) {
-        var status = delegate.execute(editingContext, data, edge, edgeDescription, kind, description);
-        if (status instanceof Failure failure && !feedback.getFeedbackMessages().isEmpty()) {
-            return new Failure(Stream.concat(failure.getMessages().stream(), feedback.getFeedbackMessages().stream())
+    public IStatus execute(IEditingContext editingContext, ReconnectionToolInterpreterData interpreterData, Edge edge,
+            EdgeDescription edgeDescription, ReconnectEdgeKind reconnectKind, DiagramDescription description) {
+        var status = this.delegate.execute(editingContext, interpreterData, edge, edgeDescription, reconnectKind, description);
+        if (status instanceof Failure failure && !this.feedbackMessageService.getFeedbackMessages().isEmpty()) {
+            return new Failure(Stream.concat(failure.getMessages().stream(), this.feedbackMessageService.getFeedbackMessages().stream())
                     .filter(message -> !message.body().isBlank()).distinct().toList());
         }
         return status;

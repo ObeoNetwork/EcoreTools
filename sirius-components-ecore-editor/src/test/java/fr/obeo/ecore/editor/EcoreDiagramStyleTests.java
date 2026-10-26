@@ -25,16 +25,16 @@ class EcoreDiagramStyleTests {
                 "#f9f9fc", "#f6fafa", "#f7f9fb", "#faf8fc")) {
             for (String text : List.of(EcoreDiagramStyle.TEXT, EcoreDiagramStyle.SECONDARY, EcoreDiagramStyle.RELATIONSHIP,
                     EcoreDiagramStyle.CLASS, EcoreDiagramStyle.ENUM, EcoreDiagramStyle.DATATYPE, EcoreDiagramStyle.PACKAGE, EcoreDiagramStyle.ERROR)) {
-                assertThat(contrast(text, background)).as("%s on %s", text, background).isGreaterThanOrEqualTo(4.5);
+                assertThat(contrastRatio(text, background)).as("%s on %s", text, background).isGreaterThanOrEqualTo(4.5);
             }
-            assertThat(contrast(EcoreDiagramStyle.BORDER, background)).isGreaterThanOrEqualTo(3);
+            assertThat(contrastRatio(EcoreDiagramStyle.BORDER, background)).isGreaterThanOrEqualTo(3);
         }
         for (String header : List.of("#e9e9f3", "#deeceb", "#e2ebf2", "#ede8f3")) {
-            assertThat(contrast(EcoreDiagramStyle.TEXT, header)).isGreaterThanOrEqualTo(4.5);
-            assertThat(contrast(EcoreDiagramStyle.BORDER, header)).isGreaterThanOrEqualTo(3);
+            assertThat(contrastRatio(EcoreDiagramStyle.TEXT, header)).isGreaterThanOrEqualTo(4.5);
+            assertThat(contrastRatio(EcoreDiagramStyle.BORDER, header)).isGreaterThanOrEqualTo(3);
         }
-        assertThat(contrast(EcoreDiagramStyle.SECONDARY, EcoreDiagramStyle.NOTE)).isGreaterThanOrEqualTo(4.5);
-        assertThat(contrast(EcoreDiagramStyle.DATATYPE, EcoreDiagramStyle.CONSTRAINT)).isGreaterThanOrEqualTo(4.5);
+        assertThat(contrastRatio(EcoreDiagramStyle.SECONDARY, EcoreDiagramStyle.NOTE)).isGreaterThanOrEqualTo(4.5);
+        assertThat(contrastRatio(EcoreDiagramStyle.DATATYPE, EcoreDiagramStyle.CONSTRAINT)).isGreaterThanOrEqualTo(4.5);
     }
 
     @Test
@@ -87,18 +87,21 @@ class EcoreDiagramStyleTests {
         }
     }
 
-    private double contrast(String foreground, String background) {
-        double first = luminance(foreground), second = luminance(background);
-        return (Math.max(first, second) + .05) / (Math.min(first, second) + .05);
+    private double contrastRatio(String foreground, String background) {
+        double foregroundLuminance = luminance(foreground);
+        double backgroundLuminance = luminance(background);
+        return (Math.max(foregroundLuminance, backgroundLuminance) + .05)
+                / (Math.min(foregroundLuminance, backgroundLuminance) + .05);
     }
 
     private double luminance(String hex) {
-        double[] weights = {.2126, .7152, .0722};
-        double result = 0;
+        double[] channelWeights = {.2126, .7152, .0722};
+        double relativeLuminance = 0;
         for (int channel = 0; channel < 3; channel++) {
-            double value = Integer.parseInt(hex.substring(1 + 2 * channel, 3 + 2 * channel), 16) / 255.0;
-            result += weights[channel] * (value <= .04045 ? value / 12.92 : Math.pow((value + .055) / 1.055, 2.4));
+            double srgbChannel = Integer.parseInt(hex.substring(1 + 2 * channel, 3 + 2 * channel), 16) / 255.0;
+            double linearChannel = srgbChannel <= .04045 ? srgbChannel / 12.92 : Math.pow((srgbChannel + .055) / 1.055, 2.4);
+            relativeLuminance += channelWeights[channel] * linearChannel;
         }
-        return result;
+        return relativeLuminance;
     }
 }

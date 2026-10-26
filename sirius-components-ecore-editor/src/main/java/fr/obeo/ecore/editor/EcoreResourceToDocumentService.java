@@ -33,6 +33,7 @@ public class EcoreResourceToDocumentService implements IResourceToDocumentServic
         return this.delegate.toDocument(resource, applyMigrationParticipants);
     }
 
+    /** Appends .ecore to writable metadata names when a direct resource root is an EPackage. */
     static void ensureEcoreExtension(Resource resource) {
         if (resource.getContents().stream().anyMatch(EPackage.class::isInstance)) {
             resource.eAdapters().stream().filter(ResourceMetadataAdapter.class::isInstance)

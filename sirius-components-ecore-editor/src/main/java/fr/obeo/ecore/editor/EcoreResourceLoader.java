@@ -26,10 +26,8 @@ import org.eclipse.sirius.emfjson.resource.JsonResource;
 import org.eclipse.sirius.web.application.editingcontext.services.ResourceLoader;
 import org.eclipse.sirius.web.application.editingcontext.services.api.IResourceLoader;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Primary;
 
 /** Uses the Ecore-aware JSON resource for EPackage documents and delegates other documents unchanged. */
-@Primary
 public class EcoreResourceLoader implements IResourceLoader {
     private final ResourceLoader delegate;
     private final List<IMigrationParticipant> migrations;
@@ -42,8 +40,7 @@ public class EcoreResourceLoader implements IResourceLoader {
     @Override
     public Optional<Resource> toResource(ResourceSet resources, String id, String name, String content,
             boolean applyMigrations, boolean readOnly) {
-        if (!content.contains("EPackage") || JsonParser.parseString(content).getAsJsonObject().getAsJsonArray("content")
-                .asList().stream().noneMatch(root -> root.getAsJsonObject().get("eClass").getAsString().equals("ecore:EPackage"))) {
+        if (!this.containsEPackageRoot(content)) {
             return this.delegate.toResource(resources, id, name, content, applyMigrations, readOnly);
         }
         var resource = new EcoreJsonResource(new JSONResourceFactory().createResourceURI(id));
@@ -64,5 +61,10 @@ public class EcoreResourceLoader implements IResourceLoader {
             resources.getResources().remove(resource);
             return Optional.empty();
         }
+    }
+
+    private boolean containsEPackageRoot(String content) {
+        return content.contains("EPackage") && JsonParser.parseString(content).getAsJsonObject().getAsJsonArray("content")
+                .asList().stream().anyMatch(root -> root.getAsJsonObject().get("eClass").getAsString().equals("ecore:EPackage"));
     }
 }

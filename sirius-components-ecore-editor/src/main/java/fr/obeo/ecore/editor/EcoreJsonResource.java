@@ -33,50 +33,67 @@ public final class EcoreJsonResource extends JsonResourceImpl {
 
     @Override
     protected void doSave(OutputStream output, Map<?, ?> options) throws IOException {
-        super.doSave(output, this.withIds(options));
+        super.doSave(output, this.withIdPreservingHandler(options));
     }
 
     @Override
     protected void doLoad(InputStream input, Map<?, ?> options) throws IOException {
-        super.doLoad(input, this.withIds(options));
+        super.doLoad(input, this.withIdPreservingHandler(options));
     }
 
-    private Map<Object, Object> withIds(Map<?, ?> options) {
-        var result = new HashMap<Object, Object>();
-        if (options != null) result.putAll(options);
-        var delegate = (JsonResource.IEObjectHandler) result.get(JsonResource.OPTION_EOBJECT_HANDLER);
-        result.put(JsonResource.OPTION_EOBJECT_HANDLER, new JsonResource.IEObjectHandler() {
-            @Override
-            public JsonElement processSerializedContent(JsonElement json, EObject object) {
-                EcoreJsonResource.this.ids(object, json.getAsJsonObject(), true);
-                return delegate == null ? json : delegate.processSerializedContent(json, object);
-            }
-
-            @Override
-            public EObject processDeserializedContent(EObject object, JsonElement json) {
-                EcoreJsonResource.this.ids(object, json.getAsJsonObject(), false);
-                return delegate == null ? object : delegate.processDeserializedContent(object, json);
-            }
-        });
-        return result;
+    private Map<Object, Object> withIdPreservingHandler(Map<?, ?> options) {
+        var resourceOptions = new HashMap<Object, Object>();
+        if (options != null) {
+            resourceOptions.putAll(options);
+        }
+        var delegate = (JsonResource.IEObjectHandler) resourceOptions.get(JsonResource.OPTION_EOBJECT_HANDLER);
+        resourceOptions.put(JsonResource.OPTION_EOBJECT_HANDLER, new IdPreservingEObjectHandler(delegate));
+        return resourceOptions;
     }
 
-    private void ids(EObject object, JsonObject json, boolean saving) {
-        if (saving) json.addProperty("id", this.getURIFragment(object));
-        else if (json.has("id")) this.setID(object, json.get("id").getAsString());
-        JsonObject data = json.has("data") ? json.getAsJsonObject("data") : json;
-        for (var feature : object.eClass().getEAllContainments()) {
-            var content = data.get(feature.getName());
-            if (content == null || content.isJsonNull()) continue;
-            if (feature.isMany()) {
-                var children = (List<?>) object.eGet(feature);
-                var elements = content.getAsJsonArray();
+    /** Copies IDs to JSON on save and back to objects on load, including compact containment encodings. */
+    private void synchronizeIdsRecursively(EObject object, JsonObject json, boolean saving) {
+        if (saving) {
+            json.addProperty("id", this.getURIFragment(object));
+        } else if (json.has("id")) {
+            this.setID(object, json.get("id").getAsString());
+        }
+        JsonObject featureValues = json.has("data") ? json.getAsJsonObject("data") : json;
+        for (var containment : object.eClass().getEAllContainments()) {
+            var serializedChildren = featureValues.get(containment.getName());
+            if (serializedChildren == null || serializedChildren.isJsonNull()) {
+                continue;
+            }
+            if (containment.isMany()) {
+                var children = (List<?>) object.eGet(containment);
+                var childElements = serializedChildren.getAsJsonArray();
+                // EMF JSON preserves containment-list order, including objects omitted by its ID handler.
                 for (int index = 0; index < children.size(); index++) {
-                    this.ids((EObject) children.get(index), elements.get(index).getAsJsonObject(), saving);
+                    this.synchronizeIdsRecursively((EObject) children.get(index), childElements.get(index).getAsJsonObject(), saving);
                 }
-            } else if (object.eGet(feature) instanceof EObject child) {
-                this.ids(child, content.getAsJsonObject(), saving);
+            } else if (object.eGet(containment) instanceof EObject child) {
+                this.synchronizeIdsRecursively(child, serializedChildren.getAsJsonObject(), saving);
             }
+        }
+    }
+
+    private final class IdPreservingEObjectHandler implements JsonResource.IEObjectHandler {
+        private final JsonResource.IEObjectHandler delegate;
+
+        private IdPreservingEObjectHandler(JsonResource.IEObjectHandler delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public JsonElement processSerializedContent(JsonElement json, EObject object) {
+            EcoreJsonResource.this.synchronizeIdsRecursively(object, json.getAsJsonObject(), true);
+            return this.delegate == null ? json : this.delegate.processSerializedContent(json, object);
+        }
+
+        @Override
+        public EObject processDeserializedContent(EObject object, JsonElement json) {
+            EcoreJsonResource.this.synchronizeIdsRecursively(object, json.getAsJsonObject(), false);
+            return this.delegate == null ? object : this.delegate.processDeserializedContent(object, json);
         }
     }
 }

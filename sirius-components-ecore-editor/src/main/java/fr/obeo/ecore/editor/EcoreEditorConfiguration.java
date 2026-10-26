@@ -11,17 +11,28 @@ package fr.obeo.ecore.editor;
 
 import java.util.List;
 import org.eclipse.sirius.components.core.api.IImagePathService;
+import org.eclipse.sirius.components.emf.migration.api.IMigrationParticipant;
 import org.eclipse.sirius.components.view.View;
+import org.eclipse.sirius.web.application.editingcontext.services.ResourceLoader;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 /** Import this configuration to install the editor in any Sirius Web application. */
 @Configuration(proxyBeanMethods = false)
 @Import({EcoreJavaServiceProvider.class, EcoreViewEditingContextInitializer.class, EcoreLabelService.class,
-        EcoreDiagramStylePostProcessor.class, EcoreResourceLoader.class, EcoreResourceToDocumentService.class,
+        EcoreDiagramStylePostProcessor.class, EcoreResourceToDocumentService.class,
         EcoreConnectorPaletteProvider.class, EcoreReconnectionToolsExecutor.class, EcoreDiagramStyles.class})
 public class EcoreEditorConfiguration {
+    @Bean
+    @Primary
+    @ConditionalOnMissingBean(EcoreResourceLoader.class)
+    EcoreResourceLoader ecoreResourceLoader(ResourceLoader defaultResourceLoader, List<IMigrationParticipant> migrationParticipants) {
+        return new EcoreResourceLoader(defaultResourceLoader, migrationParticipants);
+    }
+
     @Bean
     org.eclipse.emf.ecore.EPackage ecoreMetamodel() { return org.eclipse.emf.ecore.EcorePackage.eINSTANCE; }
 

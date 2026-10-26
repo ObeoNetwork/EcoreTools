@@ -16,6 +16,7 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 
 /** Type lookup from the editing context, followed by the built-in Ecore types. */
 public class DesignServices {
+    /** Returns the first trimmed, case-insensitive match in resource traversal order, then built-ins; null if absent. */
     public EClassifier findTypeByName(EObject context, String name) {
         if (name == null) return null;
         List<EObject> roots = new ArrayList<>();
@@ -26,16 +27,16 @@ public class DesignServices {
         }
         roots.add(EcorePackage.eINSTANCE);
         for (EObject root : roots) {
-            if (root instanceof EClassifier type && matches(type, name)) return type;
+            if (root instanceof EClassifier type && matchesNameIgnoringCase(type, name)) return type;
             var contents = root.eAllContents();
             while (contents.hasNext()) {
-                if (contents.next() instanceof EClassifier type && matches(type, name)) return type;
+                if (contents.next() instanceof EClassifier type && matchesNameIgnoringCase(type, name)) return type;
             }
         }
         return null;
     }
 
-    private boolean matches(EClassifier type, String name) {
+    private boolean matchesNameIgnoringCase(EClassifier type, String name) {
         return type.getName() != null && type.getName().trim().equalsIgnoreCase(name.trim());
     }
 }

@@ -28,8 +28,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 class EcoreEditorTests {
     private final EcoreServices services = new EcoreServices();
     private final AQLInterpreter interpreter = new AQLInterpreter(List.of(EcoreServices.class), List.of(EcorePackage.eINSTANCE));
-    private final EPackage pack = services.ecoreExample();
-    private final EClass book = (EClass) pack.getEClassifier("Book");
+    private final EPackage examplePackage = services.ecoreExample();
+    private final EClass book = (EClass) examplePackage.getEClassifier("Book");
 
     @Test
     void labelsPreserveDesktopSyntaxAndPartialEdits() {
@@ -49,9 +49,9 @@ class EcoreEditorTests {
         assertThat(attribute.getDefaultValueLiteral()).isEqualTo("42");
         services.ecoreEdit(book, "a new book");
         assertThat(book.getName()).isEqualTo("ANewBook");
-        services.ecoreEdit(pack, "a package");
-        assertThat(pack.getName()).isEqualTo("a package");
-        var enumeration = (EEnum) services.ecoreCreate(pack, "EEnum");
+        services.ecoreEdit(examplePackage, "a package");
+        assertThat(examplePackage.getName()).isEqualTo("a package");
+        var enumeration = (EEnum) services.ecoreCreate(examplePackage, "EEnum");
         var literal = (EEnumLiteral) services.ecoreCreate(enumeration, "EEnumLiteral");
         services.ecoreEdit(literal, "a_literal");
         assertThat(literal.getName()).isEqualTo("a_literal");
@@ -61,8 +61,9 @@ class EcoreEditorTests {
     @CsvSource({"0,0,1", "1,1,1", "11,1,1", "*,0,-1", "-1,0,-1"})
     void cardinalityShortcutsWorkForAttributesAndReferences(String input, int lower, int upper) {
         for (EStructuralFeature feature : List.of(book.getEAttributes().getFirst(),
-                ((EClass) pack.getEClassifier("Library")).getEReferences().getFirst())) {
-            feature.setLowerBound(0); feature.setUpperBound(1);
+                ((EClass) examplePackage.getEClassifier("Library")).getEReferences().getFirst())) {
+            feature.setLowerBound(0);
+            feature.setUpperBound(1);
             services.ecoreEdit(feature, input);
             assertThat(feature.getLowerBound()).isEqualTo(lower);
             assertThat(feature.getUpperBound()).isEqualTo(upper);
@@ -73,17 +74,17 @@ class EcoreEditorTests {
     void referencesSupportBoundsDerivedNamesAndPartialCardinalities() {
         var created = (EReference) services.ecoreCreate(book, "EReference");
         assertThat(created.getEType()).isSameAs(EcorePackage.Literals.EOBJECT);
-        var ref = services.ecoreReference(book, book, false);
-        services.ecoreEdit(ref, "[1..*] /related");
-        assertThat(services.ecoreLabel(ref)).isEqualTo("[1..*] /related");
-        services.ecoreEdit(ref, "[0..]");
-        assertThat(ref.getLowerBound()).isZero();
-        assertThat(ref.getUpperBound()).isEqualTo(-1);
-        assertThat(ref.getName()).isEqualTo("related");
-        services.ecoreEdit(ref, "[..1]");
-        assertThat(ref.getUpperBound()).isEqualTo(1);
-        services.ecoreEdit(ref, "next");
-        assertThat(ref.isDerived()).isFalse();
+        var reference = services.ecoreReference(book, book, false);
+        services.ecoreEdit(reference, "[1..*] /related");
+        assertThat(services.ecoreLabel(reference)).isEqualTo("[1..*] /related");
+        services.ecoreEdit(reference, "[0..]");
+        assertThat(reference.getLowerBound()).isZero();
+        assertThat(reference.getUpperBound()).isEqualTo(-1);
+        assertThat(reference.getName()).isEqualTo("related");
+        services.ecoreEdit(reference, "[..1]");
+        assertThat(reference.getUpperBound()).isEqualTo(1);
+        services.ecoreEdit(reference, "next");
+        assertThat(reference.isDerived()).isFalse();
     }
 
     @ParameterizedTest
@@ -91,12 +92,12 @@ class EcoreEditorTests {
     void referenceToolsAcceptTypeParameterPortsAndKeepDesktopCreationSemantics(boolean containment) {
         var parameter = (ETypeParameter) services.ecoreCreate(book, "ETypeParameter");
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
-        var clazz = diagram.getNodeDescriptions().getFirst();
-        var port = clazz.getBorderNodesDescriptions().getFirst();
-        var tool = clazz.getPalette().getEdgeTools().stream()
+        var classNodeDescription = diagram.getNodeDescriptions().getFirst();
+        var port = classNodeDescription.getBorderNodesDescriptions().getFirst();
+        var tool = classNodeDescription.getPalette().getEdgeTools().stream()
                 .filter(candidate -> candidate.getName().equals(containment ? "Composition" : "Reference"))
                 .findFirst().orElseThrow();
-        assertThat(tool.getTargetElementDescriptions()).containsExactly(clazz, port);
+        assertThat(tool.getTargetElementDescriptions()).containsExactly(classNodeDescription, port);
         var body = (ChangeContext) tool.getBody().getFirst();
         var result = interpreter.evaluateExpression(Map.of("semanticEdgeSource", book, "semanticEdgeTarget", parameter), body.getExpression());
         assertThat(result.getStatus()).isNotEqualTo(Status.ERROR);
@@ -113,7 +114,7 @@ class EcoreEditorTests {
         var oppositeTool = diagram.getEdgeDescriptions().getFirst().getPalette().getNodeTools().getFirst();
         assertThat(interpreter.evaluateExpression(Map.of("self", reference), oppositeTool.getPreconditionExpression()).asBoolean()).contains(false);
 
-        var target = (EClass) services.ecoreCreate(pack, "EClass");
+        var target = (EClass) services.ecoreCreate(examplePackage, "EClass");
         services.ecoreCreate(target, "ETypeParameter");
         var classReference = services.ecoreReference(book, target, containment);
         assertThat(classReference.getName()).isEqualTo("newclass");
@@ -130,7 +131,7 @@ class EcoreEditorTests {
     void featureLabelsCombineMandatoryDerivedAndValidationStyles(int lower, int upper, boolean bold) {
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
         var rows = diagram.getNodeDescriptions().getFirst().getChildrenDescriptions();
-        var reference = ((EClass) pack.getEClassifier("Library")).getEReferences().getFirst();
+        var reference = ((EClass) examplePackage.getEClassifier("Library")).getEReferences().getFirst();
         var edge = diagram.getEdgeDescriptions().getFirst();
         for (boolean derived : List.of(false, true)) {
             for (boolean invalid : List.of(false, true)) {
@@ -164,7 +165,7 @@ class EcoreEditorTests {
     void oppositeLinkStyleIncludesBothReferences() {
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
         var edge = diagram.getEdgeDescriptions().get(1);
-        var reference = ((EClass) pack.getEClassifier("Library")).getEReferences().getFirst();
+        var reference = ((EClass) examplePackage.getEClassifier("Library")).getEReferences().getFirst();
         reference.setContainment(false);
         services.ecoreCreateOpposite(reference);
         for (int lower : List.of(0, 1)) {
@@ -182,21 +183,21 @@ class EcoreEditorTests {
 
     @Test
     void operationsSupportParametersReturnTypeAndPartialEdits() {
-        var op = (EOperation) services.ecoreCreate(book, "EOperation");
-        services.ecoreEdit(op, "find(name : EString, count EInt) : Book");
-        assertThat(op.getName()).isEqualTo("find");
-        assertThat(op.getEParameters()).extracting(EParameter::getName).containsExactly("name", "count");
-        assertThat(op.getEParameters()).extracting(EParameter::getEType).containsExactly(EcorePackage.Literals.ESTRING, EcorePackage.Literals.EINT);
-        assertThat(op.getEType()).isSameAs(book);
-        var first = op.getEParameters().getFirst();
-        services.ecoreEdit(op, "(query EString)");
-        assertThat(op.getEParameters()).containsExactly(first);
+        var operation = (EOperation) services.ecoreCreate(book, "EOperation");
+        services.ecoreEdit(operation, "find(name : EString, count EInt) : Book");
+        assertThat(operation.getName()).isEqualTo("find");
+        assertThat(operation.getEParameters()).extracting(EParameter::getName).containsExactly("name", "count");
+        assertThat(operation.getEParameters()).extracting(EParameter::getEType).containsExactly(EcorePackage.Literals.ESTRING, EcorePackage.Literals.EINT);
+        assertThat(operation.getEType()).isSameAs(book);
+        var first = operation.getEParameters().getFirst();
+        services.ecoreEdit(operation, "(query EString)");
+        assertThat(operation.getEParameters()).containsExactly(first);
         assertThat(first.getName()).isEqualTo("query");
-        assertThat(op.getName()).isEqualTo("find");
-        assertThat(op.getEType()).isSameAs(book);
-        services.ecoreEdit(op, "():");
-        assertThat(op.getEParameters()).isEmpty();
-        assertThat(op.getEType()).isNull();
+        assertThat(operation.getName()).isEqualTo("find");
+        assertThat(operation.getEType()).isSameAs(book);
+        services.ecoreEdit(operation, "():");
+        assertThat(operation.getEParameters()).isEmpty();
+        assertThat(operation.getEType()).isNull();
     }
 
     @ParameterizedTest
@@ -205,7 +206,7 @@ class EcoreEditorTests {
     void oppositeLinkPreservesDerivedAndErrorColors(boolean derived, boolean oppositeDerived, boolean invalid, String color) {
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
         var edge = diagram.getEdgeDescriptions().get(1);
-        var reference = ((EClass) pack.getEClassifier("Library")).getEReferences().getFirst();
+        var reference = ((EClass) examplePackage.getEClassifier("Library")).getEReferences().getFirst();
         reference.setContainment(false);
         reference.setLowerBound(1);
         services.ecoreCreateOpposite(reference);
@@ -222,22 +223,22 @@ class EcoreEditorTests {
 
     @Test
     void genericTypesAndCaseInsensitiveLookupMatchDesktop() {
-        var t = (ETypeParameter) services.ecoreCreate(book, "ETypeParameter");
-        assertThat(t.getName()).isEqualTo("T");
+        var typeParameter = (ETypeParameter) services.ecoreCreate(book, "ETypeParameter");
+        assertThat(typeParameter.getName()).isEqualTo("T");
         var attribute = book.getEAttributes().getFirst();
         services.ecoreEdit(attribute, ": T");
-        assertThat(attribute.getEGenericType().getETypeParameter()).isSameAs(t);
-        var op = (EOperation) services.ecoreCreate(book, "EOperation");
-        services.ecoreEdit(op, ": T");
-        assertThat(op.getEGenericType().getETypeParameter()).isSameAs(t);
-        services.ecoreEdit(op, ": book");
-        assertThat(op.getEType()).isSameAs(book);
-        assertThat(op.getEGenericType().getETypeArguments()).hasSize(1);
+        assertThat(attribute.getEGenericType().getETypeParameter()).isSameAs(typeParameter);
+        var operation = (EOperation) services.ecoreCreate(book, "EOperation");
+        services.ecoreEdit(operation, ": T");
+        assertThat(operation.getEGenericType().getETypeParameter()).isSameAs(typeParameter);
+        services.ecoreEdit(operation, ": book");
+        assertThat(operation.getEType()).isSameAs(book);
+        assertThat(operation.getEGenericType().getETypeArguments()).hasSize(1);
     }
 
     @Test
     void genericBindingsAndReferencesToVisibleTypeParametersAreDisplayed() {
-        var parent = (EClass) pack.getEClassifier("Library");
+        var parent = (EClass) examplePackage.getEClassifier("Library");
         var parameter = (ETypeParameter) services.ecoreCreate(parent, "ETypeParameter");
         var reference = parent.getEReferences().getFirst();
         services.ecoreEditReferenceRow(reference, ": T");
@@ -271,12 +272,12 @@ class EcoreEditorTests {
 
     @Test
     void errorsDisappearAfterRepairAndInheritanceCannotCycle() {
-        assertThat(services.ecoreHasError(pack)).isFalse();
+        assertThat(services.ecoreHasError(examplePackage)).isFalse();
         book.getEAttributes().getFirst().setName("not a valid name");
         assertThat(services.ecoreHasError(book)).isTrue();
         book.getEAttributes().getFirst().setName("title");
         assertThat(services.ecoreHasError(book)).isFalse();
-        var other = (EClass) pack.getEClassifier("Library");
+        var other = (EClass) examplePackage.getEClassifier("Library");
         var parameter = (ETypeParameter) services.ecoreCreate(book, "ETypeParameter");
         var result = interpreter.evaluateExpression(Map.of("semanticEdgeSource", book, "semanticEdgeTarget", parameter),
                 "aql:semanticEdgeSource.ecoreSuperType(semanticEdgeTarget)");
@@ -291,11 +292,11 @@ class EcoreEditorTests {
 
     @Test
     void untypedReferencesRemainVisibleAsRowsAndRetypingRestoresEdges() {
-        var owner = (EClass) pack.getEClassifier("Library");
+        var owner = (EClass) examplePackage.getEClassifier("Library");
         var reference = owner.getEReferences().getFirst();
-        var ids = new org.eclipse.sirius.components.emf.services.EObjectIDManager();
+        var objectIdManager = new org.eclipse.sirius.components.emf.services.EObjectIDManager();
         String targetId = java.util.UUID.randomUUID().toString();
-        ids.setId(book, targetId);
+        objectIdManager.setId(book, targetId);
         var targetNode = mock(org.eclipse.sirius.components.diagrams.Node.class);
         when(targetNode.getId()).thenReturn("book-view"); when(targetNode.getTargetObjectId()).thenReturn(targetId);
         var diagram = mock(org.eclipse.sirius.components.diagrams.Diagram.class);
@@ -315,10 +316,10 @@ class EcoreEditorTests {
 
     @Test
     void inheritedUntypedReferencesAppearOnlyWhenTheirOwnerIsAbsent() {
-        var owner = (EClass) pack.getEClassifier("Library");
+        var owner = (EClass) examplePackage.getEClassifier("Library");
         var reference = owner.getEReferences().getFirst();
         reference.setEType(null);
-        var child = (EClass) services.ecoreCreate(pack, "EClass");
+        var child = (EClass) services.ecoreCreate(examplePackage, "EClass");
         services.ecoreSuperType(child, owner);
         var diagram = mock(org.eclipse.sirius.components.diagrams.Diagram.class);
         when(diagram.getNodes()).thenReturn(List.of());
@@ -335,20 +336,20 @@ class EcoreEditorTests {
 
     @Test
     void visibleAncestorsAndPendingImportsControlReferenceRows() {
-        var parent = (EClass) pack.getEClassifier("Library");
-        var ancestor = (EClass) services.ecoreCreate(pack, "EClass");
+        var parent = (EClass) examplePackage.getEClassifier("Library");
+        var ancestor = (EClass) services.ecoreCreate(examplePackage, "EClass");
         services.ecoreSuperType(book, parent);
         services.ecoreSuperType(parent, ancestor);
-        var ids = new org.eclipse.sirius.components.emf.services.EObjectIDManager();
+        var objectIdManager = new org.eclipse.sirius.components.emf.services.EObjectIDManager();
         String ancestorId = java.util.UUID.randomUUID().toString();
-        ids.setId(ancestor, ancestorId);
+        objectIdManager.setId(ancestor, ancestorId);
         var visible = mock(org.eclipse.sirius.components.diagrams.Node.class);
         when(visible.getId()).thenReturn("ancestor-view");
         when(visible.getTargetObjectId()).thenReturn(ancestorId);
         var diagram = mock(org.eclipse.sirius.components.diagrams.Diagram.class);
         when(diagram.getNodes()).thenReturn(List.of(visible));
         String parentId = java.util.UUID.randomUUID().toString();
-        ids.setId(parent, parentId);
+        objectIdManager.setId(parent, parentId);
         var oldInheritance = mock(org.eclipse.sirius.components.diagrams.Edge.class);
         when(oldInheritance.getId()).thenReturn("parent-inheritance");
         when(oldInheritance.getTargetObjectId()).thenReturn(parentId);
@@ -356,10 +357,10 @@ class EcoreEditorTests {
         var context = new org.eclipse.sirius.components.collaborative.diagrams.DiagramContext(diagram);
         assertThat(services.ecoreVisibleSuperTypes(book, context)).containsExactly(ancestor);
         services.ecoreNote(parent, false);
-        assertThat(services.ecoreNotes(pack, context)).isEmpty();
+        assertThat(services.ecoreNotes(examplePackage, context)).isEmpty();
         assertThat(services.ecoreReferenceRows(parent, context)).hasSize(1);
         String bookId = java.util.UUID.randomUUID().toString();
-        ids.setId(book, bookId);
+        objectIdManager.setId(book, bookId);
         context.viewCreationRequests().add(org.eclipse.sirius.components.diagrams.ViewCreationRequest.newViewCreationRequest()
                 .targetObjectId(bookId).parentElementId("diagram").descriptionId("class")
                 .containmentKind(org.eclipse.sirius.components.diagrams.components.NodeContainmentKind.CHILD_NODE).build());
@@ -370,54 +371,63 @@ class EcoreEditorTests {
 
     @Test
     void oppositeReferencesUseOneEdgeAndKeepContainmentDirection() {
-        var ref = ((EClass) pack.getEClassifier("Library")).getEReferences().getFirst();
-        services.ecoreCreateOpposite(ref);
-        assertThat(ref.getEOpposite().getEOpposite()).isSameAs(ref);
-        assertThat(services.ecoreReferences(pack)).containsExactly(ref);
+        var reference = ((EClass) examplePackage.getEClassifier("Library")).getEReferences().getFirst();
+        services.ecoreCreateOpposite(reference);
+        assertThat(reference.getEOpposite().getEOpposite()).isSameAs(reference);
+        assertThat(services.ecoreReferences(examplePackage)).containsExactly(reference);
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
         var edge = diagram.getEdgeDescriptions().get(1);
-        var variables = Map.<String, Object>of("self", ref);
+        var variables = Map.<String, Object>of("self", reference);
         assertThat(edge.getCenterLabelExpression()).isEmpty();
         assertThat(interpreter.evaluateExpression(variables, edge.getBeginLabelExpression()).asString()).contains("[0..1] opposite");
         assertThat(interpreter.evaluateExpression(variables, edge.getEndLabelExpression()).asString()).contains("[0..*] books");
         assertThat(edge.getPalette().getCenterLabelEditTool()).isNotNull();
         var beginEdit = (ChangeContext) edge.getPalette().getBeginLabelEditTool().getBody().getFirst();
-        interpreter.evaluateExpression(Map.of("self", ref, "newLabel", "[0..*] /owner"), beginEdit.getExpression());
-        assertThat(ref.getEOpposite().getName()).isEqualTo("owner");
-        assertThat(ref.getEOpposite().isDerived()).isTrue();
-        assertThat(ref.getName()).isEqualTo("books");
+        interpreter.evaluateExpression(Map.of("self", reference, "newLabel", "[0..*] /owner"), beginEdit.getExpression());
+        assertThat(reference.getEOpposite().getName()).isEqualTo("owner");
+        assertThat(reference.getEOpposite().isDerived()).isTrue();
+        assertThat(reference.getName()).isEqualTo("books");
         var endEdit = (ChangeContext) edge.getPalette().getEndLabelEditTool().getBody().getFirst();
-        interpreter.evaluateExpression(Map.of("self", ref, "newLabel", "[1..*] volumes"), endEdit.getExpression());
-        assertThat(ref.getName()).isEqualTo("volumes");
-        assertThat(ref.getLowerBound()).isEqualTo(1);
-        assertThat(ref.getEOpposite().getName()).isEqualTo("owner");
-        services.ecoreCreateOpposite(ref);
+        interpreter.evaluateExpression(Map.of("self", reference, "newLabel", "[1..*] volumes"), endEdit.getExpression());
+        assertThat(reference.getName()).isEqualTo("volumes");
+        assertThat(reference.getLowerBound()).isEqualTo(1);
+        assertThat(reference.getEOpposite().getName()).isEqualTo("owner");
+        services.ecoreCreateOpposite(reference);
         assertThat(book.getEReferences()).hasSize(1);
-        services.ecoreEditReferenceRow(ref, "/items : Book");
-        assertThat(ref.getEType()).isSameAs(book);
-        assertThat(ref.isDerived()).isTrue();
-        assertThat(services.ecoreReferenceRowLabel(ref)).contains("/items : Book");
+        services.ecoreEditReferenceRow(reference, "/items : Book");
+        assertThat(reference.getEType()).isSameAs(book);
+        assertThat(reference.isDerived()).isTrue();
+        assertThat(services.ecoreReferenceRowLabel(reference)).contains("/items : Book");
     }
 
     @Test
     void relatedImportsCoverReferencesInheritanceAndTypedMembersInBothDirections() {
-        var library = (EClass) pack.getEClassifier("Library");
-        var parent = (EClass) services.ecoreCreate(pack, "EClass"); parent.setName("Entity");
-        var child = (EClass) services.ecoreCreate(pack, "EClass"); child.setName("SpecialBook");
-        var unrelated = (EClass) services.ecoreCreate(pack, "EClass"); unrelated.setName("Unrelated");
+        var library = (EClass) examplePackage.getEClassifier("Library");
+        var parent = (EClass) services.ecoreCreate(examplePackage, "EClass");
+        parent.setName("Entity");
+        var child = (EClass) services.ecoreCreate(examplePackage, "EClass");
+        child.setName("SpecialBook");
+        var unrelated = (EClass) services.ecoreCreate(examplePackage, "EClass");
+        unrelated.setName("Unrelated");
         services.ecoreSuperType(book, parent);
         services.ecoreSuperType(child, book);
-        var money = (EDataType) services.ecoreCreate(pack, "EDataType"); money.setName("Money");
-        var status = (EEnum) services.ecoreCreate(pack, "EEnum"); status.setName("Status");
-        var price = (EAttribute) services.ecoreCreate(book, "EAttribute"); price.setEType(money);
-        var op = (EOperation) services.ecoreCreate(book, "EOperation"); op.setEType(status);
-        var argument = EcoreFactory.eINSTANCE.createEParameter(); argument.setEType(money); op.getEParameters().add(argument);
+        var money = (EDataType) services.ecoreCreate(examplePackage, "EDataType");
+        money.setName("Money");
+        var status = (EEnum) services.ecoreCreate(examplePackage, "EEnum");
+        status.setName("Status");
+        var price = (EAttribute) services.ecoreCreate(book, "EAttribute");
+        price.setEType(money);
+        var operation = (EOperation) services.ecoreCreate(book, "EOperation");
+        operation.setEType(status);
+        var argument = EcoreFactory.eINSTANCE.createEParameter();
+        argument.setEType(money);
+        operation.getEParameters().add(argument);
         assertThat(services.ecoreRelatedElements(book, null)).containsExactlyInAnyOrder(parent, child, library, money, status);
         assertThat(services.ecoreRelatedElements(money, null)).containsExactly(book);
         assertThat(services.ecoreRelatedElements(status, null)).containsExactly(book);
-        assertThat(services.ecoreRelatedElements(op, null)).containsExactlyInAnyOrder(money, status);
+        assertThat(services.ecoreRelatedElements(operation, null)).containsExactlyInAnyOrder(money, status);
         assertThat(services.ecoreRelatedElements(price, null)).containsExactly(money);
-        assertThat(services.ecoreRelatedElements(pack, null)).containsExactlyElementsOf(pack.getEClassifiers());
+        assertThat(services.ecoreRelatedElements(examplePackage, null)).containsExactlyElementsOf(examplePackage.getEClassifiers());
     }
 
     @Test
@@ -426,7 +436,7 @@ class EcoreEditorTests {
         var first = new org.eclipse.emf.ecore.resource.impl.ResourceImpl(org.eclipse.emf.common.util.URI.createURI("first.ecore"));
         var second = new org.eclipse.emf.ecore.resource.impl.ResourceImpl(org.eclipse.emf.common.util.URI.createURI("second.ecore"));
         resources.getResources().addAll(List.of(first, second));
-        first.getContents().add(pack);
+        first.getContents().add(examplePackage);
         var other = services.ecoreExample(); second.getContents().add(other);
         var consumer = (EClass) other.getEClassifier("Book");
         services.ecoreReference(consumer, book, false);
@@ -456,11 +466,11 @@ class EcoreEditorTests {
         assertThat(diagram.getPalette().getDropTool()).isNotNull();
         assertThat(EcoreUtil.getURI(diagram)).isEqualTo(EcoreUtil.getURI(new EcoreViews().create().getDescriptions().getFirst()));
         assertThat(diagram.getNodeDescriptions().subList(0, 4)).allMatch(n -> n.getSynchronizationPolicy() == SynchronizationPolicy.UNSYNCHRONIZED);
-        var clazz = diagram.getNodeDescriptions().getFirst();
-        assertThat(clazz.getChildrenDescriptions()).allMatch(n -> n.getSynchronizationPolicy() == SynchronizationPolicy.SYNCHRONIZED);
-        var remove = clazz.getPalette().getNodeTools().stream().filter(t -> t.getName().equals("Remove from diagram")).findFirst().orElseThrow();
+        var classNodeDescription = diagram.getNodeDescriptions().getFirst();
+        assertThat(classNodeDescription.getChildrenDescriptions()).allMatch(n -> n.getSynchronizationPolicy() == SynchronizationPolicy.SYNCHRONIZED);
+        var remove = classNodeDescription.getPalette().getNodeTools().stream().filter(t -> t.getName().equals("Remove from diagram")).findFirst().orElseThrow();
         assertThat(remove.getBody().getFirst()).isInstanceOf(DeleteView.class);
-        assertThat(clazz.getPalette().getDeleteTool().getBody().getFirst()).isInstanceOf(DeleteElement.class);
+        assertThat(classNodeDescription.getPalette().getDeleteTool().getBody().getFirst()).isInstanceOf(DeleteElement.class);
         var importer = diagram.getPalette().getNodeTools().stream()
                 .filter(tool -> "Import existing elements".equals(tool.getName())).findFirst().orElseThrow();
         assertThat(((SelectionDialogDescription) importer.getDialogDescription()).isMultiple()).isTrue();
@@ -480,16 +490,16 @@ class EcoreEditorTests {
     @Test
     void packagesKeepFreeFormContentsAndCreationToolsInEveryValidationState() {
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
-        var pack = diagram.getNodeDescriptions().stream().filter(n -> "EPackage".equals(n.getName())).findFirst().orElseThrow();
-        assertThat(pack.getStyle().getChildrenLayoutStrategy()).isInstanceOf(FreeFormLayoutStrategyDescription.class);
-        assertThat(pack.getConditionalStyles()).allSatisfy(style ->
+        var packageNodeDescription = diagram.getNodeDescriptions().stream().filter(n -> "EPackage".equals(n.getName())).findFirst().orElseThrow();
+        assertThat(packageNodeDescription.getStyle().getChildrenLayoutStrategy()).isInstanceOf(FreeFormLayoutStrategyDescription.class);
+        assertThat(packageNodeDescription.getConditionalStyles()).allSatisfy(style ->
                 assertThat(style.getStyle().getChildrenLayoutStrategy()).isInstanceOf(FreeFormLayoutStrategyDescription.class));
-        assertThat(pack.getReusedChildNodeDescriptions()).containsExactlyElementsOf(diagram.getNodeDescriptions().subList(0, 4));
+        assertThat(packageNodeDescription.getReusedChildNodeDescriptions()).containsExactlyElementsOf(diagram.getNodeDescriptions().subList(0, 4));
         for (var type : List.of("EClass", "EEnum", "EDataType", "EPackage")) {
-            var tool = pack.getPalette().getNodeTools().stream().filter(t -> t.getName().equals("New " + type)).findFirst().orElseThrow();
+            var tool = packageNodeDescription.getPalette().getNodeTools().stream().filter(t -> t.getName().equals("New " + type)).findFirst().orElseThrow();
             var change = (ChangeContext) tool.getBody().getFirst();
-            var created = evaluate(this.pack, change.getExpression()).asObject().orElseThrow();
-            assertThat(((org.eclipse.emf.ecore.EObject) created).eContainer()).isSameAs(this.pack);
+            var created = evaluateAql(this.examplePackage, change.getExpression()).asObject().orElseThrow();
+            assertThat(((org.eclipse.emf.ecore.EObject) created).eContainer()).isSameAs(this.examplePackage);
             var createView = (CreateView) change.getChildren().getFirst();
             assertThat(createView.getElementDescription().getName()).isEqualTo(type);
             assertThat(createView.getParentViewExpression()).isEqualTo("aql:selectedNode");
@@ -499,30 +509,30 @@ class EcoreEditorTests {
     @Test
     void semanticAqlAndCreationToolsResolveAndIconsArePackaged() {
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
-        evaluate(pack, diagram.getTitleExpression());
+        evaluateAql(examplePackage, diagram.getTitleExpression());
         for (var node : diagram.getNodeDescriptions()) {
-            evaluate(pack, node.getSemanticCandidatesExpression());
+            evaluateAql(examplePackage, node.getSemanticCandidatesExpression());
             if (node.getDomainType().equals("ecore::EStringToStringMapEntry")) {
-                evaluate(services.ecoreNote(book, false), node.getInsideLabel().getLabelExpression());
+                evaluateAql(services.ecoreNote(book, false), node.getInsideLabel().getLabelExpression());
                 continue;
             }
-            var context = node.getName().equals("EPackage") ? pack : services.ecoreCreate(pack, node.getName());
-            evaluate(context, node.getInsideLabel().getLabelExpression());
-            node.getConditionalStyles().forEach(style -> evaluate(context, style.getCondition()));
+            var context = node.getName().equals("EPackage") ? examplePackage : services.ecoreCreate(examplePackage, node.getName());
+            evaluateAql(context, node.getInsideLabel().getLabelExpression());
+            node.getConditionalStyles().forEach(style -> evaluateAql(context, style.getCondition()));
             for (var child : node.getChildrenDescriptions()) {
-                evaluate(context, child.getSemanticCandidatesExpression());
+                evaluateAql(context, child.getSemanticCandidatesExpression());
             }
         }
         for (var tool : diagram.getPalette().getNodeTools()) {
-            if (tool.getBody().getFirst() instanceof ChangeContext change) evaluate(pack, change.getExpression());
+            if (tool.getBody().getFirst() instanceof ChangeContext change) evaluateAql(examplePackage, change.getExpression());
         }
-        var ref = services.ecoreReference(book, book, true);
+        var reference = services.ecoreReference(book, book, true);
         var edge = diagram.getEdgeDescriptions().getFirst();
-        evaluate(pack, edge.getSemanticCandidatesExpression());
-        evaluate(ref, edge.getSourceExpression());
-        evaluate(ref, edge.getTargetExpression());
-        evaluate(ref, edge.getCenterLabelExpression());
-        edge.getConditionalStyles().forEach(style -> evaluate(ref, style.getCondition()));
+        evaluateAql(examplePackage, edge.getSemanticCandidatesExpression());
+        evaluateAql(reference, edge.getSourceExpression());
+        evaluateAql(reference, edge.getTargetExpression());
+        evaluateAql(reference, edge.getCenterLabelExpression());
+        edge.getConditionalStyles().forEach(style -> evaluateAql(reference, style.getCondition()));
         for (var classifier : EcorePackage.eINSTANCE.getEClassifiers()) {
             if (classifier instanceof EClass type && !type.isAbstract()) {
                 var object = EcoreFactory.eINSTANCE.create(type);
@@ -538,34 +548,34 @@ class EcoreEditorTests {
     void backgroundDocumentationIsVisibleWithoutImportingItsPackage() {
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
         var tool = diagram.getPalette().getNodeTools().stream().filter(t -> "Documentation".equals(t.getName())).findFirst().orElseThrow();
-        evaluate(pack, ((ChangeContext) tool.getBody().getFirst()).getExpression());
-        var note = services.ecoreNote(pack, false);
-        assertThat(services.ecoreNotes(pack, null)).containsExactly(note);
+        evaluateAql(examplePackage, ((ChangeContext) tool.getBody().getFirst()).getExpression());
+        var note = services.ecoreNote(examplePackage, false);
+        assertThat(services.ecoreNotes(examplePackage, null)).containsExactly(note);
         services.ecoreNote(book, false);
-        assertThat(services.ecoreNotes(pack, null)).containsExactly(note);
+        assertThat(services.ecoreNotes(examplePackage, null)).containsExactly(note);
         var empty = mock(org.eclipse.sirius.components.diagrams.Diagram.class);
         when(empty.getNodes()).thenReturn(List.of());
         when(empty.getEdges()).thenReturn(List.of());
         var context = new org.eclipse.sirius.components.collaborative.diagrams.DiagramContext(empty);
-        assertThat(services.ecoreNotes(pack, context)).containsExactly(note);
+        assertThat(services.ecoreNotes(examplePackage, context)).containsExactly(note);
     }
 
     @Test
     void documentationCanBeAssignedAndReconnectedWithoutChangingItsIdentityOrOtherMetadata() {
         var resource = new EcoreJsonResource(new org.eclipse.sirius.components.emf.services.JSONResourceFactory().createResourceURI("documentation-test"));
-        resource.getContents().add(pack);
+        resource.getContents().add(examplePackage);
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
         var noteDescription = diagram.getNodeDescriptions().getLast();
         var assignment = noteDescription.getPalette().getEdgeTools().getFirst();
         var noteLink = diagram.getEdgeDescriptions().getLast();
         assertThat(assignment.getTargetElementDescriptions()).contains(diagram.getEdgeDescriptions().getFirst(), diagram.getEdgeDescriptions().get(1));
         assertThat(noteLink.getTargetDescriptions()).contains(diagram.getEdgeDescriptions().getFirst(), diagram.getEdgeDescriptions().get(1));
-        var note = services.ecoreNote(pack, false);
+        var note = services.ecoreNote(examplePackage, false);
         var source = (EAnnotation) note.eContainer();
         source.getDetails().put("other", "Keep this package setting");
         note.eSet(note.eClass().getEStructuralFeature("value"), "Line one\nLine two");
-        var ids = new org.eclipse.sirius.components.emf.services.EObjectIDManager();
-        String noteId = ids.getOrCreateId(note);
+        var objectIdManager = new org.eclipse.sirius.components.emf.services.EObjectIDManager();
+        String noteId = objectIdManager.getOrCreateId(note);
         var existing = EcoreFactory.eINSTANCE.createEAnnotation();
         existing.setSource(source.getSource()); existing.getDetails().put("setting", "Keep this class setting");
         book.getEAnnotations().add(existing);
@@ -577,28 +587,28 @@ class EcoreEditorTests {
         assertThat(source.getDetails().map()).doesNotContainKey("documentation");
         assertThat(existing.getDetails().get("setting")).isEqualTo("Keep this class setting");
         assertThat(existing.getDetails().get("documentation")).isEqualTo("Line one\nLine two");
-        var reference = ((EClass) pack.getEClassifier("Library")).getEReferences().getFirst();
+        var reference = ((EClass) examplePackage.getEClassifier("Library")).getEReferences().getFirst();
         var reconnect = noteLink.getPalette().getEdgeReconnectionTools().getFirst();
         assertThat(reconnect).isInstanceOf(TargetEdgeEndReconnectionTool.class);
         result = interpreter.evaluateExpression(Map.of("edgeSemanticElement", note, "semanticReconnectionTarget", reference),
                 ((ChangeContext) reconnect.getBody().getFirst()).getExpression());
         assertThat(result.getStatus()).isNotEqualTo(Status.ERROR);
         assertThat(((EAnnotation) note.eContainer()).getEModelElement()).isSameAs(reference);
-        assertThat(ids.getOrCreateId(note)).isEqualTo(noteId);
+        assertThat(objectIdManager.getOrCreateId(note)).isEqualTo(noteId);
         assertThat(existing.getDetails().map()).doesNotContainKey("documentation");
         assertThat(existing.getDetails().get("setting")).isEqualTo("Keep this class setting");
         var edge = mock(org.eclipse.sirius.components.diagrams.Edge.class);
-        when(edge.getId()).thenReturn("reference-edge"); when(edge.getTargetObjectId()).thenReturn(ids.getOrCreateId(reference));
+        when(edge.getId()).thenReturn("reference-edge"); when(edge.getTargetObjectId()).thenReturn(objectIdManager.getOrCreateId(reference));
         var rendered = mock(org.eclipse.sirius.components.diagrams.Diagram.class);
         when(rendered.getNodes()).thenReturn(List.of()); when(rendered.getEdges()).thenReturn(List.of(edge));
-        assertThat(services.ecoreNotes(pack, new org.eclipse.sirius.components.collaborative.diagrams.DiagramContext(rendered))).contains(note);
+        assertThat(services.ecoreNotes(examplePackage, new org.eclipse.sirius.components.collaborative.diagrams.DiagramContext(rendered))).contains(note);
     }
 
     @Test
     void reassigningNotesPreservesExistingDocumentationAndReadOnlyModels() {
         var feedback = mock(org.eclipse.sirius.components.core.api.IFeedbackMessageService.class);
         var services = new EcoreServices(feedback);
-        var note = services.ecoreNote(pack, false);
+        var note = services.ecoreNote(examplePackage, false);
         var existing = services.ecoreNote(book, false);
         var value = note.eClass().getEStructuralFeature("value");
         note.eSet(value, "New documentation\nKeep both texts");
@@ -607,7 +617,7 @@ class EcoreEditorTests {
                 .hasMessageContaining("already has documentation");
         org.mockito.Mockito.verify(feedback).addFeedbackMessage(new org.eclipse.sirius.components.representations.Message(
                 "The target already has documentation; both notes have been preserved", org.eclipse.sirius.components.representations.MessageLevel.ERROR));
-        assertThat(((EAnnotation) note.eContainer()).getEModelElement()).isSameAs(pack);
+        assertThat(((EAnnotation) note.eContainer()).getEModelElement()).isSameAs(examplePackage);
         assertThat(services.ecoreNote(book, false)).isSameAs(existing);
         assertThat(note.eGet(value)).isEqualTo("New documentation\nKeep both texts");
         assertThat(existing.eGet(value)).isEqualTo("Existing documentation");
@@ -625,7 +635,7 @@ class EcoreEditorTests {
 
     @Test
     void annotationToolsPreserveExistingTextAndOfferDirectValueEditing() {
-        assertThat(services.ecoreNotes(pack, null)).isEmpty();
+        assertThat(services.ecoreNotes(examplePackage, null)).isEmpty();
         var documentation = services.ecoreNote(book, false);
         var value = documentation.eClass().getEStructuralFeature("value");
         documentation.eSet(value, "First line\nSecond line");
@@ -646,7 +656,31 @@ class EcoreEditorTests {
         }
     }
 
-    private Result evaluate(Object self, String expression) {
+    @Test
+    void operationParameterParsingKeepsSeparatorPrecedenceAndAbsentParts() {
+        var labels = new fr.obeo.ecore.editor.labels.EOperationServices();
+        assertThat(labels.parseParameter("name : Type")).containsExactly("name", "Type");
+        assertThat(labels.parseParameter("name Type")).containsExactly("name", "Type");
+        assertThat(labels.parseParameter("name\tType")).containsExactly("name", "Type");
+        assertThat(labels.parseParameter("name\tignored Type")).containsExactly("name\tignored", "Type");
+        assertThat(labels.parseParameter(": Type")).containsExactly(null, "Type");
+        assertThat(labels.parseParameter("name:")).containsExactly("name", null);
+        assertThat(labels.parseParameter("name")).containsExactly("name", null);
+        assertThat(labels.parseParameter(" ")).containsExactly(null, null);
+    }
+
+    @Test
+    void referenceRangeParsingKeepsUnspecifiedAndInvalidBoundsDistinctFromUnbounded() {
+        var labels = new fr.obeo.ecore.editor.labels.EReferenceServices();
+        assertThat(labels.parseCardinality("[..2]")).containsExactly(null, 2);
+        assertThat(labels.parseCardinality("[2..]")).containsExactly(2, null);
+        assertThat(labels.parseCardinality("[bad..*]")).containsExactly(null, -1);
+        assertThat(labels.parseCardinality("[1..2..3]")).containsExactly(1, 2);
+        assertThat(labels.parseCardinality("[4]")).containsExactly(null, null);
+        assertThat(labels.parseCardinality("name")).containsExactly(null, null);
+    }
+
+    private Result evaluateAql(Object self, String expression) {
         var diagram = mock(org.eclipse.sirius.components.diagrams.Diagram.class);
         when(diagram.getNodes()).thenReturn(List.of());
         var context = new org.eclipse.sirius.components.collaborative.diagrams.DiagramContext(diagram);

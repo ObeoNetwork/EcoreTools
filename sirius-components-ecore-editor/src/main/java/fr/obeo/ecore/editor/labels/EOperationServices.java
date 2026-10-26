@@ -33,70 +33,71 @@ public class EOperationServices {
 	/**
 	 * Computes the label of an EOperation.
 	 */
-	public String render(EOperation op) {
-		StringBuilder sb = new StringBuilder();
-		renderName(op, sb);
-		renderParameters(op, sb, true);
-		renderType(op, sb);
-		return sb.toString();
+	public String render(EOperation operation) {
+		StringBuilder label = new StringBuilder();
+		renderName(operation, label);
+		renderParameters(operation, label, true);
+		renderReturnType(operation, label);
+		return label.toString();
 	}
 
 	/**
 	 * Computes the tooltip of an EOperation (same as label but excluding the
 	 * parameters Types) .
 	 * 
-	 * @param op
+	 * @param operation
 	 *            the operation to be rendered
 	 * @return the tooltip of the given EOperation (same as label but excluding
 	 *         the parameters Types)
 	 */
-	public String renderEOperationTooltip(EOperation op) {
-		StringBuilder sb = new StringBuilder();
-		renderName(op, sb);
-		renderParameters(op, sb, false);
-		renderType(op, sb);
-		return sb.toString();
+	public String renderEOperationTooltip(EOperation operation) {
+		StringBuilder label = new StringBuilder();
+		renderName(operation, label);
+		renderParameters(operation, label, false);
+		renderReturnType(operation, label);
+		return label.toString();
 	}
 
 	/**
-	 * Performs a "direct edit" operation on an EOperation.
+	 * Mutates and returns the operation, reusing parameters by position and removing excess ones.
+	 * Omitted parameter/return clauses keep existing values; an explicit unresolved return type clears it.
 	 */
-	public EOperation performEdit(EOperation op, String editString) {
-		editName(op, editString);
-		editParameters(op, editString);
-		editType(op, editString);
-		return op;
+	public EOperation performEdit(EOperation operation, String editString) {
+		editName(operation, editString);
+		editParameters(operation, editString);
+		editReturnType(operation, editString);
+		return operation;
 	}
 
-	private void renderName(EOperation op, StringBuilder sb) {
-		if (op.getName() != null) {
-			sb.append(op.getName());
+	private void renderName(EOperation operation, StringBuilder label) {
+		if (operation.getName() != null) {
+			label.append(operation.getName());
 		}
 	}
 
 	/**
 	 * Renders the parameters of the given EOperation.
 	 * 
-	 * @param op
+	 * @param operation
 	 *            the operation to render
-	 * @param sb
+	 * @param label
 	 *            the string builder used to render the eOperation
 	 * @param includeParameterType
 	 *            indicates whether parameter's Types should be rendered or not
 	 */
-	private void renderParameters(EOperation op, StringBuilder sb,
+	private void renderParameters(EOperation operation, StringBuilder label,
 			boolean includeParameterType) {
-		sb.append("(");
+		label.append("(");
 		boolean first = true;
-		for (EParameter param : op.getEParameters()) {
+		for (EParameter parameter : operation.getEParameters()) {
 			if (!first) {
-				sb.append(PARAMETERS_SEPARATOR).append(" ");
+				label.append(PARAMETERS_SEPARATOR).append(" ");
 			} else {
 				first = false;
 			}
-			sb.append(renderParameter(param, includeParameterType));
+			label.append(renderParameter(parameter, includeParameterType));
 		}
-		sb.append(")");
+		label.append(")");
 	}
 
 	/**
@@ -120,83 +121,81 @@ public class EOperationServices {
 		}
 	}
 
-	private void renderType(EOperation op, StringBuilder sb) {
-		String typeLabel = EGenericsServices.getETypeLabel(op);
+	private void renderReturnType(EOperation operation, StringBuilder label) {
+		String typeLabel = EGenericsServices.getETypeLabel(operation);
 		if (typeLabel != null) {
-			sb.append(" ").append(TYPE_SEPARATOR).append(" ");
-			sb.append(typeLabel);
+			label.append(" ").append(TYPE_SEPARATOR).append(" ");
+			label.append(typeLabel);
 		}
 	}
 
-	private void editName(EOperation op, String editString) {
+	private void editName(EOperation operation, String editString) {
 		int nameEnd = editString.length();
 		int typeStart = editString.indexOf(TYPE_SEPARATOR);
 		if (typeStart != -1) {
 			nameEnd = Math.min(nameEnd, typeStart);
 		}
-		int paramStart = editString.indexOf("(");
-		if (paramStart != -1) {
-			nameEnd = Math.min(nameEnd, paramStart);
+		int parametersStart = editString.indexOf("(");
+		if (parametersStart != -1) {
+			nameEnd = Math.min(nameEnd, parametersStart);
 		}
 
 		String namePart = editString.substring(0, nameEnd);
 		if (namePart.trim().length() > 0) {
-			op.setName(namePart.trim());
-		} else if (typeStart == -1 && paramStart == -1) {
+			operation.setName(namePart.trim());
+		} else if (typeStart == -1 && parametersStart == -1) {
 			// Reset the name only if no other parts have been specified.
-			op.setName(null);
+			operation.setName(null);
 		}
 	}
 
-	private void editParameters(EOperation op, String editString) {
-		int paramStart = editString.indexOf("(");
-		int paramEnd = editString.lastIndexOf(")");
-		if (paramStart != -1 && paramEnd != -1 && paramStart < paramEnd) {
-			List<String[]> spec = parseParameters(editString.substring(
-					paramStart + 1, paramEnd));
-			int nbParam = spec.size();
-			// Remove parameters from the end if we have too many.
-			for (int i = op.getEParameters().size() - 1; i >= nbParam; i--) {
-				op.getEParameters().remove(i);
+	private void editParameters(EOperation operation, String editString) {
+		int parametersStart = editString.indexOf("(");
+		int parametersEnd = editString.lastIndexOf(")");
+		if (parametersStart != -1 && parametersEnd != -1 && parametersStart < parametersEnd) {
+			List<String[]> parameterSpecifications = parseParameters(editString.substring(
+					parametersStart + 1, parametersEnd));
+			int parameterCount = parameterSpecifications.size();
+			for (int i = operation.getEParameters().size() - 1; i >= parameterCount; i--) {
+				operation.getEParameters().remove(i);
 			}
-			// Update existing parameters with new spec and append additional
-			// ones if necessary
-			for (int i = 0; i < nbParam; i++) {
-				EParameter param = null;
-				if (i < op.getEParameters().size()) {
-					param = op.getEParameters().get(i);
+			// Reusing parameter objects preserves their IDs and references across direct edits.
+			for (int i = 0; i < parameterCount; i++) {
+				EParameter parameter = null;
+				if (i < operation.getEParameters().size()) {
+					parameter = operation.getEParameters().get(i);
 				} else {
-					param = EcoreFactory.eINSTANCE.createEParameter();
-					op.getEParameters().add(param);
+					parameter = EcoreFactory.eINSTANCE.createEParameter();
+					operation.getEParameters().add(parameter);
 				}
-				updateParameter(op, param, spec.get(i));
+				updateParameter(operation, parameter, parameterSpecifications.get(i));
 			}
 		}
 	}
 
-	private void updateParameter(EOperation op, EParameter param,
-			String[] paramSpec) {
-		if (paramSpec[0] != null) {
-			param.setName(paramSpec[0]);
+	private void updateParameter(EOperation operation, EParameter parameter,
+			String[] parameterSpec) {
+		if (parameterSpec[0] != null) {
+			parameter.setName(parameterSpec[0]);
 		}
-		if (paramSpec[1] != null) {
-			EClassifier type = new DesignServices().findTypeByName(op,
-					paramSpec[1]);
+		if (parameterSpec[1] != null) {
+			EClassifier type = new DesignServices().findTypeByName(operation,
+					parameterSpec[1]);
 			if (type != null) {
-				param.setEType(type);
+				parameter.setEType(type);
 			}
 		}
 	}
 
-	private List<String[]> parseParameters(String spec) {
-		List<String[]> result = new ArrayList<String[]>();
-		if (spec.contains(PARAMETERS_SEPARATOR)) {
-			String[] params = spec.split(PARAMETERS_SEPARATOR);
-			for (String paramSpec : params) {
-				result.add(parseParameter(paramSpec));
+	private List<String[]> parseParameters(String parameterListText) {
+		List<String[]> result = new ArrayList<>();
+		if (parameterListText.contains(PARAMETERS_SEPARATOR)) {
+			String[] params = parameterListText.split(PARAMETERS_SEPARATOR);
+			for (String parameterSpec : params) {
+				result.add(parseParameter(parameterSpec));
 			}
-		} else if (spec.trim().length() > 0) {
-			result.add(parseParameter(spec));
+		} else if (parameterListText.trim().length() > 0) {
+			result.add(parseParameter(parameterListText));
 		}
 		return result;
 	}
@@ -215,48 +214,31 @@ public class EOperationServices {
 	 * type name. Both can be <code>null</code> if the corresponding part is not
 	 * specified.
 	 * 
-	 * Note: this method is public only so that it can be visible from tests.
 	 */
-	public String[] parseParameter(String paramSpec) {
-		String[] type = null;
-		// Try ":" as type separator
-		int typeStart = paramSpec.indexOf(TYPE_SEPARATOR);
+	public String[] parseParameter(String parameterSpec) {
+		int typeStart = parameterSpec.indexOf(TYPE_SEPARATOR);
 		if (typeStart != -1) {
-			type = splitParameterSpec(paramSpec, typeStart);
-		} else {
-			// If there is no ":", assume whitespace separates the name from the
-			// type
-			paramSpec = paramSpec.trim();
-			typeStart = paramSpec.lastIndexOf(" ");
-			if (typeStart != -1) {
-				type = splitParameterSpec(paramSpec, typeStart);
-			} else {
-				typeStart = paramSpec.lastIndexOf("\t");
-				if (typeStart != -1) {
-					type = splitParameterSpec(paramSpec, typeStart);
-				}
-			}
+			return splitParameterSpec(parameterSpec, typeStart);
 		}
-		// If there was neither ":" nor space, the spec can specify only the
-		// name, or maybe nothing if it is blank.
-		if (type == null) {
-			String name = paramSpec.trim();
-			if (name.length() == 0) {
-				name = null;
-			}
-			type = new String[] { name, null };
+
+		parameterSpec = parameterSpec.trim();
+		// Preserve the legacy precedence of a space separator over a tab separator.
+		typeStart = parameterSpec.lastIndexOf(" ");
+		if (typeStart == -1) {
+			typeStart = parameterSpec.lastIndexOf("\t");
 		}
-		return type;
+		if (typeStart != -1) {
+			return splitParameterSpec(parameterSpec, typeStart);
+		}
+		return new String[] { parameterSpec.isEmpty() ? null : parameterSpec, null };
 	}
 
 
-	private String[] splitParameterSpec(String paramSpec, int typeStart) {
-		String[] type;
-		String name;
+	private String[] splitParameterSpec(String parameterSpec, int typeStart) {
+		String name = parameterSpec.substring(0, typeStart).trim();
 		String typeName;
-		name = paramSpec.substring(0, typeStart).trim();
-		if (typeStart != paramSpec.length() - 1) {
-			typeName = paramSpec.substring(typeStart + 1).trim();
+		if (typeStart != parameterSpec.length() - 1) {
+			typeName = parameterSpec.substring(typeStart + 1).trim();
 		} else {
 			typeName = null;
 		}
@@ -266,37 +248,35 @@ public class EOperationServices {
 		if (typeName != null && typeName.length() == 0) {
 			typeName = null;
 		}
-		type = new String[] { name, typeName };
-		return type;
+		return new String[] { name, typeName };
 	}
 
-	private void editType(EOperation op, String editString) {
-		Object value = getSpecifiedType(op, editString);
-		if (value != null) {
-			EGenericsServices.setETypeWithGenerics(op, value);
+	private void editReturnType(EOperation operation, String editString) {
+		Object resolvedType = resolveReturnType(operation, editString);
+		if (resolvedType != null) {
+			EGenericsServices.setETypeWithGenerics(operation, resolvedType);
 		} else {
-			// Only reset the type to null if the ":" is explicitly present with
-			// no type specified
+			// A parameter type separator must not clear the operation's return type.
 			int typeStart = editString.lastIndexOf(TYPE_SEPARATOR);
 			if (typeStart != -1
 					&& !editString.substring(typeStart).contains(")")) {
-				op.setEType(null);
+				operation.setEType(null);
 			}
 		}
 	}
 
-	private Object getSpecifiedType(ETypedElement receiver, String editString) {
+	private Object resolveReturnType(ETypedElement receiver, String editString) {
 		int typeStart = editString.lastIndexOf(TYPE_SEPARATOR);
 		if (typeStart != -1 && editString.length() > typeStart + 1) {
 			String typeName = editString.substring(typeStart + 1).trim();
 			if (!typeName.contains(")")) {
-				Object value = EGenericsServices.findGenericType(receiver,
+				Object resolvedType = EGenericsServices.findGenericType(receiver,
 						typeName);
-				if (value == null) {
-					value = new DesignServices().findTypeByName(receiver,
+				if (resolvedType == null) {
+					resolvedType = new DesignServices().findTypeByName(receiver,
 							typeName);
 				}
-				return value;
+				return resolvedType;
 			}
 		}
 		return null;

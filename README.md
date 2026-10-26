@@ -26,6 +26,20 @@ java -jar sirius-components-ecore-editor-application/target/ecore-editor.jar \
 Open [localhost:8083](http://localhost:8083) and create a project using the
 **Example** template. It includes a model and a ready-to-edit diagram with
 classes, generics, references, opposites, an enum, and a constraint.
+Studio is enabled for all projects, including existing ones. The standard
+**Studio** and **Blank Studio** templates are also available.
+
+To create instances, save an Ecore model with a unique package namespace URI,
+then open an instance project. Use **+ → New model** and select
+the **package name** in **Model type**. If several packages share a name, their
+labels also include their namespace URI. This creates an empty document. Use its
+**New root object** action to select the domain (package namespace URI) and a
+concrete class, following Sirius Web's standard root creation flow.
+**Ecore model**, **Domain**, and **View** create their corresponding
+documents; use View documents to describe representations for your instances.
+Metamodels are loaded from saved Ecore documents when a project opens. Reopen
+the instance project after editing a metamodel; existing instances are not
+automatically migrated after structural changes.
 
 PostgreSQL runs on local port **5435** with its own persistent volume.
 `docker compose -f ecore-editor-releng/compose.yaml stop` keeps your data.
@@ -119,15 +133,18 @@ python3.13 -m venv .venv
 .venv/bin/pip install -r tests/requirements.txt
 .venv/bin/python tests/smoke.py http://localhost:8083
 .venv/bin/python tests/example.py http://localhost:8083
+.venv/bin/python tests/instances.py http://localhost:8083
 ```
 
-These scripts create projects and leave them available for inspection.
+The smoke and example checks leave their projects available for inspection.
+The instance check removes its own temporary projects.
 
 ## Scope and license
 
-This project focuses on the EcoreTools Design class diagram. Runtime metamodel
-registration, code generation, and the other Desktop viewpoints are outside
-its current scope.
+This project focuses on the EcoreTools Design class diagram. The standalone
+application includes native Studio Domain/View authoring and instantiation of
+saved Ecore models. Code generation, automatic instance migration, and the other
+Desktop viewpoints remain outside the current scope.
 
 Project sources and assets are distributed under **EPL-2.0**. See [LICENSE](LICENSE)
 for the terms and [NOTICE](NOTICE) for EcoreTools, EMF, and Sirius Web attributions.

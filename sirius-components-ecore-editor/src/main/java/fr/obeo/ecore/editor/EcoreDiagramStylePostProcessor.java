@@ -64,24 +64,30 @@ public class EcoreDiagramStylePostProcessor implements IDiagramPostProcessor {
         var nodes = context.diagram().getNodes().stream().map(this::style).toList();
         boolean changed = !nodes.equals(context.diagram().getNodes());
         for (var edge : context.diagram().getEdges()) {
-            var updated = edge;
-            if (this.oppositeDescriptionId.equals(edge.getDescriptionId())) {
-                var reference = this.objectSearch.getObject(editingContext, edge.getTargetObjectId())
-                        .filter(EReference.class::isInstance).map(EReference.class::cast);
-                if (reference.isPresent() && reference.get().getEOpposite() != null) {
-                    var begin = this.style(edge.getBeginLabel(), reference.get().getEOpposite());
-                    var end = this.style(edge.getEndLabel(), reference.get());
-                    if (begin != edge.getBeginLabel() || end != edge.getEndLabel()) {
-                        updated = Edge.newEdge(edge).beginLabel(begin).endLabel(end).build();
-                        changed = true;
-                    }
-                }
-            }
-            edges.add(updated);
+            var styledEdge = this.styleOppositeReferenceLabels(editingContext, edge);
+            changed |= styledEdge != edge;
+            edges.add(styledEdge);
         }
         return changed ? Optional.of(Diagram.newDiagram(context.diagram()).nodes(nodes).edges(edges).build()) : Optional.empty();
     }
 
+    private Edge styleOppositeReferenceLabels(IEditingContext editingContext, Edge edge) {
+        if (!this.oppositeDescriptionId.equals(edge.getDescriptionId())) {
+            return edge;
+        }
+        var reference = this.objectSearch.getObject(editingContext, edge.getTargetObjectId())
+                .filter(EReference.class::isInstance).map(EReference.class::cast);
+        if (reference.isEmpty() || reference.get().getEOpposite() == null) {
+            return edge;
+        }
+        var beginLabel = this.style(edge.getBeginLabel(), reference.get().getEOpposite());
+        var endLabel = this.style(edge.getEndLabel(), reference.get());
+        // Styling returns the original objects when unchanged, so identity avoids unnecessary diagram updates.
+        return beginLabel != edge.getBeginLabel() || endLabel != edge.getEndLabel()
+                ? Edge.newEdge(edge).beginLabel(beginLabel).endLabel(endLabel).build() : edge;
+    }
+
+    /** Recursively styles child nodes, preserving the original node when nothing changes. */
     Node style(Node node) {
         var children = node.getChildNodes().stream().map(this::style).toList();
         var style = node.getStyle();
@@ -98,21 +104,26 @@ public class EcoreDiagramStylePostProcessor implements IDiagramPostProcessor {
                 ? Node.newNode(node).style(style).childNodes(children).build() : node;
     }
 
+    /** Preserves user overrides and returns the original label when unchanged; a missing label stays null. */
     Label style(Label label, EReference reference) {
-        if (label == null) return null;
-        var previous = label.style();
-        String color = label.customizedStyleProperties().contains(LabelAppearanceHandler.COLOR) ? previous.getColor()
+        if (label == null) {
+            return null;
+        }
+        var previousStyle = label.style();
+        String color = label.customizedStyleProperties().contains(LabelAppearanceHandler.COLOR) ? previousStyle.getColor()
                 : this.colors.get(this.services.ecoreHasError(reference) ? "Error" : reference.isDerived() ? "Derived" : "Relationship");
-        boolean bold = label.customizedStyleProperties().contains(LabelAppearanceHandler.BOLD) ? previous.isBold()
+        boolean bold = label.customizedStyleProperties().contains(LabelAppearanceHandler.BOLD) ? previousStyle.isBold()
                 : reference.getLowerBound() > 0;
-        if (color.equals(previous.getColor()) && bold == previous.isBold()) return label;
+        if (color.equals(previousStyle.getColor()) && bold == previousStyle.isBold()) {
+            return label;
+        }
         var style = LabelStyle.newLabelStyle().color(color).bold(bold)
-                .fontSize(previous.getFontSize()).italic(previous.isItalic()).underline(previous.isUnderline())
-                .strikeThrough(previous.isStrikeThrough()).iconURL(previous.getIconURL())
-                .background(previous.getBackground()).borderColor(previous.getBorderColor())
-                .borderSize(previous.getBorderSize()).borderRadius(previous.getBorderRadius())
-                .borderStyle(previous.getBorderStyle()).maxWidth(previous.getMaxWidth())
-                .visibility(previous.getVisibility()).build();
+                .fontSize(previousStyle.getFontSize()).italic(previousStyle.isItalic()).underline(previousStyle.isUnderline())
+                .strikeThrough(previousStyle.isStrikeThrough()).iconURL(previousStyle.getIconURL())
+                .background(previousStyle.getBackground()).borderColor(previousStyle.getBorderColor())
+                .borderSize(previousStyle.getBorderSize()).borderRadius(previousStyle.getBorderRadius())
+                .borderStyle(previousStyle.getBorderStyle()).maxWidth(previousStyle.getMaxWidth())
+                .visibility(previousStyle.getVisibility()).build();
         return new Label(label.id(), label.type(), label.text(), style, label.customizedStyleProperties());
     }
 }

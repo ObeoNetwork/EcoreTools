@@ -10,9 +10,11 @@
 package fr.obeo.ecore.editor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import fr.obeo.ecore.editor.labels.*;
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.ecore.*;
@@ -26,22 +28,21 @@ import org.eclipse.sirius.components.emf.ResourceMetadataAdapter;
 import org.eclipse.sirius.components.representations.Message;
 import org.eclipse.sirius.components.representations.MessageLevel;
 import org.springframework.beans.factory.annotation.Autowired;
-import java.util.Set;
-import java.util.HashSet;
 
-/** Semantic operations shared by the diagram and its tools. */
+/** AQL service entry points for Ecore diagram queries, labels, and model-editing tools. */
 public class EcoreServices {
-    private final IFeedbackMessageService feedback;
+    private final IFeedbackMessageService feedbackMessageService;
 
     public EcoreServices() {
         this(new IFeedbackMessageService.NoOp());
     }
 
     @Autowired
-    public EcoreServices(IFeedbackMessageService feedback) {
-        this.feedback = Objects.requireNonNull(feedback);
+    public EcoreServices(IFeedbackMessageService feedbackMessageService) {
+        this.feedbackMessageService = Objects.requireNonNull(feedbackMessageService);
     }
 
+    /** Creates the annotation/detail entry when missing and returns the editable detail entry. */
     public EObject ecoreNote(EModelElement self, boolean constraint) {
         String source = constraint ? EcorePackage.eNS_URI : "http://www.eclipse.org/emf/2002/GenModel";
         String key = constraint ? "constraints" : "documentation";
@@ -56,38 +57,39 @@ public class EcoreServices {
     }
 
     public List<EObject> ecoreNotes(EObject self, DiagramContext context) {
-        var visible = visibleObjects(context);
-        var visibleReferences = new HashSet<String>();
+        var visibleObjectIds = visibleSemanticObjectIds(context);
+        var visibleReferenceIds = new HashSet<String>();
         if (context != null) {
-            var deleted = context.viewDeletionRequests().stream().map(request -> request.getElementId()).collect(java.util.stream.Collectors.toSet());
-            context.diagram().getEdges().stream().filter(edge -> !deleted.contains(edge.getId()))
-                    .forEach(edge -> visibleReferences.add(edge.getTargetObjectId()));
+            var deletedViewIds = context.viewDeletionRequests().stream().map(request -> request.getElementId()).collect(java.util.stream.Collectors.toSet());
+            context.diagram().getEdges().stream().filter(edge -> !deletedViewIds.contains(edge.getId()))
+                    .forEach(edge -> visibleReferenceIds.add(edge.getTargetObjectId()));
         }
-        var ids = new EObjectIDManager();
+        var objectIdManager = new EObjectIDManager();
         var result = new ArrayList<EObject>();
-        if (self instanceof EModelElement model) collectNotes(model, result);
+        if (self instanceof EModelElement model) appendAnnotationNotes(model, result);
         for (var element : ecoreImportCandidates(self)) {
-            if (element instanceof EModelElement model && visible.contains(ids.findId(model).orElse(""))) collectNotes(model, result);
+            if (element instanceof EModelElement model && visibleObjectIds.contains(objectIdManager.findId(model).orElse(""))) appendAnnotationNotes(model, result);
             element.eAllContents().forEachRemaining(child -> {
                 if (child instanceof EModelElement model) {
-                    String id = ids.findId(model).orElse("");
-                    if (visible.contains(id) || child instanceof EReference && visibleReferences.contains(id)) collectNotes(model, result);
+                    String id = objectIdManager.findId(model).orElse("");
+                    if (visibleObjectIds.contains(id) || child instanceof EReference && visibleReferenceIds.contains(id)) appendAnnotationNotes(model, result);
                 }
             });
         }
         return result.stream().distinct().toList();
     }
 
+    /** Moves the existing detail entry to the target, rejecting conflicts before either note is changed. */
     public EObject ecoreAssignNote(EObject self, EModelElement target) {
         if (!(self.eContainer() instanceof EAnnotation source) || source.getDetails().indexOf(self) < 0) {
-            throw toolError("Select a documentation or constraint note");
+            throw reportToolError("Select a documentation or constraint note");
         }
-        if (isReadOnly(self) || isReadOnly(target)) throw toolError("The annotation and its target must be editable");
+        if (isReadOnly(self) || isReadOnly(target)) throw reportToolError("The annotation and its target must be editable");
         if (source.getEModelElement() == target) return self;
         var entry = source.getDetails().get(source.getDetails().indexOf(self));
         var destination = target.getEAnnotation(source.getSource());
         if (destination != null && destination.getDetails().containsKey(entry.getKey())) {
-            throw toolError("The target already has " + entry.getKey() + "; both notes have been preserved");
+            throw reportToolError("The target already has " + entry.getKey() + "; both notes have been preserved");
         }
         if (destination == null) {
             destination = EcoreFactory.eINSTANCE.createEAnnotation();
@@ -96,12 +98,14 @@ public class EcoreServices {
         }
         destination.getDetails().add(entry);
         if (source.getDetails().isEmpty() && source.getContents().isEmpty()
-                && source.getReferences().isEmpty() && source.getEAnnotations().isEmpty()) EcoreUtil.remove(source);
+                && source.getReferences().isEmpty() && source.getEAnnotations().isEmpty()) {
+            EcoreUtil.remove(source);
+        }
         return self;
     }
 
-    private IllegalArgumentException toolError(String message) {
-        feedback.addFeedbackMessage(new Message(message, MessageLevel.ERROR));
+    private IllegalArgumentException reportToolError(String message) {
+        feedbackMessageService.addFeedbackMessage(new Message(message, MessageLevel.ERROR));
         return new IllegalArgumentException(message);
     }
 
@@ -111,11 +115,11 @@ public class EcoreServices {
                 .anyMatch(ResourceMetadataAdapter::isReadOnly);
     }
 
-    private void collectNotes(EModelElement element, List<EObject> result) {
+    private void appendAnnotationNotes(EModelElement element, List<EObject> notes) {
         for (var annotation : element.getEAnnotations()) {
             String key = EcorePackage.eNS_URI.equals(annotation.getSource()) ? "constraints"
                     : "http://www.eclipse.org/emf/2002/GenModel".equals(annotation.getSource()) ? "documentation" : null;
-            if (key != null && annotation.getDetails().containsKey(key)) result.add((EObject) annotation.getDetails().get(annotation.getDetails().indexOfKey(key)));
+            if (key != null && annotation.getDetails().containsKey(key)) notes.add((EObject) annotation.getDetails().get(annotation.getDetails().indexOfKey(key)));
         }
     }
 
@@ -128,18 +132,19 @@ public class EcoreServices {
     }
 
     public List<EReference> ecoreReferenceRows(EClass self, DiagramContext context) {
-        var visible = visibleObjects(context);
-        var ids = new EObjectIDManager();
+        var visibleObjectIds = visibleSemanticObjectIds(context);
+        var objectIdManager = new EObjectIDManager();
         return self.getEAllReferences().stream()
                 .filter(ref -> ref.getEContainingClass() == self
-                        ? ecoreReferenceTarget(ref) == null || !visible.contains(ids.findId(ecoreReferenceTarget(ref)).orElse(""))
-                        : !visible.contains(ids.findId(ref.getEContainingClass()).orElse(""))).toList();
+                        ? ecoreReferenceTarget(ref) == null || !visibleObjectIds.contains(objectIdManager.findId(ecoreReferenceTarget(ref)).orElse(""))
+                        : !visibleObjectIds.contains(objectIdManager.findId(ref.getEContainingClass()).orElse(""))).toList();
     }
 
+    /** Returns a depth-first, encounter-ordered copy, stopping each inheritance path at its first visible type. */
     public List<EClass> ecoreVisibleSuperTypes(EClass self, DiagramContext context) {
-        var visible = visibleObjects(context);
+        var visibleObjectIds = visibleSemanticObjectIds(context);
         var result = new java.util.LinkedHashSet<EClass>();
-        collectSuperTypes(self, visible, new HashSet<>(), result);
+        collectNearestVisibleSuperTypes(self, visibleObjectIds, new HashSet<>(), result);
         return List.copyOf(result);
     }
 
@@ -154,31 +159,37 @@ public class EcoreServices {
                 .findFirst().orElse("");
     }
 
-    private void collectSuperTypes(EClass type, Set<String> visible, Set<EClass> visited, Set<EClass> result) {
-        if (!visited.add(type)) return;
-        var ids = new EObjectIDManager();
+    private void collectNearestVisibleSuperTypes(EClass type, Set<String> visibleObjectIds, Set<EClass> visited, Set<EClass> result) {
+        if (!visited.add(type)) {
+            return;
+        }
+        var objectIdManager = new EObjectIDManager();
         for (var parent : type.getESuperTypes()) {
-            if (visible.contains(ids.findId(parent).orElse(""))) result.add(parent);
-            else collectSuperTypes(parent, visible, visited, result);
+            if (visibleObjectIds.contains(objectIdManager.findId(parent).orElse(""))) {
+                result.add(parent);
+            } else {
+                collectNearestVisibleSuperTypes(parent, visibleObjectIds, visited, result);
+            }
         }
     }
 
-    private Set<String> visibleObjects(DiagramContext context) {
+    /** Includes pending creations and excludes deleted views with their descendants. */
+    private Set<String> visibleSemanticObjectIds(DiagramContext context) {
         Set<String> result = new HashSet<>();
         if (context == null) return result;
-        Set<String> deleted = new HashSet<>();
-        context.viewDeletionRequests().forEach(request -> deleted.add(request.getElementId()));
-        collectVisible(context.diagram().getNodes(), deleted, result);
+        Set<String> deletedViewIds = new HashSet<>();
+        context.viewDeletionRequests().forEach(request -> deletedViewIds.add(request.getElementId()));
+        collectVisibleObjectIds(context.diagram().getNodes(), deletedViewIds, result);
         context.viewCreationRequests().forEach(request -> result.add(request.getTargetObjectId()));
         return result;
     }
 
-    private void collectVisible(List<Node> nodes, Set<String> deleted, Set<String> result) {
+    private void collectVisibleObjectIds(List<Node> nodes, Set<String> deletedViewIds, Set<String> result) {
         for (Node node : nodes) {
-            if (!deleted.contains(node.getId())) {
+            if (!deletedViewIds.contains(node.getId())) {
                 result.add(node.getTargetObjectId());
-                collectVisible(node.getChildNodes(), deleted, result);
-                collectVisible(node.getBorderNodes(), deleted, result);
+                collectVisibleObjectIds(node.getChildNodes(), deletedViewIds, result);
+                collectVisibleObjectIds(node.getBorderNodes(), deletedViewIds, result);
             }
         }
     }
@@ -218,47 +229,51 @@ public class EcoreServices {
         if (self instanceof EAttribute attribute) return new EAttributeServices().performEdit(attribute, label);
         if (self instanceof EOperation operation) return new EOperationServices().performEdit(operation, label);
         if (self instanceof ENamedElement named) {
-            if (self instanceof EClassifier || self instanceof ETypeParameter) {
-                StringBuilder camel = new StringBuilder();
-                for (String word : label.split("\\s+")) {
-                    if (!word.isEmpty()) {
-                        char first = word.charAt(0);
-                        camel.append(first >= 'a' && first <= 'z' ? (char) (first - 32) : first).append(word.substring(1));
-                    }
-                }
-                named.setName(camel.toString());
-            } else named.setName(label);
+            named.setName(self instanceof EClassifier || self instanceof ETypeParameter ? this.classifierNameFromLabel(label) : label);
         }
         return self;
+    }
+
+    private String classifierNameFromLabel(String label) {
+        StringBuilder classifierName = new StringBuilder();
+        for (String word : label.split("\\s+")) {
+            if (!word.isEmpty()) {
+                // Preserve the tool's ASCII-only capitalization, independent of the server locale.
+                char first = word.charAt(0);
+                classifierName.append(first >= 'a' && first <= 'z' ? (char) (first - 32) : first).append(word.substring(1));
+            }
+        }
+        return classifierName.toString();
     }
 
     public boolean ecoreHasError(EObject self) {
         return Diagnostician.INSTANCE.validate(self).getSeverity() >= Diagnostic.ERROR;
     }
 
+    /** Collects packages and classifiers recursively in loaded-resource order, or from the detached root. */
     public List<EObject> ecoreImportCandidates(EObject self) {
         List<EObject> result = new ArrayList<>();
         if (self.eResource() != null && self.eResource().getResourceSet() != null) {
-            self.eResource().getResourceSet().getResources().forEach(r -> r.getContents().forEach(root -> collect(root, result)));
-        } else collect(EcoreUtil.getRootContainer(self), result);
+            self.eResource().getResourceSet().getResources().forEach(r -> r.getContents().forEach(root -> collectImportableElements(root, result)));
+        } else collectImportableElements(EcoreUtil.getRootContainer(self), result);
         return result;
     }
 
     public List<EClassifier> ecoreRelatedElements(EObject self, DiagramContext context) {
         var candidates = ecoreImportCandidates(self);
-        var related = relatedTypes(self);
+        var related = referencedClassifiers(self);
         for (var candidate : candidates) {
-            if (candidate instanceof EClassifier classifier && relatedTypes(classifier).contains(self)) related.add(classifier);
+            if (candidate instanceof EClassifier classifier && referencedClassifiers(classifier).contains(self)) related.add(classifier);
         }
         related.remove(self);
-        var visible = visibleObjects(context);
-        var ids = new EObjectIDManager();
+        var visibleObjectIds = visibleSemanticObjectIds(context);
+        var objectIdManager = new EObjectIDManager();
         // shortcut: only loaded model classifiers are importable, add read-only library views before exposing registry types.
         return related.stream().filter(candidates::contains)
-                .filter(type -> !visible.contains(ids.findId(type).orElseGet(() -> EcoreUtil.getURI(type).toString()))).toList();
+                .filter(type -> !visibleObjectIds.contains(objectIdManager.findId(type).orElseGet(() -> EcoreUtil.getURI(type).toString()))).toList();
     }
 
-    private Set<EClassifier> relatedTypes(EObject self) {
+    private Set<EClassifier> referencedClassifiers(EObject self) {
         Set<EClassifier> related = new java.util.LinkedHashSet<>();
         if (self instanceof EPackage pack) {
             related.addAll(pack.getEClassifiers());
@@ -275,13 +290,14 @@ public class EcoreServices {
         return related;
     }
 
-    private void collect(EObject root, List<EObject> result) {
+    private void collectImportableElements(EObject root, List<EObject> result) {
         if (root instanceof EPackage || root instanceof EClassifier) result.add(root);
         root.eAllContents().forEachRemaining(o -> {
             if (o instanceof EPackage || o instanceof EClassifier) result.add(o);
         });
     }
 
+    /** Returns one edge representative per opposite pair, preferring the containment reference. */
     public List<EReference> ecoreReferences(EObject self) {
         var references = ecoreImportCandidates(self).stream().filter(EClass.class::isInstance).map(EClass.class::cast)
                 .flatMap(c -> c.getEReferences().stream()).toList();
@@ -295,20 +311,29 @@ public class EcoreServices {
 
     public EObject ecoreCreate(EObject self, String kind) {
         EObject created = EcoreFactory.eINSTANCE.create((EClass) EcorePackage.eINSTANCE.getEClassifier(kind));
-        if (created instanceof ENamedElement named) named.setName(created instanceof ETypeParameter ? "T" : "New" + kind.substring(1));
-        if (self instanceof EPackage pack && created instanceof EClassifier classifier) pack.getEClassifiers().add(classifier);
-        else if (self instanceof EPackage pack && created instanceof EPackage child) {
-            child.setNsPrefix("newPackage"); child.setNsURI(pack.getNsURI() + "/newPackage"); pack.getESubpackages().add(child);
+        if (created instanceof ENamedElement named) {
+            named.setName(created instanceof ETypeParameter ? "T" : "New" + kind.substring(1));
+        }
+        if (self instanceof EPackage pack && created instanceof EClassifier classifier) {
+            pack.getEClassifiers().add(classifier);
+        } else if (self instanceof EPackage pack && created instanceof EPackage child) {
+            child.setNsPrefix("newPackage");
+            child.setNsURI(pack.getNsURI() + "/newPackage");
+            pack.getESubpackages().add(child);
         } else if (self instanceof EClass type && created instanceof EStructuralFeature feature) {
             type.getEStructuralFeatures().add(feature);
             if (feature instanceof EAttribute) feature.setEType(EcorePackage.Literals.ESTRING);
             else feature.setEType(EcorePackage.Literals.EOBJECT);
-        } else if (self instanceof EClass type && created instanceof EOperation operation) type.getEOperations().add(operation);
-        else if (self instanceof EClassifier type && created instanceof ETypeParameter parameter) type.getETypeParameters().add(parameter);
-        else if (self instanceof EEnum type && created instanceof EEnumLiteral literal) {
+        } else if (self instanceof EClass type && created instanceof EOperation operation) {
+            type.getEOperations().add(operation);
+        } else if (self instanceof EClassifier type && created instanceof ETypeParameter parameter) {
+            type.getETypeParameters().add(parameter);
+        } else if (self instanceof EEnum type && created instanceof EEnumLiteral literal) {
             literal.setValue(type.getELiterals().stream().mapToInt(EEnumLiteral::getValue).max().orElse(-1) + 1);
             type.getELiterals().add(literal);
-        } else throw new IllegalArgumentException("Cannot create " + kind + " in " + self.eClass().getName());
+        } else {
+            throw new IllegalArgumentException("Cannot create " + kind + " in " + self.eClass().getName());
+        }
         return created;
     }
 
@@ -326,15 +351,15 @@ public class EcoreServices {
     }
 
     public EReference ecoreBidirectionalReference(EClass source, EObject target) {
-        if (!(target instanceof EClass type)) throw toolError("A bidirectional reference must connect two EClasses");
-        if (isReadOnly(source) || isReadOnly(type)) throw toolError("Both reference owners must be editable");
+        if (!(target instanceof EClass type)) throw reportToolError("A bidirectional reference must connect two EClasses");
+        if (isReadOnly(source) || isReadOnly(type)) throw reportToolError("Both reference owners must be editable");
         return ecoreCreateOpposite(ecoreReference(source, type, false));
     }
 
     public List<EReference> ecoreReferencesToDelete(EReference reference) {
         var opposite = reference.getEOpposite();
         var references = opposite == null || opposite == reference ? List.of(reference) : List.of(opposite, reference);
-        if (references.stream().anyMatch(this::isReadOnly)) throw toolError("Both references must be editable before deleting the pair");
+        if (references.stream().anyMatch(this::isReadOnly)) throw reportToolError("Both references must be editable before deleting the pair");
         return references;
     }
 
@@ -350,17 +375,18 @@ public class EcoreServices {
 
     public EReference ecoreReconnectReference(EReference reference, EObject newEnd, boolean reconnectSource) {
         if (reconnectSource ? !(newEnd instanceof EClass) : !(newEnd instanceof EClass || newEnd instanceof ETypeParameter)) {
-            throw toolError(reconnectSource ? "A reference source must be an EClass" : "A reference must target an EClass or an ETypeParameter");
+            throw reportToolError(reconnectSource ? "A reference source must be an EClass" : "A reference must target an EClass or an ETypeParameter");
         }
         var opposite = reference.getEOpposite();
         if (opposite != null && !(newEnd instanceof EClass)) {
-            throw toolError("A reference with an opposite must target an EClass");
+            throw reportToolError("A reference with an opposite must target an EClass");
         }
         if (isReadOnly(reference) || opposite != null && isReadOnly(opposite)
                 || (reconnectSource || opposite != null) && isReadOnly(newEnd)) {
-            throw toolError("The references and their modified owners must be editable");
+            throw reportToolError("The references and their modified owners must be editable");
         }
         if (reconnectSource) {
+            // Adding to the new owner's containment list moves the existing reference without changing its identity.
             ((EClass) newEnd).getEStructuralFeatures().add(reference);
             if (opposite != null) retargetReference(opposite, newEnd);
         } else {
@@ -377,33 +403,38 @@ public class EcoreServices {
 
     public EClass ecoreReconnectSuperType(EClass source, EObject oldTarget, EObject newEnd, boolean reconnectSource) {
         if (!(newEnd instanceof EClass type) || !(oldTarget instanceof EClass parent)) {
-            throw toolError("An inheritance link must connect two EClasses");
+            throw reportToolError("An inheritance link must connect two EClasses");
         }
         var binding = source.getEGenericSuperTypes().stream().filter(generic -> generic.getEClassifier() == parent).findFirst()
-                .orElseThrow(() -> toolError("Import the direct supertype before reconnecting an indirect inheritance link"));
+                .orElseThrow(() -> reportToolError("Import the direct supertype before reconnecting an indirect inheritance link"));
         var newSource = reconnectSource ? type : source;
         var newTarget = reconnectSource ? parent : type;
         if (newSource == source && newTarget == parent) return source;
         if (isReadOnly(source) || reconnectSource && isReadOnly(newSource)) {
-            throw toolError("The classes whose supertypes change must be editable");
+            throw reportToolError("The classes whose supertypes change must be editable");
         }
         if (newSource == newTarget || newSource.isSuperTypeOf(newTarget)) {
-            throw toolError("Reconnecting this inheritance link would create a cycle");
+            throw reportToolError("Reconnecting this inheritance link would create a cycle");
         }
         if (newSource.getESuperTypes().contains(newTarget)) {
-            throw toolError("The class already has this direct supertype");
+            throw reportToolError("The class already has this direct supertype");
         }
         if (reconnectSource) newSource.getEGenericSuperTypes().add(binding);
         else retargetGenericType(binding, newTarget);
         return newSource;
     }
 
-    private void retargetGenericType(EGenericType generic, EClass type) {
-        generic.setETypeParameter(null);
-        generic.setEClassifier(type);
-        int count = type.getETypeParameters().size();
-        while (generic.getETypeArguments().size() > count) generic.getETypeArguments().removeLast();
-        while (generic.getETypeArguments().size() < count) generic.getETypeArguments().add(EcoreFactory.eINSTANCE.createEGenericType());
+    private void retargetGenericType(EGenericType genericType, EClass targetClass) {
+        genericType.setETypeParameter(null);
+        genericType.setEClassifier(targetClass);
+        // Preserve arguments by position; only discard excess bindings or add unbound placeholders.
+        int typeParameterCount = targetClass.getETypeParameters().size();
+        while (genericType.getETypeArguments().size() > typeParameterCount) {
+            genericType.getETypeArguments().removeLast();
+        }
+        while (genericType.getETypeArguments().size() < typeParameterCount) {
+            genericType.getETypeArguments().add(EcoreFactory.eINSTANCE.createEGenericType());
+        }
     }
 
     public EClass ecoreRemoveSuperType(EClass source, EClass target) {

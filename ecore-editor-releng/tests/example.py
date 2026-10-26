@@ -22,15 +22,23 @@ def graphql(query, **variables):
     return result["data"]
 
 
+templates = graphql("{ viewer { allProjectTemplates { id } } }")["viewer"]["allProjectTemplates"]
+assert {"Ecore example", "studio-template", "blank-studio-template"} <= {t["id"] for t in templates}, templates
+
 created = graphql("""mutation($input:CreateProjectInput!) {
  createProject(input:$input) { __typename
-  ... on CreateProjectSuccessPayload { project { id currentEditingContext { id } } }
+  ... on CreateProjectSuccessPayload { project { id natures { name } currentEditingContext { id } } }
   ... on ErrorPayload { messages { body } }
  }
 }""", input={"id": str(uuid.uuid4()), "name": "EcoreTools example", "templateId": "Ecore example", "libraryIds": []})["createProject"]
 assert created["__typename"] == "CreateProjectSuccessPayload", created
 project = created["project"]
 context = project["currentEditingContext"]["id"]
+assert {"name": "siriusComponents://nature?kind=studio"} in project["natures"], project
+studio_actions = graphql("""query($ctx:ID!) {
+ viewer { editingContext(editingContextId:$ctx) { actions { edges { node { id } } } } }
+}""", ctx=context)["viewer"]["editingContext"]["actions"]["edges"]
+assert {"empty_domain", "empty_view"} <= {a["node"]["id"] for a in studio_actions}, studio_actions
 representations = graphql("""query($ctx:ID!) {
  viewer { editingContext(editingContextId:$ctx) { representations { edges { node { id label iconURLs } } } } }
 }""", ctx=context)["viewer"]["editingContext"]["representations"]["edges"]
@@ -106,7 +114,7 @@ try:
     assert bounds["size"] == {"width": 240, "height": 280}, bounds
     assert bounds["movedByUser"] and bounds["resizedByUser"], bounds
     assert len(diagram["layoutData"]["edgeLayoutData"]) == len(diagram["edges"])
-    print("PASS: Example template, .ecore document name and XML download, valid semantic styles, generic ports/bindings, references/opposites and saved diagram layout")
+    print("PASS: Studio templates and Example authoring actions, .ecore document name and XML download, valid semantic styles, generic ports/bindings, references/opposites and saved diagram layout")
     print(BASE + "/projects/" + project["id"] + "/edit/" + diagram_id)
 finally:
     ws.close()

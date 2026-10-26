@@ -33,36 +33,36 @@ public class EReferenceServices {
 
     private static final String TYPE_SEPARATOR = ":";
 
-    public String render(EReference ref) {
-        StringBuilder sb = new StringBuilder();
-        renderCardinality(ref, sb);
-        renderName(ref, sb);
-        return sb.toString();
+    public String render(EReference reference) {
+        StringBuilder label = new StringBuilder();
+        renderCardinality(reference, label);
+        renderName(reference, label);
+        return label.toString();
     }
 
-    public String renderAsNode(EReference ref) {
-        StringBuilder sb = new StringBuilder();
-        renderName(ref, sb);
-        renderType(ref, sb);
-        return sb.toString();
+    public String renderAsNode(EReference reference) {
+        StringBuilder label = new StringBuilder();
+        renderName(reference, label);
+        renderType(reference, label);
+        return label.toString();
     }
 
-    private void renderType(EReference ref, StringBuilder sb) {
-        String typeName = EGenericsServices.getETypeLabel(ref);
+    private void renderType(EReference reference, StringBuilder label) {
+        String typeName = EGenericsServices.getETypeLabel(reference);
         if (typeName != null) {
-            if (ref.getName() != null) {
-                sb.append(" ");
+            if (reference.getName() != null) {
+                label.append(" ");
             }
-            sb.append(TYPE_SEPARATOR).append(" ").append(typeName);
+            label.append(TYPE_SEPARATOR).append(" ").append(typeName);
         }
     }
 
-    private void renderCardinality(EReference ref, StringBuilder sb) {
-        sb.append("[");
-        sb.append(renderBound(ref.getLowerBound()));
-        sb.append(CARDINALITY_SEPARATOR);
-        sb.append(renderBound(ref.getUpperBound()));
-        sb.append("]");
+    private void renderCardinality(EReference reference, StringBuilder label) {
+        label.append("[");
+        label.append(renderBound(reference.getLowerBound()));
+        label.append(CARDINALITY_SEPARATOR);
+        label.append(renderBound(reference.getUpperBound()));
+        label.append("]");
     }
 
     private String renderBound(int bound) {
@@ -73,91 +73,89 @@ public class EReferenceServices {
         }
     }
 
-    private void renderName(EReference ref, StringBuilder sb) {
-        if (ref.getName() != null) {
-            sb.append(" ");
-            if (ref.isDerived()) {
-                sb.append(DERIVED_PREFIX);
+    private void renderName(EReference reference, StringBuilder label) {
+        if (reference.getName() != null) {
+            label.append(" ");
+            if (reference.isDerived()) {
+                label.append(DERIVED_PREFIX);
             }
-            sb.append(ref.getName());
+            label.append(reference.getName());
         }
     }
 
-    public EReference performEdit(EReference ref, String editString) {
-        if ("0".equals(editString.trim())) {
-            ref.setLowerBound(0);
-        } else if ("1".equals(editString.trim())) {
-            ref.setLowerBound(1);
-        } else if ("11".equals(editString.trim())) {
-            ref.setLowerBound(1);
-            ref.setUpperBound(1);
-        } else if (CARDINALITY_UNBOUNDED.equals(editString.trim())) {
-            ref.setUpperBound(-1);
-        } else if (CARDINALITY_UNBOUNDED_ALTERNATIVE.equals(editString.trim())) {
-            ref.setUpperBound(-1);
+    public EReference performEdit(EReference reference, String editString) {
+        String trimmedEditString = editString.trim();
+        if ("0".equals(trimmedEditString)) {
+            reference.setLowerBound(0);
+        } else if ("1".equals(trimmedEditString)) {
+            reference.setLowerBound(1);
+        } else if ("11".equals(trimmedEditString)) {
+            reference.setLowerBound(1);
+            reference.setUpperBound(1);
+        } else if (CARDINALITY_UNBOUNDED.equals(trimmedEditString)
+                || CARDINALITY_UNBOUNDED_ALTERNATIVE.equals(trimmedEditString)) {
+            reference.setUpperBound(-1);
         } else {
-            editName(ref, editString);
-            editCardinality(ref, editString);
+            editName(reference, editString);
+            editCardinality(reference, editString);
         }
-        return ref;
+        return reference;
     }
 
-    private void editName(EReference ref, String editString) {
-        String namePart = extractNamePart(ref, editString);
+    private void editName(EReference reference, String editString) {
+        String namePart = extractNamePart(editString);
         if (namePart != null && namePart.trim().length() > 0) {
             boolean derived = namePart.startsWith(DERIVED_PREFIX);
-            ref.setDerived(derived);
-            ref.setName(namePart.substring(derived ? DERIVED_PREFIX.length() : 0).trim());
+            reference.setDerived(derived);
+            reference.setName(namePart.substring(derived ? DERIVED_PREFIX.length() : 0).trim());
         }
     }
 
-    private String extractNamePart(EReference ref, String name) {
-        int end = name.indexOf("]");
-        if (end != -1 && end < name.length()) {
-            return name.substring(end + 1).trim();
+    private String extractNamePart(String editString) {
+        int end = editString.indexOf("]");
+        if (end != -1 && end < editString.length()) {
+            return editString.substring(end + 1).trim();
         } else {
-            return name.trim();
+            return editString.trim();
         }
     }
 
-    private void editCardinality(EReference ref, String editString) {
-        List<Integer> card = parseCardinality(editString);
-        if (card.get(0) != null) {
-            ref.setLowerBound(card.get(0).intValue());
+    private void editCardinality(EReference reference, String editString) {
+        List<Integer> bounds = parseCardinality(editString);
+        if (bounds.get(0) != null) {
+            reference.setLowerBound(bounds.get(0).intValue());
         }
-        if (card.get(1) != null) {
-            ref.setUpperBound(card.get(1).intValue());
+        if (bounds.get(1) != null) {
+            reference.setUpperBound(bounds.get(1).intValue());
         }
     }
 
     /**
-     * Made public only to allow testing. Returns a List instead of an array
-     * because one the method is public (for testing), Acceleo will try to
-     * interpret as a service, but it does not handle arrays.
+     * Returns a mutable [lower, upper] list; null entries mean absent or invalid bounds.
+     * Only bracketed ranges with ".." are parsed, and extra range parts are ignored.
      */
     public List<Integer> parseCardinality(String editString) {
-        List<Integer> result = new ArrayList<>(java.util.Arrays.asList(null, null));
-        String spec = extractCardinalityPart(editString);
-        if (spec != null) {
-            if (spec.contains(CARDINALITY_SEPARATOR)) {
-                String[] parts = spec.split(Pattern.quote(CARDINALITY_SEPARATOR));
-                switch (parts.length) {
-                case 0:
-                    break;
-                case 1:
-                    if (spec.startsWith(CARDINALITY_SEPARATOR)) {
-                        result.set(1, parseBound(parts[0]));
-                    } else if (spec.endsWith(CARDINALITY_SEPARATOR)) {
-                        result.set(0, parseBound(parts[0]));
-                    }
-                    break;
-                default: // 2 (or more, but only the first 2 are considered)
-                    result.set(0, parseBound(parts[0]));
-                    result.set(1, parseBound(parts[1]));
-                }
-            }
+        List<Integer> bounds = new ArrayList<>(java.util.Arrays.asList(null, null));
+        String cardinalityText = extractCardinalityPart(editString);
+        if (cardinalityText == null || !cardinalityText.contains(CARDINALITY_SEPARATOR)) {
+            return bounds;
         }
-        return result;
+        String[] boundParts = cardinalityText.split(Pattern.quote(CARDINALITY_SEPARATOR));
+        switch (boundParts.length) {
+        case 0:
+            break;
+        case 1:
+            if (cardinalityText.startsWith(CARDINALITY_SEPARATOR)) {
+                bounds.set(1, parseBound(boundParts[0]));
+            } else if (cardinalityText.endsWith(CARDINALITY_SEPARATOR)) {
+                bounds.set(0, parseBound(boundParts[0]));
+            }
+            break;
+        default:
+            bounds.set(0, parseBound(boundParts[0]));
+            bounds.set(1, parseBound(boundParts[1]));
+        }
+        return bounds;
     }
 
     private Integer parseBound(String bound) {
@@ -172,9 +170,7 @@ public class EReferenceServices {
         }
     }
 
-    /**
-     * Made public only to allow testing.
-     */
+    /** Returns the trimmed text between the first bracket pair, or null if that pair is absent or reversed. */
     public String extractCardinalityPart(String editString) {
         int start = editString.indexOf("[");
         int end = editString.indexOf("]");

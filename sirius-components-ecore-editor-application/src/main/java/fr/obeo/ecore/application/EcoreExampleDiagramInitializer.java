@@ -35,60 +35,64 @@ import org.springframework.transaction.event.TransactionalEventListener;
 /** Creates the saved example diagram once, using the same lifecycle as Sirius Web starter templates. */
 @Service
 public class EcoreExampleDiagramInitializer {
-    private final IRepresentationDescriptionSearchService descriptions;
-    private final IDiagramCreationService diagrams;
-    private final IRepresentationMetadataPersistenceService metadata;
-    private final IRepresentationPersistenceService representations;
-    private final IIdentityService identity;
-    private final String descriptionId;
-    private final Map<String, String> nodeDescriptions;
+    private final IRepresentationDescriptionSearchService descriptionSearchService;
+    private final IDiagramCreationService diagramCreationService;
+    private final IRepresentationMetadataPersistenceService metadataPersistenceService;
+    private final IRepresentationPersistenceService representationPersistenceService;
+    private final IIdentityService identityService;
+    private final String ecoreDiagramDescriptionId;
+    private final Map<String, String> nodeDescriptionIdsByType;
 
-    public EcoreExampleDiagramInitializer(IRepresentationDescriptionSearchService descriptions,
-            IDiagramCreationService diagrams, IRepresentationMetadataPersistenceService metadata,
-            IRepresentationPersistenceService representations, IIdentityService identity,
-            @Qualifier("ecoreView") View view, IDiagramIdProvider ids) {
-        this.descriptions = descriptions;
-        this.diagrams = diagrams;
-        this.metadata = metadata;
-        this.representations = representations;
-        this.identity = identity;
+    public EcoreExampleDiagramInitializer(IRepresentationDescriptionSearchService descriptionSearchService,
+            IDiagramCreationService diagramCreationService, IRepresentationMetadataPersistenceService metadataPersistenceService,
+            IRepresentationPersistenceService representationPersistenceService, IIdentityService identityService,
+            @Qualifier("ecoreView") View view, IDiagramIdProvider diagramIdProvider) {
+        this.descriptionSearchService = descriptionSearchService;
+        this.diagramCreationService = diagramCreationService;
+        this.metadataPersistenceService = metadataPersistenceService;
+        this.representationPersistenceService = representationPersistenceService;
+        this.identityService = identityService;
         var description = (org.eclipse.sirius.components.view.diagram.DiagramDescription) view.getDescriptions().getFirst();
-        this.descriptionId = ids.getId(description);
-        this.nodeDescriptions = description.getNodeDescriptions().stream()
-                .collect(Collectors.toMap(node -> node.getName(), ids::getId));
+        this.ecoreDiagramDescriptionId = diagramIdProvider.getId(description);
+        this.nodeDescriptionIdsByType = description.getNodeDescriptions().stream()
+                .collect(Collectors.toMap(node -> node.getName(), diagramIdProvider::getId));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener
     public void onSemanticDataUpdatedEvent(SemanticDataUpdatedEvent event) {
-        if (event.causedBy() instanceof EcoreProjectTemplateInitializer.ExampleInitialization initialization) {
-            var context = initialization.editingContext();
-            var model = initialization.model();
-            var description = this.descriptions.findById(context, this.descriptionId)
-                    .filter(DiagramDescription.class::isInstance).map(DiagramDescription.class::cast).orElseThrow();
-            var diagram = this.diagrams.create(context, description, model);
-            var diagramContext = new DiagramContext(diagram);
-            var contents = new java.util.ArrayList<org.eclipse.emf.ecore.EObject>(model.getEClassifiers());
-            contents.addAll(model.getESubpackages());
-            for (var element : contents) {
-                if (element instanceof org.eclipse.emf.ecore.ENamedElement named
-                        && !List.of("C", "Thing").contains(named.getName())) {
-                    diagramContext.viewCreationRequests().add(ViewCreationRequest.newViewCreationRequest()
-                            .parentElementId(diagram.getId()).descriptionId(this.nodeDescriptions.get(element.eClass().getName()))
-                            .targetObjectId(this.identity.getId(element)).containmentKind(NodeContainmentKind.CHILD_NODE).build());
-                }
-            }
-            diagram = this.diagrams.refresh(context, diagramContext).orElseThrow();
-            // A second refresh synchronizes references to the newly created type-parameter ports.
-            diagram = this.diagrams.refresh(context, new DiagramContext(diagram)).orElseThrow();
-            diagram = new EcoreExampleLayout(this.identity).apply(model, diagram);
-            var variables = new VariableManager();
-            variables.put(VariableManager.SELF, model);
-            var representationMetadata = RepresentationMetadata.newRepresentationMetadata(diagram.getId())
-                    .kind(diagram.getKind()).label("Example").descriptionId(diagram.getDescriptionId())
-                    .iconURLs(description.getIconURLsProvider().apply(variables)).build();
-            this.metadata.save(event, context, representationMetadata, diagram.getTargetObjectId());
-            this.representations.save(event, context, diagram);
+        if (!(event.causedBy() instanceof EcoreProjectTemplateInitializer.ExampleInitialization initialization)) {
+            return;
         }
+        var editingContext = initialization.editingContext();
+        var model = initialization.model();
+        var description = this.descriptionSearchService.findById(editingContext, this.ecoreDiagramDescriptionId)
+                .filter(DiagramDescription.class::isInstance).map(DiagramDescription.class::cast).orElseThrow();
+        var diagram = this.diagramCreationService.create(editingContext, description, model);
+        var diagramContext = new DiagramContext(diagram);
+        var initialNodeCandidates = new java.util.ArrayList<org.eclipse.emf.ecore.EObject>(model.getEClassifiers());
+        initialNodeCandidates.addAll(model.getESubpackages());
+        var initiallyHiddenElementNames = List.of("C", "Thing");
+        for (var element : initialNodeCandidates) {
+            if (element instanceof org.eclipse.emf.ecore.ENamedElement named
+                    && !initiallyHiddenElementNames.contains(named.getName())) {
+                diagramContext.viewCreationRequests().add(ViewCreationRequest.newViewCreationRequest()
+                        .parentElementId(diagram.getId()).descriptionId(this.nodeDescriptionIdsByType.get(element.eClass().getName()))
+                        .targetObjectId(this.identityService.getId(element)).containmentKind(NodeContainmentKind.CHILD_NODE).build());
+            }
+        }
+
+        diagram = this.diagramCreationService.refresh(editingContext, diagramContext).orElseThrow();
+        // A second refresh synchronizes references to the newly created type-parameter ports.
+        diagram = this.diagramCreationService.refresh(editingContext, new DiagramContext(diagram)).orElseThrow();
+        diagram = new EcoreExampleLayout(this.identityService).apply(model, diagram);
+
+        var variableManager = new VariableManager();
+        variableManager.put(VariableManager.SELF, model);
+        var representationMetadata = RepresentationMetadata.newRepresentationMetadata(diagram.getId())
+                .kind(diagram.getKind()).label("Example").descriptionId(diagram.getDescriptionId())
+                .iconURLs(description.getIconURLsProvider().apply(variableManager)).build();
+        this.metadataPersistenceService.save(event, editingContext, representationMetadata, diagram.getTargetObjectId());
+        this.representationPersistenceService.save(event, editingContext, diagram);
     }
 }

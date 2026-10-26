@@ -35,10 +35,10 @@ class EcoreExampleTests {
     void xmlDownloadCanBeOpenedAsAnEcoreModel() throws Exception {
         var resource = new EcoreJsonResource(new JSONResourceFactory().createResourceURI("download-test"));
         resource.getContents().add(EcoreExample.load());
-        var bytes = new XMLDocumentExporter().getBytes(resource, "application/xml").orElseThrow();
+        var exportedXml = new XMLDocumentExporter().getBytes(resource, "application/xml").orElseThrow();
         var downloaded = new EcoreResourceFactoryImpl().createResource(URI.createURI("download.ecore"));
         new ResourceSetImpl().getResources().add(downloaded);
-        downloaded.load(new ByteArrayInputStream(bytes), Map.of());
+        downloaded.load(new ByteArrayInputStream(exportedXml), Map.of());
         assertThat(downloaded.getErrors()).isEmpty();
         assertThat(Diagnostician.INSTANCE.validate(downloaded.getContents().getFirst()).getSeverity()).isZero();
         assertThat(((EPackage) downloaded.getContents().getFirst()).getEClassifiers()).hasSize(9);
@@ -66,25 +66,27 @@ class EcoreExampleTests {
         assertThat(((EEnum) model.getEClassifier("Enumeration")).getELiterals()).extracting(literal -> literal.getName()).containsExactly("ok", "nok");
         assertThat(model.getEClassifier("SomeDataType").getEAnnotations().getFirst().getDetails().get("constraints")).isEqualTo("hasNoSpecialChar");
         assertThat(model.getESubpackages()).extracting(pack -> pack.getName()).containsExactly("subPackage");
+
         var resource = new EcoreJsonResource(new JSONResourceFactory().createResourceURI("example-test"));
         resource.getContents().add(model);
-        var bytes = new ByteArrayOutputStream();
-        resource.save(bytes, Map.of());
+        var serializedModel = new ByteArrayOutputStream();
+        resource.save(serializedModel, Map.of());
         String parameterId = new EObjectIDManager().getOrCreateId(set.getETypeParameters().getFirst());
         var loader = new EcoreResourceLoader(new ResourceLoader(List.of()), List.of());
-        var restored = loader.toResource(new ResourceSetImpl(), "example-test", "Example", bytes.toString(java.nio.charset.StandardCharsets.UTF_8), false, false).orElseThrow();
-        assertThat(restored).isInstanceOf(EcoreJsonResource.class);
-        var diagnostic = Diagnostician.INSTANCE.validate(restored.getContents().getFirst());
+        var restoredResource = loader.toResource(new ResourceSetImpl(), "example-test", "Example", serializedModel.toString(java.nio.charset.StandardCharsets.UTF_8), false, false).orElseThrow();
+        assertThat(restoredResource).isInstanceOf(EcoreJsonResource.class);
+        var diagnostic = Diagnostician.INSTANCE.validate(restoredResource.getContents().getFirst());
         assertThat(diagnostic.getSeverity()).as(diagnostic.toString()).isZero();
-        assertThat(((EPackage) restored.getContents().getFirst()).getEClassifiers()).hasSize(9);
-        var restoredSet = (EClass) ((EPackage) restored.getContents().getFirst()).getEClassifier("Set");
+        assertThat(((EPackage) restoredResource.getContents().getFirst()).getEClassifiers()).hasSize(9);
+        var restoredSet = (EClass) ((EPackage) restoredResource.getContents().getFirst()).getEClassifier("Set");
         assertThat(new EObjectIDManager().getOrCreateId(restoredSet.getETypeParameters().getFirst())).isEqualTo(parameterId);
+
         restoredSet.getETypeParameters().getFirst().setName("Element");
-        bytes.reset();
-        restored.save(bytes, Map.of());
-        var reopened = loader.toResource(new ResourceSetImpl(), "example-test", "Example", bytes.toString(java.nio.charset.StandardCharsets.UTF_8), false, false).orElseThrow();
-        assertThat(Diagnostician.INSTANCE.validate(reopened.getContents().getFirst()).getSeverity()).isZero();
-        var reopenedSet = (EClass) ((EPackage) reopened.getContents().getFirst()).getEClassifier("Set");
+        serializedModel.reset();
+        restoredResource.save(serializedModel, Map.of());
+        var reopenedResource = loader.toResource(new ResourceSetImpl(), "example-test", "Example", serializedModel.toString(java.nio.charset.StandardCharsets.UTF_8), false, false).orElseThrow();
+        assertThat(Diagnostician.INSTANCE.validate(reopenedResource.getContents().getFirst()).getSeverity()).isZero();
+        var reopenedSet = (EClass) ((EPackage) reopenedResource.getContents().getFirst()).getEClassifier("Set");
         assertThat(reopenedSet.getEReferences().getFirst().getEGenericType().getETypeParameter().getName()).isEqualTo("Element");
         assertThat(new EObjectIDManager().getOrCreateId(reopenedSet.getETypeParameters().getFirst())).isEqualTo(parameterId);
     }
