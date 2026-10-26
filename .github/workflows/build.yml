@@ -1,0 +1,91 @@
+# Copyright (c) 2026 Obeo. SPDX-License-Identifier: EPL-2.0
+name: Build and publish
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  MAVEN_USERNAME: ${{ vars.MAVEN_USERNAME }}
+  MAVEN_READ_TOKEN: ${{ secrets.MAVEN_READ_TOKEN }}
+
+jobs:
+  build:
+    # Fork pull requests cannot receive the token required by upstream Maven repositories.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check dependency credentials
+        run: |
+          if [[ -z "$MAVEN_USERNAME" || -z "$MAVEN_READ_TOKEN" ]]; then
+            echo '::error::Configure the MAVEN_USERNAME variable and MAVEN_READ_TOKEN secret; see README.md.'
+            exit 1
+          fi
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          mvn-server-credentials: |
+            github-sirius-web:MAVEN_USERNAME:MAVEN_READ_TOKEN
+            github-sirius-emfjson:MAVEN_USERNAME:MAVEN_READ_TOKEN
+      - name: Read version and validate release tag
+        id: version
+        run: |
+          version=$(mvn --batch-mode --no-transfer-progress -f ecore-editor-releng/pom.xml \
+            help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF_TYPE" == tag && ( "$GITHUB_REF_NAME" != "v$version" || "$version" == *-SNAPSHOT ) ]]; then
+            echo "::error::Release tags must match a non-SNAPSHOT Maven version: v$version."
+            exit 1
+          fi
+      - name: Build and test the complete reactor
+        run: mvn --batch-mode --no-transfer-progress -f ecore-editor-releng/pom.xml clean verify
+
+  publish:
+    needs: build
+    if: >-
+      github.event_name == 'push' && github.repository == 'ObeoNetwork/EcoreTools' &&
+      (startsWith(github.ref, 'refs/tags/v') ||
+      (github.ref == 'refs/heads/main' && endsWith(needs.build.outputs.version, '-SNAPSHOT')))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          mvn-server-credentials: |
+            github-sirius-web:MAVEN_USERNAME:MAVEN_READ_TOKEN
+            github-sirius-emfjson:MAVEN_USERNAME:MAVEN_READ_TOKEN
+            github-ecore-editor:GITHUB_ACTOR:GITHUB_TOKEN
+      - name: Publish the verified reactor to GitHub Packages
+        run: >-
+          mvn --batch-mode --no-transfer-progress -f ecore-editor-releng/pom.xml
+          deploy -DskipTests -DdeployAtEnd=true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

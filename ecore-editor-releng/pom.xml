@@ -30,6 +30,18 @@
     <module>../sirius-components-ecore-editor-application</module>
   </modules>
   <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals><goal>jar-no-fork</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
     <resources>
       <resource><directory>src/main/resources</directory></resource>
       <resource>
@@ -59,6 +71,14 @@
     <repository>
       <id>github-sirius-emfjson</id>
       <url>https://maven.pkg.github.com/eclipse-sirius/sirius-emf-json</url>
+      <snapshots><enabled>true</enabled></snapshots>
     </repository>
   </repositories>
+  <distributionManagement>
+    <repository>
+      <id>github-ecore-editor</id>
+      <name>Ecore Editor GitHub Packages</name>
+      <url>https://maven.pkg.github.com/obeonetwork/ecoretools</url>
+    </repository>
+  </distributionManagement>
 </project>
