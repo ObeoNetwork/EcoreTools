@@ -5,7 +5,10 @@ class diagram in [Eclipse EcoreTools](https://eclipse.dev/ecoretools/).
 Built with Sirius Web, it edits standard `.ecore` models and provides a
 reusable editor component plus a standalone application to try it out.
 
-![Example class diagram](sirius-components-ecore-editor-application/src/main/resources/project-templates/ecore-example.svg)
+![Ecore Editor demo: creating projects, editing classes, and importing an Ecore model](docs/ecore-editor-demo.gif)
+
+Creating and editing Ecore models in the browser (2× speed).
+[View the example class diagram](sirius-components-ecore-editor-application/src/main/resources/project-templates/ecore-example.svg).
 
 ## Compatibility
 
