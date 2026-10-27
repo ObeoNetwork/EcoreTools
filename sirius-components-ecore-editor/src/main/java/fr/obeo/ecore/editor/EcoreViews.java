@@ -163,12 +163,14 @@ public class EcoreViews {
         for (boolean containment : List.of(false, true)) {
             classNode.getPalette().getEdgeTools().add(diagramBuilders.newEdgeTool().name(containment ? "Composition" : "Reference")
                     .targetElementDescriptions(classNode, parameter)
+                    .elementsToSelectExpression("aql:semanticEdgeSource.eReferences->last()")
                     .body(viewBuilders.newChangeContext().expression("aql:semanticEdgeSource.ecoreReference(semanticEdgeTarget, " + containment + ")").build()).build());
         }
         classNode.getPalette().getEdgeTools().add(diagramBuilders.newEdgeTool().name("Supertype").targetElementDescriptions(classNode)
                 .body(viewBuilders.newChangeContext().expression("aql:semanticEdgeSource.ecoreSuperType(semanticEdgeTarget)").build()).build());
         classNode.getPalette().getEdgeTools().add(diagramBuilders.newEdgeTool().name("Bidirectional reference")
                 .iconURLsExpression("/icons/ecore/EReference.svg").targetElementDescriptions(classNode)
+                .elementsToSelectExpression("aql:semanticEdgeSource.ecoreReferences()->select(r | r = semanticEdgeTarget.eReferences->last() or r = semanticEdgeTarget.eReferences->last().eOpposite)->first()")
                 .body(viewBuilders.newChangeContext().expression("aql:semanticEdgeSource.ecoreBidirectionalReference(semanticEdgeTarget)").build()).build());
         var reference = diagramBuilders.newEdgeDescription().name("EReference").domainType("ecore::EReference")
                 .semanticCandidatesExpression("aql:self.ecoreReferences()")
@@ -187,6 +189,7 @@ public class EcoreViews {
         reference.getPalette().getNodeTools().add(diagramBuilders.newNodeTool().name("Create opposite")
                 .iconURLsExpression("/icons/ecore/EReference.svg")
                 .preconditionExpression("aql:self.ecoreReferenceTarget().oclIsKindOf(ecore::EClass)")
+                .elementsToSelectExpression("aql:self.ecoreReferences()->select(r | r = self or r = self.eOpposite)->first()")
                 .body(viewBuilders.newChangeContext().expression("aql:self.ecoreCreateOpposite()").build()).build());
         var opposite = EcoreUtil.copy(reference);
         opposite.setName("EOpposite");
@@ -336,6 +339,7 @@ public class EcoreViews {
     private NodeTool createNoteTool(boolean constraint) {
         return diagramBuilders.newNodeTool().name(constraint ? "Constraints" : "Documentation")
                 .iconURLsExpression("/icons/ecore/EAnnotation.svg")
+                .elementsToSelectExpression("aql:self.ecoreExistingNote(" + constraint + ")")
                 .body(viewBuilders.newChangeContext().expression("aql:self.ecoreNote(" + constraint + ")").build()).build();
     }
     private DeleteTool deleteElementTool() {
@@ -352,6 +356,8 @@ public class EcoreViews {
         if (description != null) change.children(diagramBuilders.newCreateView().elementDescription(description)
                 .semanticElementExpression("aql:self").parentViewExpression("aql:selectedNode").containmentKind(NodeContainmentKind.CHILD_NODE).build());
         var elementsToSelect = switch (type) {
+            case "EClass", "EEnum", "EDataType" -> "aql:self.eClassifiers->last()";
+            case "EPackage" -> "aql:self.eSubpackages->last()";
             case "EAttribute", "EReference" -> "aql:self.eStructuralFeatures->last()";
             case "EOperation" -> "aql:self.eOperations->last()";
             case "ETypeParameter" -> "aql:self.eTypeParameters->last()";

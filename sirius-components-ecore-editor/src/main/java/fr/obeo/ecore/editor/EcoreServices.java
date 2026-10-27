@@ -56,6 +56,14 @@ public class EcoreServices {
         return (EObject) annotation.getDetails().get(annotation.getDetails().indexOfKey(key));
     }
 
+    public EObject ecoreExistingNote(EModelElement self, boolean constraint) {
+        String source = constraint ? EcorePackage.eNS_URI : "http://www.eclipse.org/emf/2002/GenModel";
+        String key = constraint ? "constraints" : "documentation";
+        var annotation = self.getEAnnotation(source);
+        int index = annotation == null ? -1 : annotation.getDetails().indexOfKey(key);
+        return index < 0 ? null : (EObject) annotation.getDetails().get(index);
+    }
+
     public List<EObject> ecoreNotes(EObject self, DiagramContext context) {
         var visibleObjectIds = visibleSemanticObjectIds(context);
         var visibleReferenceIds = new HashSet<String>();

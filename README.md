@@ -86,8 +86,9 @@ Project** on all three projects.
   literals, type parameters, and relationships update automatically.
   A reference appears as an edge when its target is visible, or as a row in
   its owning class when the target is hidden or missing.
-- Newly created attributes, operations, references, enum literals, and type
-  parameters are selected so you can start editing their label from the keyboard.
+- Newly created classifiers, packages, attributes, operations, references, enum
+  literals, and type parameters are selected so you can edit their labels from
+  the keyboard.
 - Edit labels directly using EcoreTools syntax: `name : EString = initial`,
   `[0..*] children`, or `find(query : EString) : Book`. Both ends of an opposite
   reference have independently editable labels. References can target generic

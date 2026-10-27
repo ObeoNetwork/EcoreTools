@@ -636,12 +636,17 @@ class EcoreEditorTests {
     @Test
     void annotationToolsPreserveExistingTextAndOfferDirectValueEditing() {
         assertThat(services.ecoreNotes(examplePackage, null)).isEmpty();
+        assertThat(services.ecoreExistingNote(book, false)).isNull();
+        assertThat(book.getEAnnotations()).isEmpty();
         var documentation = services.ecoreNote(book, false);
+        assertThat(services.ecoreExistingNote(book, false)).isSameAs(documentation);
+        assertThat(services.ecoreExistingNote(book, true)).isNull();
         var value = documentation.eClass().getEStructuralFeature("value");
         documentation.eSet(value, "First line\nSecond line");
         assertThat(services.ecoreNote(book, false)).isSameAs(documentation);
         assertThat(documentation.eGet(value)).isEqualTo("First line\nSecond line");
         var constraints = services.ecoreNote(book, true);
+        assertThat(services.ecoreExistingNote(book, true)).isSameAs(constraints);
         assertThat(constraints).isNotSameAs(documentation);
         assertThat(((EAnnotation) constraints.eContainer()).getSource()).isEqualTo(EcorePackage.eNS_URI);
     }

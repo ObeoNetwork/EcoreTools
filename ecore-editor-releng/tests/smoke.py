@@ -168,7 +168,7 @@ def invoke_edge(label, source, target, expect_error=False):
     result = graphql("""mutation($input:InvokeSingleClickOnTwoDiagramElementsToolInput!) {
      invokeSingleClickOnTwoDiagramElementsTool(input:$input) { __typename
       ... on ErrorPayload { messages { body } }
-      ... on InvokeSingleClickOnTwoDiagramElementsToolSuccessPayload { messages { body level } }
+      ... on InvokeSingleClickOnTwoDiagramElementsToolSuccessPayload { messages { body level } newSelection { entries { id } } }
      }
     }""", input={"id": uid(), "editingContextId": context, "representationId": diagram,
                  "toolId": tool["id"], "diagramSourceElementId": source["id"], "diagramTargetElementId": target["id"],
@@ -179,6 +179,7 @@ def invoke_edge(label, source, target, expect_error=False):
         return result
     assert result["__typename"] == "InvokeSingleClickOnTwoDiagramElementsToolSuccessPayload", result
     assert not any(m["level"] == "ERROR" for m in result["messages"]), result
+    return result["newSelection"]
 
 
 def connector_tools(source, target):
@@ -417,11 +418,14 @@ try:
         assert current_book["childNodes"][0]["style"]["background"] == "transparent"
     edit(attribute["insideLabel"]["id"], "0")
     refreshed(lambda d: not next(n for n in d["nodes"] if n["id"] == book["id"])["childNodes"][0]["insideLabel"]["style"]["bold"])
-    invoke("New EClass")
-    assert len(refreshed(lambda d: len(d["nodes"]) == 3)["nodes"]) == 3
-    invoke("Documentation", book["id"])
+    selection = invoke("New EClass")
+    with_class = refreshed(lambda d: len(d["nodes"]) == 3)
+    new_class = next(n for n in with_class["nodes"] if n["insideLabel"]["text"] == "NewClass")
+    assert_selected(selection, new_class)
+    selection = invoke("Documentation", book["id"])
     annotated = refreshed(lambda d: len(d["nodes"]) == 4)
     note = next(n for n in annotated["nodes"] if n["insideLabel"]["text"] == "New documentation note")
+    assert_selected(selection, note)
     assert note["style"]["borderSize"] == 1, note
     assert note["style"]["borderColor"] == "#788398", note
     assert note["insideLabel"]["style"]["color"] == "#566179", note
@@ -435,16 +439,18 @@ try:
     assert operation["style"]["background"] == "transparent"
     edit(operation["insideLabel"]["id"], "find(query : EString) : Book")
     refreshed(lambda d: any(c["insideLabel"]["text"] == "find(query EString) : Book" for n in d["nodes"] for c in n["childNodes"]))
-    invoke("New EDataType")
+    selection = invoke("New EDataType")
     with_datatype = refreshed(lambda d: len(d["nodes"]) == 5)
     datatype = next(n for n in with_datatype["nodes"] if n["insideLabel"]["text"] == "NewDataType")
+    assert_selected(selection, datatype)
     check_icon(datatype, "EDataType")
     assert datatype["childNodes"][0]["style"]["background"] == "transparent"
     edit(datatype["childNodes"][0]["insideLabel"]["id"], "java.lang.String")
     refreshed(lambda d: any(c["insideLabel"]["text"] == "java.lang.String" for n in d["nodes"] for c in n["childNodes"]))
-    invoke("New EEnum")
+    selection = invoke("New EEnum")
     with_enum = refreshed(lambda d: len(d["nodes"]) == 6)
     enumeration = next(n for n in with_enum["nodes"] if n["insideLabel"]["text"] == "NewEnum")
+    assert_selected(selection, enumeration)
     previous_literals = set()
     for count in (1, 2):
         selection = invoke("New EEnumLiteral", enumeration["id"])
@@ -474,9 +480,10 @@ try:
     enumeration = next(n for n in resized["nodes"] if n["id"] == enumeration["id"])
     assert enumeration["style"]["background"] == "var(--ecore-content-background, #f9f9fc)", enumeration
     assert all(n["style"]["background"] == "transparent" for n in enumeration["childNodes"]), enumeration
-    invoke("Constraints", book["id"])
+    selection = invoke("Constraints", book["id"])
     with_constraints = refreshed(lambda d: len(d["nodes"]) == 7)
     constraint = next(n for n in with_constraints["nodes"] if n["insideLabel"]["text"] == "Constraint1 Constraint2")
+    assert_selected(selection, constraint)
     assert constraint["style"]["background"] == "#eef4f9", constraint
     assert constraint["style"]["borderSize"] == 1, constraint
     assert constraint["style"]["borderColor"] == "#2d6f9f", constraint
@@ -532,9 +539,10 @@ try:
     assert all(c["targetObjectId"] not in selected for n in multiple["nodes"] if n["id"] == restored_book["id"]
                for c in n["childNodes"]), multiple
     reference = next(e for e in multiple["edges"] if e["targetObjectId"] == reference_id)
-    invoke("Create opposite", reference["id"])
+    selection = invoke("Create opposite", reference["id"])
     with_opposite = refreshed(lambda d: any(e["targetObjectId"] == reference_id and e["beginLabel"] for e in d["edges"]))
     opposite = next(e for e in with_opposite["edges"] if e["targetObjectId"] == reference_id)
+    assert_selected(selection, opposite)
     assert sum(e["targetObjectId"] == reference_id for e in with_opposite["edges"]) == 1, with_opposite
     assert opposite["centerLabel"] is None, opposite
     assert opposite["beginLabel"]["text"] == "[0..1] opposite", opposite
@@ -564,9 +572,10 @@ try:
     assert "Supertype" in {t["label"] for t in connector_tools(source, library)}
     for label, cardinality, arrow, name in [("Reference", "[0..1]", "None", "optionalT"),
                                            ("Composition", "[0..*]", "FillDiamond", "containedT")]:
-        invoke_edge(label, source, target)
+        selection = invoke_edge(label, source, target)
         linked = refreshed(lambda d: any(e["targetId"] == target["id"] and e["centerLabel"]["text"] == cardinality + " t" for e in d["edges"]))
         edge = next(e for e in linked["edges"] if e["targetId"] == target["id"] and e["centerLabel"]["text"] == cardinality + " t")
+        assert_selected(selection, edge)
         assert edge["sourceId"] == source["id"], edge
         assert edge["style"]["sourceArrow"] == arrow, edge
         assert edge["centerLabel"]["style"]["color"] == "#63708a", edge
@@ -577,9 +586,10 @@ try:
         assert [r["id"] for r in semantic] == [edge["targetObjectId"]], semantic
         edit(edge["centerLabel"]["id"], cardinality + " " + name)
         changed = refreshed(lambda d: any(e["targetId"] == target["id"] and e["centerLabel"]["text"] == cardinality + " " + name for e in d["edges"]))
-    invoke("Documentation")
+    selection = invoke("Documentation")
     documented = refreshed(lambda d: any(n["insideLabel"]["text"] == "New documentation note" for n in d["nodes"]))
     background_note = next(n for n in documented["nodes"] if n["insideLabel"]["text"] == "New documentation note")
+    assert_selected(selection, background_note)
     assert not any(e["sourceId"] == background_note["id"] for e in documented["edges"]), documented
     text = "Diagram documentation\nKeep this text when reconnecting"
     edit(background_note["insideLabel"]["id"], text)
@@ -714,13 +724,14 @@ try:
     assert objects("aql:editingContext.allContents()->filter(ecore::EClass)->select(c | c.name = 'ReconnectA').eGenericSuperTypes.eTypeArguments") == arguments
     reference_ids_before = {r["id"] for r in objects("aql:editingContext.allContents()->filter(ecore::EReference)")}
     for as_row in (False, True):
-        invoke_edge("Bidirectional reference", reconnect_a, reconnect_b)
+        selection = invoke_edge("Bidirectional reference", reconnect_a, reconnect_b)
         pair_ids = {r["id"] for r in objects("aql:editingContext.allContents()->filter(ecore::EReference)")} - reference_ids_before
         assert len(pair_ids) == 2, pair_ids
         current = refreshed(lambda d: any(e["targetObjectId"] in pair_ids for e in d["edges"]))
         rendered = [e for e in current["edges"] if e["targetObjectId"] in pair_ids]
         assert len(rendered) == 1, rendered
         paired_edge = rendered[0]
+        assert_selected(selection, paired_edge)
         assert paired_edge["beginLabel"] and paired_edge["endLabel"], paired_edge
         assert paired_edge["style"]["sourceArrow"] == paired_edge["style"]["targetArrow"] == "InputArrow", paired_edge
         element_id = paired_edge["id"]
@@ -733,18 +744,20 @@ try:
         current = refreshed(lambda d: not any(e["targetObjectId"] in pair_ids for e in d["edges"])
                             and not any(c["targetObjectId"] in pair_ids for n in d["nodes"] for c in n["childNodes"]))
         assert {r["id"] for r in objects("aql:editingContext.allContents()->filter(ecore::EReference)")} == reference_ids_before
-    invoke("New EPackage")
+    selection = invoke("New EPackage")
     current = refreshed(lambda d: any(n["insideLabel"]["text"] == "NewPackage" for n in d["nodes"]))
     package = next(n for n in current["nodes"] if n["insideLabel"]["text"] == "NewPackage")
+    assert_selected(selection, package)
     assert package["defaultWidth"] == 360 and package["defaultHeight"] == 240, package
     edit(package["insideLabel"]["id"], "nested")
     current = refreshed(lambda d: any(n["id"] == package["id"] and n["insideLabel"]["text"] == "nested" for n in d["nodes"]))
     children = {}
     for kind in ("EClass", "EDataType", "EEnum", "EPackage"):
-        invoke("New " + kind, package["id"])
+        selection = invoke("New " + kind, package["id"])
         current = refreshed(lambda d: len(next(n for n in d["nodes"] if n["id"] == package["id"])["childNodes"]) == len(children) + 1)
         parent = next(n for n in current["nodes"] if n["id"] == package["id"])
         child = next(n for n in parent["childNodes"] if n["insideLabel"]["text"] == "New" + kind[1:])
+        assert_selected(selection, child)
         children[kind] = child
         assert child["targetObjectId"] in {o["id"] for o in objects(
             "aql:editingContext.allContents()->filter(ecore::EPackage)->select(p | p.name = 'nested').eContents()")}, child
