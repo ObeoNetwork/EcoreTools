@@ -351,7 +351,15 @@ public class EcoreViews {
         var change = viewBuilders.newChangeContext().expression("aql:self.ecoreCreate('" + type + "')");
         if (description != null) change.children(diagramBuilders.newCreateView().elementDescription(description)
                 .semanticElementExpression("aql:self").parentViewExpression("aql:selectedNode").containmentKind(NodeContainmentKind.CHILD_NODE).build());
-        return diagramBuilders.newNodeTool().name("New " + type).iconURLsExpression("/icons/ecore/" + type + ".svg").body(change.build()).build();
+        var elementsToSelect = switch (type) {
+            case "EAttribute", "EReference" -> "aql:self.eStructuralFeatures->last()";
+            case "EOperation" -> "aql:self.eOperations->last()";
+            case "ETypeParameter" -> "aql:self.eTypeParameters->last()";
+            case "EEnumLiteral" -> "aql:self.eLiterals->last()";
+            default -> null;
+        };
+        return diagramBuilders.newNodeTool().name("New " + type).iconURLsExpression("/icons/ecore/" + type + ".svg")
+                .elementsToSelectExpression(elementsToSelect).body(change.build()).build();
     }
     private Operation[] createImportViewOperations(List<NodeDescription> descriptions, String variable, String parent) {
         var operations = new ArrayList<Operation>();

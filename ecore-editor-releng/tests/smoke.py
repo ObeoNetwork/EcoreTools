@@ -263,7 +263,7 @@ def invoke(label, element=None, selected=()):
     mutation($input:InvokeSingleClickOnDiagramElementToolInput!) {
      invokeSingleClickOnDiagramElementTool(input:$input) { __typename
       ... on ErrorPayload { messages { body } }
-      ... on InvokeSingleClickOnDiagramElementToolSuccessPayload { messages { body level } }
+      ... on InvokeSingleClickOnDiagramElementToolSuccessPayload { messages { body level } newSelection { entries { id } } }
      }
     }""", input={"id": uid(), "editingContextId": context, "representationId": diagram,
                  "toolId": tools(element)[label], "diagramElementIds": [element],
@@ -272,6 +272,11 @@ def invoke(label, element=None, selected=()):
     result = result["invokeSingleClickOnDiagramElementTool"]
     assert result["__typename"] == "InvokeSingleClickOnDiagramElementToolSuccessPayload", result
     assert not any(m["level"] == "ERROR" for m in result["messages"]), result
+    return result["newSelection"]
+
+
+def assert_selected(selection, node):
+    assert selection == {"entries": [{"id": node["targetObjectId"]}]}, (selection, node)
 
 
 def edit(label_id, text):
@@ -422,9 +427,10 @@ try:
     assert note["insideLabel"]["style"]["color"] == "#566179", note
     edit(note["insideLabel"]["id"], "A library book\nWith its title")
     refreshed(lambda d: any(n["insideLabel"]["text"] == "A library book\nWith its title" for n in d["nodes"]))
-    invoke("New EOperation", book["id"])
+    selection = invoke("New EOperation", book["id"])
     with_operation = refreshed(lambda d: len(next(n for n in d["nodes"] if n["id"] == book["id"])["childNodes"]) == 2)
     operation = next(n for n in next(n for n in with_operation["nodes"] if n["id"] == book["id"])["childNodes"] if n["id"] != attribute["id"])
+    assert_selected(selection, operation)
     check_icon(operation, "EOperation")
     assert operation["style"]["background"] == "transparent"
     edit(operation["insideLabel"]["id"], "find(query : EString) : Book")
@@ -439,9 +445,14 @@ try:
     invoke("New EEnum")
     with_enum = refreshed(lambda d: len(d["nodes"]) == 6)
     enumeration = next(n for n in with_enum["nodes"] if n["insideLabel"]["text"] == "NewEnum")
+    previous_literals = set()
     for count in (1, 2):
-        invoke("New EEnumLiteral", enumeration["id"])
+        selection = invoke("New EEnumLiteral", enumeration["id"])
         updated = refreshed(lambda d: len(next(n for n in d["nodes"] if n["id"] == enumeration["id"])["childNodes"]) == count)
+        literals = next(n for n in updated["nodes"] if n["id"] == enumeration["id"])["childNodes"]
+        new_literal = next(n for n in literals if n["targetObjectId"] not in previous_literals)
+        assert_selected(selection, new_literal)
+        previous_literals.add(new_literal["targetObjectId"])
     enumeration = next(n for n in updated["nodes"] if n["id"] == enumeration["id"])
     assert enumeration["style"]["background"] == "var(--ecore-content-background, #f9f9fc)", enumeration
     assert all(n["style"]["background"] == "transparent" for n in enumeration["childNodes"]), enumeration
@@ -475,9 +486,10 @@ try:
     edit(constraint["insideLabel"]["id"], "MustHaveTitle")
     updated = refreshed(lambda d: any(n["insideLabel"]["text"] == "MustHaveTitle" for n in d["nodes"]))
     assert next(n for n in updated["nodes"] if n["id"] == constraint["id"])["style"] == constraint["style"], updated
-    invoke("New ETypeParameter", book["id"])
+    selection = invoke("New ETypeParameter", book["id"])
     with_parameter = refreshed(lambda d: len(next(n for n in d["nodes"] if n["id"] == book["id"])["borderNodes"]) == 1)
     parameter = next(n for n in with_parameter["nodes"] if n["id"] == book["id"])["borderNodes"][0]
+    assert_selected(selection, parameter)
     assert parameter["insideLabel"]["text"] == "T", parameter
     assert parameter["insideLabel"]["style"]["iconURL"] == [], parameter
     assert parameter["insideLabel"]["insideLabelLocation"] == "MIDDLE_CENTER", parameter
@@ -502,10 +514,11 @@ try:
     assert len(imported["nodes"]) == len(without_book["nodes"]) + 3, imported
     assert all(c["targetObjectId"] != types["Book"]["id"] for n in imported["nodes"] for c in n["childNodes"]), imported
     assert objects("aql:editingContext.allContents()->filter(ecore::EClass)->select(c | c.name = 'Book')")[0]["id"] == types["Book"]["id"]
-    invoke("New EAttribute", restored_book["id"])
+    selection = invoke("New EAttribute", restored_book["id"])
     with_status = refreshed(lambda d: len(next(n for n in d["nodes"] if n["id"] == restored_book["id"])["childNodes"]) == 3)
     status = next(c for n in with_status["nodes"] if n["id"] == restored_book["id"]
                   for c in n["childNodes"] if c["insideLabel"]["text"].startswith("NewAttribute"))
+    assert_selected(selection, status)
     edit(status["insideLabel"]["id"], "status : NewEnum")
     refreshed(lambda d: any(c["insideLabel"]["text"].startswith("status : NewEnum") for n in d["nodes"] for c in n["childNodes"]))
     for node in (datatype, enumeration):
@@ -739,6 +752,13 @@ try:
     invoke("New EAttribute", children["EClass"]["id"])
     current = refreshed(lambda d: any(c["childNodes"] for n in d["nodes"] if n["id"] == package["id"]
                                      for c in n["childNodes"] if c["id"] == children["EClass"]["id"]))
+    selection = invoke("New EReference", children["EClass"]["id"])
+    current = refreshed(lambda d: any(len(c["childNodes"]) == 2 for n in d["nodes"] if n["id"] == package["id"]
+                                     for c in n["childNodes"] if c["id"] == children["EClass"]["id"]))
+    nested_class = next(c for n in current["nodes"] if n["id"] == package["id"] for c in n["childNodes"]
+                        if c["id"] == children["EClass"]["id"])
+    reference_row = next(c for c in nested_class["childNodes"] if c["insideLabel"]["text"].lstrip().startswith("NewReference"))
+    assert_selected(selection, reference_row)
     invoke("New EClass", children["EPackage"]["id"])
     current = refreshed(lambda d: any(c["childNodes"] for n in d["nodes"] if n["id"] == package["id"]
                                      for c in n["childNodes"] if c["id"] == children["EPackage"]["id"]))
