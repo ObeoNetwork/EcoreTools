@@ -24,7 +24,8 @@ import org.springframework.context.annotation.Primary;
 @Configuration(proxyBeanMethods = false)
 @Import({EcoreJavaServiceProvider.class, EcoreViewEditingContextInitializer.class, EcoreLabelService.class,
         EcoreDiagramStylePostProcessor.class, EcoreResourceToDocumentService.class,
-        EcoreConnectorPaletteProvider.class, EcoreReconnectionToolsExecutor.class, EcoreDiagramStyles.class})
+        EcoreConnectorPaletteProvider.class, EcoreReconnectionToolsExecutor.class, EcoreDiagramStyles.class,
+        EcoreDocumentationPropertiesConfigurer.class})
 public class EcoreEditorConfiguration {
     @Bean
     @Primary

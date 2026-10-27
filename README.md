@@ -114,6 +114,9 @@ Project** on all three projects.
   its target end to move it. A target that already has documentation is rejected
   with a message, preserving both notes and their text. Constraints have a
   separate style and editable text.
+- The **Documentation** field at the top of the properties view edits the same
+  GenModel annotation for an Ecore element or its documentation note. It supports
+  Markdown; existing HTML is edited as source to preserve its markup.
 - **Remove from diagram** keeps the model element. **Delete from model** deletes
   it. Downloaded Ecore documents retain the `.ecore` extension.
 
@@ -342,10 +345,11 @@ python3.13 -m venv .venv
 .venv/bin/python tests/smoke.py http://localhost:8083
 .venv/bin/python tests/example.py http://localhost:8083
 .venv/bin/python tests/instances.py http://localhost:8083
+.venv/bin/python tests/documentation.py http://localhost:8083
 ```
 
 The smoke and example checks leave their projects available for inspection.
-The instance check removes its own temporary projects.
+The instance and documentation checks remove their own temporary projects.
 
 ## Scope and license
 

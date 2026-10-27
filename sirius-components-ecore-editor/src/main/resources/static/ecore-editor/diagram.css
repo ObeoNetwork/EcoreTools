@@ -1,5 +1,15 @@
 /* Copyright (c) 2026 Obeo. SPDX-License-Identifier: EPL-2.0 */
 
+/* Sirius Web does not expose a height setting for its documentation widgets. */
+[data-testid="group-Documentation"] [data-testid="Documentation"] [contenteditable],
+[data-testid="group-Documentation"] [data-testid="input-Documentation (HTML)"] {
+  box-sizing: border-box;
+  height: 15lh !important;
+  max-height: 15lh !important;
+  overflow-y: auto !important;
+  resize: none;
+}
+
 /* The marker comes from the Ecore view's canvas color, including for note-only diagrams. */
 .react-flow:has([data-testid="rf__background"][style*="--ecore-canvas"]) {
   --ecore-focus: #be1a78;
