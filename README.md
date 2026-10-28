@@ -27,9 +27,14 @@ versions has not been established. The source of truth for these versions is
 
 ## Try it
 
-You need JDK 21+, Maven 3.9+, and Docker with Compose. Configure
-[Maven credentials](#maven-credentials) before building: Sirius Web dependencies
-are downloaded from GitHub Packages.
+You need JDK 21+, Maven 3.9+, Node.js 22.12+ and npm, and Docker with Compose.
+Configure [Maven credentials](#maven-credentials) and npm access before building:
+Sirius Web dependencies are downloaded from GitHub Packages. Authenticate npm
+using a GitHub token with `read:packages`:
+
+```sh
+npm login --registry=https://npm.pkg.github.com --auth-type=legacy
+```
 
 From the repository root:
 
@@ -114,9 +119,10 @@ Project** on all three projects.
   its target end to move it. A target that already has documentation is rejected
   with a message, preserving both notes and their text. Constraints have a
   separate style and editable text.
-- The **Documentation** field at the top of the properties view edits the same
-  GenModel annotation for an Ecore element or its documentation note. It supports
-  Markdown; existing HTML is edited as source to preserve its markup.
+- The **Documentation** view in the right panel edits the same GenModel annotation
+  for an Ecore element or its documentation note. It supports Markdown; existing
+  HTML is edited as source to preserve its markup. Clicking the diagram background
+  shows the documentation of its root EPackage.
 - **Remove from diagram** keeps the model element. **Delete from model** deletes
   it. Downloaded Ecore documents retain the `.ecore` extension.
 
@@ -126,7 +132,7 @@ Project** on all three projects.
 | --- | --- |
 | `ecore-editor-releng` | Parent POM, complete Maven reactor, Docker Compose, and API checks |
 | `sirius-components-ecore-editor` | View descriptions, AQL services, label editing, validation styles, and SVG icons |
-| `sirius-components-ecore-editor-application` | Spring Boot application with the standard Sirius Web frontend and Example template |
+| `sirius-components-ecore-editor-application` | Spring Boot application with the Ecore Editor frontend and Example template |
 
 Artifacts use group ID `fr.obeo.ecore` and are published to
 [`https://maven.pkg.github.com/obeonetwork/ecoretools`](https://github.com/ObeoNetwork/EcoreTools/packages)
@@ -249,6 +255,10 @@ Import the editor's Spring configuration from your application:
 
 The host application supplies Sirius Web and persistence. The component
 registers the Ecore metamodel, EMF Edit support, views, services, and icons.
+The standalone application's custom frontend contributes the Documentation
+workbench view; hosts using the standard Sirius Web frontend need to add the
+corresponding [frontend contribution](frontend/src/index.tsx) and
+[view component](frontend/src/documentation/DocumentationView.tsx) to show it.
 Build the host with `mvn verify`; use `mvn -U verify` to refresh a snapshot.
 For local development without publishing, first run
 `mvn -f ecore-editor-releng/pom.xml install` from this repository's root.
@@ -293,7 +303,7 @@ In **Settings → Secrets and variables → Actions**, configure:
 | Kind | Name | Value |
 | --- | --- | --- |
 | Repository variable | `MAVEN_USERNAME` | GitHub username that owns the dependency read token |
-| Actions secret | `MAVEN_READ_TOKEN` | Classic PAT with `read:packages` for Sirius Web and Sirius EMF JSON |
+| Actions secret | `MAVEN_READ_TOKEN` | Classic PAT with `read:packages` for Sirius Web, Sirius EMF JSON, and frontend npm dependencies |
 
 Enable GitHub Actions and allow the workflow's publication job to request
 `packages: write`. Publication uses the automatically supplied `GITHUB_TOKEN`

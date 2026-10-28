@@ -9,7 +9,6 @@
  *******************************************************************************/
 package fr.obeo.ecore.editor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,11 +21,9 @@ import org.eclipse.emf.ecore.EAnnotation;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EcorePackage;
-import org.eclipse.sirius.components.collaborative.forms.services.api.IPropertiesDescriptionRegistry;
-import org.eclipse.sirius.components.collaborative.forms.services.api.IPropertiesDescriptionRegistryConfigurer;
 import org.eclipse.sirius.components.core.api.IIdentityService;
 import org.eclipse.sirius.components.core.api.IReadOnlyObjectPredicate;
-import org.eclipse.sirius.components.emf.forms.api.IEMFFormDescriptionProvider;
+import org.eclipse.sirius.components.forms.description.FormDescription;
 import org.eclipse.sirius.components.forms.description.GroupDescription;
 import org.eclipse.sirius.components.forms.description.IfDescription;
 import org.eclipse.sirius.components.forms.description.PageDescription;
@@ -37,39 +34,35 @@ import org.eclipse.sirius.components.representations.IStatus;
 import org.eclipse.sirius.components.representations.Success;
 import org.eclipse.sirius.components.representations.VariableManager;
 
-/** Adds documentation alongside the standard Ecore properties. */
-public class EcoreDocumentationPropertiesConfigurer implements IPropertiesDescriptionRegistryConfigurer {
+/** Describes the form used by the separate documentation view. */
+public class EcoreDocumentationPropertiesConfigurer {
+    public static final String DESCRIPTION_ID = "ecore-documentation-form";
     private static final String SOURCE = "http://www.eclipse.org/emf/2002/GenModel";
     private static final String KEY = "documentation";
     private static final Pattern HTML = Pattern.compile("<(/?[a-zA-Z][^>]*|![^>]*|\\?[^>]*)>|&(#\\d+|#x[0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]+);");
     private final IIdentityService identityService;
     private final IReadOnlyObjectPredicate readOnlyObjectPredicate;
-    private final IEMFFormDescriptionProvider defaultFormDescriptionProvider;
-
-    public EcoreDocumentationPropertiesConfigurer(IIdentityService identityService, IReadOnlyObjectPredicate readOnlyObjectPredicate,
-            IEMFFormDescriptionProvider defaultFormDescriptionProvider) {
+    public EcoreDocumentationPropertiesConfigurer(IIdentityService identityService, IReadOnlyObjectPredicate readOnlyObjectPredicate) {
         this.identityService = Objects.requireNonNull(identityService);
         this.readOnlyObjectPredicate = Objects.requireNonNull(readOnlyObjectPredicate);
-        this.defaultFormDescriptionProvider = Objects.requireNonNull(defaultFormDescriptionProvider);
     }
 
-    @Override
-    public void addPropertiesDescriptions(IPropertiesDescriptionRegistry registry) {
-        boolean firstPage = true;
-        for (var page : this.defaultFormDescriptionProvider.getFormDescription().getPageDescriptions()) {
-            var groups = new ArrayList<GroupDescription>();
-            if (firstPage) {
-                groups.add(this.documentationGroup());
-                firstPage = false;
-            }
-            groups.addAll(page.getGroupDescriptions());
-            registry.add(PageDescription.newPageDescription("ecore-default-" + page.getId())
-                    .idProvider(page.getIdProvider()).labelProvider(page.getLabelProvider())
-                    .semanticElementsProvider(page.getSemanticElementsProvider()).groupDescriptions(groups)
-                    .toolbarActionDescriptions(page.getToolbarActionDescriptions())
-                    .canCreatePredicate(variableManager -> this.isDocumentable(variableManager) && page.getCanCreatePredicate().test(variableManager))
-                    .build());
-        }
+    public FormDescription formDescription() {
+        var page = PageDescription.newPageDescription("ecore-documentation-page")
+                .idProvider(vm -> "ecore-documentation-page")
+                .labelProvider(vm -> "Documentation")
+                .semanticElementsProvider(vm -> vm.get(VariableManager.SELF, Object.class).stream().toList())
+                .groupDescriptions(List.of(this.documentationGroup()))
+                .canCreatePredicate(this::isDocumentable).build();
+        return FormDescription.newFormDescription(DESCRIPTION_ID).label("Documentation")
+                .idProvider(vm -> "ecore-documentation")
+                .labelProvider(vm -> "Documentation")
+                .targetObjectIdProvider(vm -> vm.get(VariableManager.SELF, Object.class).map(this.identityService::getId).orElse(null))
+                .canCreatePredicate(vm -> false).pageDescriptions(List.of(page)).iconURLsProvider(vm -> List.of()).build();
+    }
+
+    FormDescription formDescription(String representationId) {
+        return FormDescription.newFormDescription(this.formDescription()).idProvider(vm -> representationId).build();
     }
 
     private GroupDescription documentationGroup() {

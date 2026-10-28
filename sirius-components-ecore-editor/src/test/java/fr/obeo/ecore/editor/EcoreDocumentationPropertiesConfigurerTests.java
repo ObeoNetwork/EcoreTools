@@ -11,18 +11,13 @@ package fr.obeo.ecore.editor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.sirius.components.core.api.IIdentityService;
-import org.eclipse.sirius.components.emf.forms.api.IEMFFormDescriptionProvider;
-import org.eclipse.sirius.components.forms.description.FormDescription;
-import org.eclipse.sirius.components.forms.description.GroupDescription;
 import org.eclipse.sirius.components.forms.description.IfDescription;
 import org.eclipse.sirius.components.forms.description.PageDescription;
 import org.eclipse.sirius.components.forms.description.RichTextDescription;
@@ -34,19 +29,16 @@ import org.junit.jupiter.api.Test;
 
 class EcoreDocumentationPropertiesConfigurerTests {
     @Test
-    void documentationNoteEditsItsOwnEntryAndKeepsStandardProperties() {
-        var defaultGroup = GroupDescription.newGroupDescription("default-group")
-                .idProvider(vm -> "default-group").labelProvider(vm -> "Default")
-                .semanticElementsProvider(vm -> List.of()).controlDescriptions(List.of()).build();
-        var defaultPage = PageDescription.newPageDescription("default")
-                .idProvider(vm -> "default").labelProvider(vm -> "Default")
-                .semanticElementsProvider(vm -> List.of()).groupDescriptions(List.of(defaultGroup)).canCreatePredicate(vm -> true).build();
-        var form = mock(FormDescription.class);
-        when(form.getPageDescriptions()).thenReturn(List.of(defaultPage));
+    void formIdMatchesTheSubscriptionIdExactly() {
+        var configurer = new EcoreDocumentationPropertiesConfigurer(mock(IIdentityService.class), object -> false);
+        var representationId = "documentation://?objectIds=[urn%3Amodel%2Fa%20b]";
+        assertThat(configurer.formDescription(representationId).getIdProvider().apply(new VariableManager())).isEqualTo(representationId);
+    }
+    @Test
+    void documentationNoteEditsItsOwnEntry() {
         var readOnly = new AtomicBoolean(false);
-        var configurer = new EcoreDocumentationPropertiesConfigurer(mock(IIdentityService.class), object -> readOnly.get(), () -> form);
-        List<PageDescription> pages = new ArrayList<>();
-        configurer.addPropertiesDescriptions(pages::add);
+        var configurer = new EcoreDocumentationPropertiesConfigurer(mock(IIdentityService.class), object -> readOnly.get());
+        List<PageDescription> pages = configurer.formDescription().getPageDescriptions();
 
         var element = EcoreFactory.eINSTANCE.createEClass();
         var annotation = EcoreFactory.eINSTANCE.createEAnnotation();
@@ -60,8 +52,7 @@ class EcoreDocumentationPropertiesConfigurerTests {
         assertThat(pages).hasSize(1);
         var page = pages.getFirst();
         assertThat(page.getCanCreatePredicate().test(vm)).isTrue();
-        assertThat(page.getGroupDescriptions()).hasSize(2);
-        assertThat(page.getGroupDescriptions().get(1)).isSameAs(defaultGroup);
+        assertThat(page.getGroupDescriptions()).hasSize(1);
         var controls = page.getGroupDescriptions().getFirst().getControlDescriptions();
         var markdownIf = (IfDescription) controls.getFirst();
         var htmlIf = (IfDescription) controls.get(1);
@@ -90,16 +81,9 @@ class EcoreDocumentationPropertiesConfigurerTests {
 
     @Test
     void documentationPreservesAnnotationsAndRejectsReadOnlyEdits() {
-        var form = mock(FormDescription.class);
-        var defaultPage = PageDescription.newPageDescription("default")
-                .idProvider(vm -> "default").labelProvider(vm -> "Default")
-                .semanticElementsProvider(vm -> List.of()).groupDescriptions(List.of()).canCreatePredicate(vm -> true).build();
-        when(form.getPageDescriptions()).thenReturn(List.of(defaultPage));
-        IEMFFormDescriptionProvider defaultForm = () -> form;
         var readOnly = new AtomicBoolean(false);
-        var configurer = new EcoreDocumentationPropertiesConfigurer(mock(IIdentityService.class), object -> readOnly.get(), defaultForm);
-        List<PageDescription> pages = new ArrayList<>();
-        configurer.addPropertiesDescriptions(pages::add);
+        var configurer = new EcoreDocumentationPropertiesConfigurer(mock(IIdentityService.class), object -> readOnly.get());
+        List<PageDescription> pages = configurer.formDescription().getPageDescriptions();
         var page = pages.getFirst();
         var element = EcoreFactory.eINSTANCE.createEClass();
         var vm = new VariableManager();

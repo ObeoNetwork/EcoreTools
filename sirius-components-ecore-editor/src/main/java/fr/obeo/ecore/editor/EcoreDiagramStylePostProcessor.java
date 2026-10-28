@@ -38,6 +38,7 @@ public class EcoreDiagramStylePostProcessor implements IDiagramPostProcessor {
     private final IObjectSearchService objectSearch;
     private final String diagramDescriptionId;
     private final String oppositeDescriptionId;
+    private final String referenceDescriptionId;
     private final Map<String, String> colors;
     private final EcoreServices services = new EcoreServices();
 
@@ -48,6 +49,8 @@ public class EcoreDiagramStylePostProcessor implements IDiagramPostProcessor {
         this.diagramDescriptionId = ids.getId(description);
         this.oppositeDescriptionId = ids.getId(description.getEdgeDescriptions().stream()
                 .filter(edge -> "EOpposite".equals(edge.getName())).findFirst().orElseThrow());
+        this.referenceDescriptionId = ids.getId(description.getEdgeDescriptions().stream()
+                .filter(edge -> "EReference".equals(edge.getName())).findFirst().orElseThrow());
         this.colors = view.getColorPalettes().stream().flatMap(palette -> palette.getColors().stream())
                 .filter(FixedColor.class::isInstance).map(FixedColor.class::cast)
                 .collect(Collectors.toMap(FixedColor::getName, FixedColor::getValue));
@@ -64,22 +67,27 @@ public class EcoreDiagramStylePostProcessor implements IDiagramPostProcessor {
         var nodes = context.diagram().getNodes().stream().map(this::style).toList();
         boolean changed = !nodes.equals(context.diagram().getNodes());
         for (var edge : context.diagram().getEdges()) {
-            var styledEdge = this.styleOppositeReferenceLabels(editingContext, edge);
+            var styledEdge = this.styleReferenceLabels(editingContext, edge);
             changed |= styledEdge != edge;
             edges.add(styledEdge);
         }
         return changed ? Optional.of(Diagram.newDiagram(context.diagram()).nodes(nodes).edges(edges).build()) : Optional.empty();
     }
 
-    private Edge styleOppositeReferenceLabels(IEditingContext editingContext, Edge edge) {
-        if (!this.oppositeDescriptionId.equals(edge.getDescriptionId())) {
+    private Edge styleReferenceLabels(IEditingContext editingContext, Edge edge) {
+        if (!this.oppositeDescriptionId.equals(edge.getDescriptionId()) && !this.referenceDescriptionId.equals(edge.getDescriptionId())) {
             return edge;
         }
         var reference = this.objectSearch.getObject(editingContext, edge.getTargetObjectId())
                 .filter(EReference.class::isInstance).map(EReference.class::cast);
-        if (reference.isEmpty() || reference.get().getEOpposite() == null) {
+        if (reference.isEmpty()) {
             return edge;
         }
+        if (this.referenceDescriptionId.equals(edge.getDescriptionId())) {
+            var centerLabel = this.style(edge.getCenterLabel(), reference.get());
+            return centerLabel != edge.getCenterLabel() ? Edge.newEdge(edge).centerLabel(centerLabel).build() : edge;
+        }
+        if (reference.get().getEOpposite() == null) return edge;
         var beginLabel = this.style(edge.getBeginLabel(), reference.get().getEOpposite());
         var endLabel = this.style(edge.getEndLabel(), reference.get());
         // Styling returns the original objects when unchanged, so identity avoids unnecessary diagram updates.
@@ -111,7 +119,7 @@ public class EcoreDiagramStylePostProcessor implements IDiagramPostProcessor {
         }
         var previousStyle = label.style();
         String color = label.customizedStyleProperties().contains(LabelAppearanceHandler.COLOR) ? previousStyle.getColor()
-                : this.colors.get(this.services.ecoreHasError(reference) ? "Error" : reference.isDerived() ? "Derived" : "Relationship");
+                : this.colors.get(this.services.ecoreHasError(reference) ? "Error" : reference.isDerived() ? "Derived" : "Ink");
         boolean bold = label.customizedStyleProperties().contains(LabelAppearanceHandler.BOLD) ? previousStyle.isBold()
                 : reference.getLowerBound() > 0;
         if (color.equals(previousStyle.getColor()) && bold == previousStyle.isBold()) {

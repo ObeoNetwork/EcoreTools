@@ -25,7 +25,8 @@ import org.springframework.context.annotation.Primary;
 @Import({EcoreJavaServiceProvider.class, EcoreViewEditingContextInitializer.class, EcoreLabelService.class,
         EcoreDiagramStylePostProcessor.class, EcoreResourceToDocumentService.class,
         EcoreConnectorPaletteProvider.class, EcoreReconnectionToolsExecutor.class, EcoreDiagramStyles.class,
-        EcoreDocumentationPropertiesConfigurer.class})
+        EcoreDocumentationPropertiesConfigurer.class, EcoreDocumentationEventProcessorFactory.class,
+        EcoreDocumentationConfiguration.class})
 public class EcoreEditorConfiguration {
     @Bean
     @Primary

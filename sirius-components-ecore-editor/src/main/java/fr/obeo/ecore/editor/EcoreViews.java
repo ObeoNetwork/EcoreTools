@@ -84,7 +84,9 @@ public class EcoreViews {
         classNode.getBorderNodesDescriptions().add(parameter);
         classNode.getPalette().getNodeTools().addAll(List.of(createTool("EAttribute", null), createTool("EOperation", null), createTool("ETypeParameter", null), createTool("EReference", null)));
         var enumeration = node("EEnum", "aql:self.ecoreImportCandidates()->filter(ecore::EEnum)", enumColor, true);
-        enumeration.getChildrenDescriptions().add(node("EEnumLiteral", "aql:self.eLiterals", transparent, false));
+        var literal = node("EEnumLiteral", "aql:self.eLiterals", transparent, false);
+        literal.getInsideLabel().getStyle().setLabelColor(ink);
+        enumeration.getChildrenDescriptions().add(literal);
         enumeration.getPalette().getNodeTools().add(createTool("EEnumLiteral", null));
         var dataTypeNode = node("EDataType", "aql:self.ecoreImportCandidates()->select(e | e.eClass() = ecore::EDataType)", dataColor, true);
         var instanceClassNameNode = node("InstanceClassName", "aql:self", transparent, false);
@@ -120,6 +122,7 @@ public class EcoreViews {
                 .style(constraintStyle).build());
         note.getInsideLabel().setLabelExpression("aql:self.value");
         note.getInsideLabel().setOverflowStrategy(LabelOverflowStrategy.WRAP);
+        note.getInsideLabel().getStyle().setLabelColor(ink);
         note.getInsideLabel().getStyle().setShowIconExpression("aql:false");
         var constraintLabel = labelStyle(constraintBorder, false);
         constraintLabel.setShowIconExpression("aql:false");
@@ -257,8 +260,9 @@ public class EcoreViews {
     }
 
     private void configureStructuralFeatureLabels(NodeDescription feature) {
+        feature.getInsideLabel().getStyle().setLabelColor(ink);
         // Conditional styles use first-match priority: error, then derived, then mandatory.
-        var mandatory = labelStyle(secondary, false);
+        var mandatory = labelStyle(ink, false);
         mandatory.setBold(true);
         var mandatoryError = labelStyle(error, false);
         mandatoryError.setBold(true);

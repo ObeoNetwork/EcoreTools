@@ -146,7 +146,7 @@ class EcoreEditorTests {
                             .filter(s -> interpreter.evaluateExpression(Map.of("self", feature), s.getCondition()).asBoolean().orElseThrow())
                             .map(ConditionalInsideLabelStyle::getStyle).findFirst().orElse(label.getStyle());
                     assertThat(style.isBold()).isEqualTo(bold);
-                    assertThat(style.getLabelColor().getName()).isEqualTo(invalid ? "Error" : derived ? "Derived" : "Secondary");
+                    assertThat(style.getLabelColor().getName()).isEqualTo(invalid ? "Error" : derived ? "Derived" : "Ink");
                 }
                 for (boolean containment : List.of(false, true)) {
                     reference.setContainment(containment);

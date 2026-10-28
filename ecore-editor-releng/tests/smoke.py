@@ -354,7 +354,7 @@ try:
         edit(reference_row["insideLabel"]["id"], cardinality)
         refreshed(lambda d: d["nodes"][0]["childNodes"][0]["insideLabel"]["style"]["bold"])
     for text, mandatory, color in [("/books : Book", True, "#2d6f9f"), ("0", False, "#2d6f9f"),
-                                   ("1", True, "#2d6f9f"), ("books : Book", True, "#566179")]:
+                                   ("1", True, "#2d6f9f"), ("books : Book", True, "#1e2644")]:
         edit(reference_row["insideLabel"]["id"], text)
         changed = refreshed(lambda d: d["nodes"][0]["childNodes"][0]["insideLabel"]["style"]["color"] == color
                             and d["nodes"][0]["childNodes"][0]["insideLabel"]["style"]["bold"] == mandatory)
@@ -368,11 +368,11 @@ try:
     assert len(both["edges"]) == 1, both
     reference_label = both["edges"][0]["centerLabel"]["id"]
     assert both["edges"][0]["centerLabel"]["style"]["bold"] is True
-    for text, mandatory, color in [("0", False, "#63708a"), ("11", True, "#63708a"),
-                                   ("[1..*] invalid name", True, "#c62828"), ("[1..*] books", True, "#63708a"),
+    for text, mandatory, color in [("0", False, "#1e2644"), ("11", True, "#1e2644"),
+                                   ("[1..*] invalid name", True, "#c62828"), ("[1..*] books", True, "#1e2644"),
                                    ("[0..*] /books", False, "#2d6f9f"), ("[1..*] /books", True, "#2d6f9f"),
                                    ("[1..*] /invalid name", True, "#c62828"), ("[1..*] /books", True, "#2d6f9f"),
-                                   ("[1..*] books", True, "#63708a")]:
+                                   ("[1..*] books", True, "#1e2644")]:
         edit(reference_label, text)
         changed = refreshed(lambda d: d["edges"][0]["centerLabel"]["style"] == {"bold": mandatory, "color": color})
         assert changed["edges"][0]["style"]["sourceArrow"] == "FillDiamond", changed
@@ -404,7 +404,7 @@ try:
     edit(attribute["insideLabel"]["id"], "1")
     refreshed(lambda d: next(n for n in d["nodes"] if n["id"] == book["id"])["childNodes"][0]["insideLabel"]["style"]["bold"])
     for text, expected in [("invalid name", "#c62828"), ("/title", "#2d6f9f"),
-                           ("/invalid name", "#c62828"), ("title", "#566179")]:
+                           ("/invalid name", "#c62828"), ("title", "#1e2644")]:
         edit(attribute["insideLabel"]["id"], text)
         parent_color = "#c62828" if expected == "#c62828" else "#788398"
         updated = refreshed(lambda d: next(n for n in d["nodes"] if n["id"] == book["id"])["style"]["borderColor"] == parent_color)
@@ -428,7 +428,7 @@ try:
     assert_selected(selection, note)
     assert note["style"]["borderSize"] == 1, note
     assert note["style"]["borderColor"] == "#788398", note
-    assert note["insideLabel"]["style"]["color"] == "#566179", note
+    assert note["insideLabel"]["style"]["color"] == "#1e2644", note
     edit(note["insideLabel"]["id"], "A library book\nWith its title")
     refreshed(lambda d: any(n["insideLabel"]["text"] == "A library book\nWith its title" for n in d["nodes"]))
     selection = invoke("New EOperation", book["id"])
@@ -458,6 +458,7 @@ try:
         literals = next(n for n in updated["nodes"] if n["id"] == enumeration["id"])["childNodes"]
         new_literal = next(n for n in literals if n["targetObjectId"] not in previous_literals)
         assert_selected(selection, new_literal)
+        assert new_literal["insideLabel"]["style"]["color"] == "#1e2644", new_literal
         previous_literals.add(new_literal["targetObjectId"])
     enumeration = next(n for n in updated["nodes"] if n["id"] == enumeration["id"])
     assert enumeration["style"]["background"] == "var(--ecore-content-background, #f9f9fc)", enumeration
@@ -547,12 +548,12 @@ try:
     assert opposite["centerLabel"] is None, opposite
     assert opposite["beginLabel"]["text"] == "[0..1] opposite", opposite
     assert opposite["endLabel"]["text"] == "[1..*] books", opposite
-    assert opposite["beginLabel"]["style"] == {"bold": False, "color": "#63708a"}, opposite
+    assert opposite["beginLabel"]["style"] == {"bold": False, "color": "#1e2644"}, opposite
     # Earlier row edits left books transient, so EMF flags its non-transient opposite.
     assert opposite["endLabel"]["style"] == {"bold": True, "color": "#c62828"}, opposite
     for text, bold, color in [("[0..1] /owner", False, "#2d6f9f"),
                               ("[1..1] /invalid name", True, "#c62828"),
-                              ("[0..1] owner", False, "#63708a")]:
+                              ("[0..1] owner", False, "#1e2644")]:
         edit(opposite["beginLabel"]["id"], text)
         changed = refreshed()
         edge = next(e for e in changed["edges"] if e["targetObjectId"] == reference_id)
@@ -565,7 +566,7 @@ try:
     edge = next(e for e in changed["edges"] if e["targetObjectId"] == reference_id)
     assert edge["endLabel"]["style"] == {"bold": True, "color": "#c62828"}, edge
     assert edge["beginLabel"]["text"] == "[0..1] owner", edge
-    assert edge["beginLabel"]["style"] == {"bold": False, "color": "#63708a"}, edge
+    assert edge["beginLabel"]["style"] == {"bold": False, "color": "#1e2644"}, edge
     source = next(n for n in changed["nodes"] if n["targetObjectId"] == types["Book"]["id"])
     target = source["borderNodes"][0]
     assert {t["label"] for t in connector_tools(source, target)} == {"Reference", "Composition"}
@@ -578,7 +579,7 @@ try:
         assert_selected(selection, edge)
         assert edge["sourceId"] == source["id"], edge
         assert edge["style"]["sourceArrow"] == arrow, edge
-        assert edge["centerLabel"]["style"]["color"] == "#63708a", edge
+        assert edge["centerLabel"]["style"]["color"] == "#1e2644", edge
         assert "Create opposite" not in tools(edge["id"]), edge
         book_node = next(n for n in linked["nodes"] if n["id"] == source["id"])
         assert all(n["targetObjectId"] != edge["targetObjectId"] for n in book_node["childNodes"]), book_node

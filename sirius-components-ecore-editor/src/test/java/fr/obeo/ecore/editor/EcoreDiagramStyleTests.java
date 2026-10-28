@@ -33,7 +33,7 @@ class EcoreDiagramStyleTests {
             assertThat(contrastRatio(EcoreDiagramStyle.TEXT, header)).isGreaterThanOrEqualTo(4.5);
             assertThat(contrastRatio(EcoreDiagramStyle.BORDER, header)).isGreaterThanOrEqualTo(3);
         }
-        assertThat(contrastRatio(EcoreDiagramStyle.SECONDARY, EcoreDiagramStyle.NOTE)).isGreaterThanOrEqualTo(4.5);
+        assertThat(contrastRatio(EcoreDiagramStyle.TEXT, EcoreDiagramStyle.NOTE)).isGreaterThanOrEqualTo(7);
         assertThat(contrastRatio(EcoreDiagramStyle.DATATYPE, EcoreDiagramStyle.CONSTRAINT)).isGreaterThanOrEqualTo(4.5);
     }
 

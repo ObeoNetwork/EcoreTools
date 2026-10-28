@@ -103,9 +103,9 @@ class EcoreDiagramStylePostProcessorTests {
                 var begin = processor.style(original, opposite);
                 var end = processor.style(original, reference);
                 assertThat(begin.style().isBold()).isFalse();
-                assertThat(begin.style().getColor()).isEqualTo(invalid ? "#c62828" : derived ? "#2d6f9f" : "#63708a");
+                assertThat(begin.style().getColor()).isEqualTo(invalid ? "#c62828" : derived ? "#2d6f9f" : "#1e2644");
                 assertThat(end.style().isBold()).isTrue();
-                assertThat(end.style().getColor()).isEqualTo("#63708a");
+                assertThat(end.style().getColor()).isEqualTo("#1e2644");
                 assertThat(begin.style().getFontSize()).isEqualTo(17);
                 assertThat(begin.style().isItalic()).isTrue();
                 assertThat(begin.style().isUnderline()).isTrue();

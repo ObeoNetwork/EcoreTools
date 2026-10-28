@@ -1,13 +1,33 @@
 /* Copyright (c) 2026 Obeo. SPDX-License-Identifier: EPL-2.0 */
 
+/* Keep the widget label and hide the duplicate group heading. */
+[data-testid="group-Documentation"]:has([data-testid="Documentation"], [data-testid="input-Documentation (HTML)"]) > div:first-child {
+  display: none;
+}
+
+/* The view title already names the field; retain its label for assistive technology. */
+[data-testid="view-Documentation"] div:has(> [data-testid="Documentation"]) > div:first-child > div:first-child > .MuiTypography-root,
+[data-testid="view-Documentation"] div:has(> div > [data-testid="Documentation (HTML)"]) > div:first-child > div:first-child > .MuiTypography-root {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* Sirius Web does not expose a height setting for its documentation widgets. */
 [data-testid="group-Documentation"] [data-testid="Documentation"] [contenteditable],
 [data-testid="group-Documentation"] [data-testid="input-Documentation (HTML)"] {
   box-sizing: border-box;
-  height: 15lh !important;
-  max-height: 15lh !important;
+  height: 8lh !important;
+  max-height: 8lh !important;
   overflow-y: auto !important;
   resize: none;
+}
+
+[data-testid="view-Documentation"] [data-testid="Documentation"] [contenteditable] p {
+  margin-block: 0;
 }
 
 /* The marker comes from the Ecore view's canvas color, including for note-only diagrams. */
