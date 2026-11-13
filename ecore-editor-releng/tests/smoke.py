@@ -425,7 +425,7 @@ try:
     for text, expected in [("invalid name", "#c62828"), ("/title", "#2d6f9f"),
                            ("/invalid name", "#c62828"), ("title", "#1e2644")]:
         edit(attribute["insideLabel"]["id"], text)
-        parent_color = "#c62828" if expected == "#c62828" else "#788398"
+        parent_color = "#c62828" if expected == "#c62828" else "#1e2644"
         updated = refreshed(lambda d: next(n for n in d["nodes"] if n["id"] == book["id"])["style"]["borderColor"] == parent_color)
         current_book = next(n for n in updated["nodes"] if n["id"] == book["id"])
         assert current_book["insideLabel"]["style"]["color"] == ("#c62828" if expected == "#c62828" else "#1e2644")

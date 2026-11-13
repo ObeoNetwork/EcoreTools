@@ -54,7 +54,7 @@ public class EcoreViews {
     public View create() {
         var classNode = node("EClass", "aql:self.ecoreImportCandidates()->filter(ecore::EClass)", classColor, true);
         classNode.getConditionalStyles().add(diagramBuilders.newConditionalNodeStyle().condition("aql:self.abstract or self.interface")
-                .style(nodeStyle(abstractColor, border, true)).build());
+                .style(nodeStyle(abstractColor, ink, true)).build());
         var abstractLabel = labelStyle(ink, true);
         abstractLabel.setItalic(true);
         classNode.getInsideLabel().getConditionalStyles().add(diagramBuilders.newConditionalInsideLabelStyle()
@@ -301,10 +301,14 @@ public class EcoreViews {
                 .withHeader(header).bold(header).headerSeparatorDisplayMode(HeaderSeparatorDisplayMode.IF_CHILDREN).build();
     }
     private NodeDescription node(String type, String candidates, FixedColor background, boolean container) {
+        var nodeBorder = switch (type) {
+            case "EClass", "EDataType", "EEnum" -> ink;
+            default -> border;
+        };
         return diagramBuilders.newNodeDescription().name(type).domainType("ecore::" + type).semanticCandidatesExpression(candidates)
                 .synchronizationPolicy(container ? SynchronizationPolicy.UNSYNCHRONIZED : SynchronizationPolicy.SYNCHRONIZED)
                 .defaultWidthExpression(container ? "180" : "0").defaultHeightExpression(container ? "44" : "0")
-                .style(nodeStyle(background, border, container))
+                .style(nodeStyle(background, nodeBorder, container))
                 .conditionalStyles(diagramBuilders.newConditionalNodeStyle().condition("aql:self.ecoreHasError()").style(nodeStyle(background, error, container)).build())
                 .insideLabel(diagramBuilders.newInsideLabelDescription().labelExpression("aql:self.ecoreLabel()")
                         .position(container ? InsideLabelPosition.TOP_LEFT : InsideLabelPosition.MIDDLE_LEFT)
