@@ -145,7 +145,7 @@ public class EcoreViews {
         var assignNote = diagramBuilders.newEdgeTool().name("Assign annotation").iconURLsExpression("/icons/ecore/EAnnotation.svg")
                 .targetElementDescriptions(noteTargets.toArray(NodeDescription[]::new))
                 .body(viewBuilders.newChangeContext().expression("aql:semanticEdgeSource.ecoreAssignNote(semanticEdgeTarget)").build()).build();
-        note.getPalette().getEdgeTools().add(assignNote);
+        note.getEdgeTools().add(assignNote);
         var noteLink = diagramBuilders.newEdgeDescription().name("Annotation assignment").domainType("ecore::EStringToStringMapEntry")
                 .centerLabelExpression("")
                 .isDomainBasedEdge(true).semanticCandidatesExpression("aql:self.ecoreNotes(diagramContext)")
@@ -164,18 +164,21 @@ public class EcoreViews {
         diagramTools.add(createImportTool(topLevelNodeDescriptions, "Import existing elements", "aql:self.ecoreImportCandidates()", "aql:selectedNode"));
         packageNode.getPalette().getNodeTools().addAll(diagramTools.stream().map(EcoreUtil::copy).toList());
         diagramTools.add(createNoteTool(false));
+        var connectorPalette = diagramBuilders.newNodePalette().build();
         for (boolean containment : List.of(false, true)) {
-            classNode.getPalette().getEdgeTools().add(diagramBuilders.newEdgeTool().name(containment ? "Composition" : "Reference")
-                    .targetElementDescriptions(classNode, parameter)
+            connectorPalette.getNodeTools().add(diagramBuilders.newNodeTool().name(containment ? "Composition" : "Reference")
                     .elementsToSelectExpression("aql:semanticEdgeSource.eReferences->last()")
                     .body(viewBuilders.newChangeContext().expression("aql:semanticEdgeSource.ecoreReference(semanticEdgeTarget, " + containment + ")").build()).build());
         }
-        classNode.getPalette().getEdgeTools().add(diagramBuilders.newEdgeTool().name("Supertype").targetElementDescriptions(classNode)
+        connectorPalette.getNodeTools().add(diagramBuilders.newNodeTool().name("Supertype")
+                .preconditionExpression("aql:semanticEdgeTarget.oclIsKindOf(ecore::EClass)")
                 .body(viewBuilders.newChangeContext().expression("aql:semanticEdgeSource.ecoreSuperType(semanticEdgeTarget)").build()).build());
-        classNode.getPalette().getEdgeTools().add(diagramBuilders.newEdgeTool().name("Bidirectional reference")
-                .iconURLsExpression("/icons/ecore/EReference.svg").targetElementDescriptions(classNode)
+        connectorPalette.getNodeTools().add(diagramBuilders.newNodeTool().name("Bidirectional reference")
+                .iconURLsExpression("/icons/ecore/EReference.svg").preconditionExpression("aql:semanticEdgeTarget.oclIsKindOf(ecore::EClass)")
                 .elementsToSelectExpression("aql:semanticEdgeSource.ecoreReferences()->select(r | r = semanticEdgeTarget.eReferences->last() or r = semanticEdgeTarget.eReferences->last().eOpposite)->first()")
                 .body(viewBuilders.newChangeContext().expression("aql:semanticEdgeSource.ecoreBidirectionalReference(semanticEdgeTarget)").build()).build());
+        classNode.getEdgeTools().add(diagramBuilders.newEdgeTool().name("Create relationship")
+                .targetElementDescriptions(classNode, parameter).palette(connectorPalette).build());
         var reference = diagramBuilders.newEdgeDescription().name("EReference").domainType("ecore::EReference")
                 .semanticCandidatesExpression("aql:self.ecoreReferences()")
                 .preconditionExpression("aql:self.eOpposite = null")

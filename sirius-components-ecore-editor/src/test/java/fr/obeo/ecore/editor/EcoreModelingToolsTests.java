@@ -40,8 +40,9 @@ class EcoreModelingToolsTests {
         var target = selfLink ? library : book;
         services.ecoreCreate(target, "ETypeParameter");
         var clazz = diagram.getNodeDescriptions().getFirst();
-        var tool = clazz.getPalette().getEdgeTools().stream().filter(t -> t.getName().equals("Bidirectional reference")).findFirst().orElseThrow();
-        assertThat(tool.getTargetElementDescriptions()).containsExactly(clazz);
+        var tool = clazz.getEdgeTools().getFirst().getPalette().getNodeTools().stream().filter(t -> t.getName().equals("Bidirectional reference")).findFirst().orElseThrow();
+        assertThat(interpreter.evaluateExpression(Map.of("semanticEdgeTarget", target), tool.getPreconditionExpression()).asBoolean()).contains(true);
+        assertThat(interpreter.evaluateExpression(Map.of("semanticEdgeTarget", target.getETypeParameters().getFirst()), tool.getPreconditionExpression()).asBoolean()).contains(false);
         int count = library.getEReferences().size();
         var result = interpreter.evaluateExpression(Map.of("semanticEdgeSource", library, "semanticEdgeTarget", target),
                 ((ChangeContext) tool.getBody().getFirst()).getExpression());
@@ -107,7 +108,7 @@ class EcoreModelingToolsTests {
     @ValueSource(ints = {0, 1, 2})
     void newSupertypeArgumentsMatchTargetParametersAndExistingBindingsArePreserved(int parameterCount) {
         for (int i = 0; i < parameterCount; i++) ((ETypeParameter) services.ecoreCreate(book, "ETypeParameter")).setName("T" + i);
-        var tool = diagram.getNodeDescriptions().getFirst().getPalette().getEdgeTools().stream()
+        var tool = diagram.getNodeDescriptions().getFirst().getEdgeTools().getFirst().getPalette().getNodeTools().stream()
                 .filter(t -> t.getName().equals("Supertype")).findFirst().orElseThrow();
         var result = interpreter.evaluateExpression(Map.of("semanticEdgeSource", library, "semanticEdgeTarget", book),
                 ((ChangeContext) tool.getBody().getFirst()).getExpression());

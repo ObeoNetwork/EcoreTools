@@ -186,17 +186,35 @@ def connector_tools(source, target):
     result = graphql("""query($ctx:ID!, $diagram:ID!, $source:ID!, $target:ID!) {
      viewer { editingContext(editingContextId:$ctx) {
       representation(representationId:$diagram) { description { ... on DiagramDescription {
-       connectorPalette(sourceDiagramElementId:$source, targetDiagramElementId:$target) { paletteEntries {
+       connectorPalette(sourceDiagramElementId:$source, targetDiagramElementId:$target) { __typename
         ... on SingleClickOnTwoDiagramElementsTool { id label candidates { sources { id } targets { id } } }
-        ... on ToolSection { tools { id label
-         ... on SingleClickOnTwoDiagramElementsTool { candidates { sources { id } targets { id } } }
+        ... on Palette { paletteEntries {
+         ... on SingleClickOnTwoDiagramElementsTool { id label candidates { sources { id } targets { id } } }
+         ... on ToolSection { tools { id label
+          ... on SingleClickOnTwoDiagramElementsTool { candidates { sources { id } targets { id } } }
+         } }
         } }
-       } }
+       }
       } } }
      } }
     }""", ctx=context, diagram=diagram, source=source["id"], target=target["id"])
-    entries = result["viewer"]["editingContext"]["representation"]["description"]["connectorPalette"]["paletteEntries"]
+    connector = result["viewer"]["editingContext"]["representation"]["description"]["connectorPalette"]
+    if connector["__typename"] == "SingleClickOnTwoDiagramElementsTool":
+        return [connector]
+    assert connector["__typename"] == "Palette", connector
+    entries = connector["paletteEntries"]
     return [t for entry in entries for t in entry.get("tools", [entry]) if "label" in t]
+
+
+def connector_candidates(source):
+    result = graphql("""query($ctx:ID!, $diagram:ID!, $source:ID!) {
+     viewer { editingContext(editingContextId:$ctx) {
+      representation(representationId:$diagram) { description { ... on DiagramDescription {
+       connectorToolCandidateDescriptionIds(diagramElementId:$source)
+      } } }
+     } }
+    }""", ctx=context, diagram=diagram, source=source["id"])
+    return result["viewer"]["editingContext"]["representation"]["description"]["connectorToolCandidateDescriptionIds"]
 
 
 def reconnect_edge(edge, target, kind="TARGET"):
@@ -570,6 +588,7 @@ try:
     assert edge["beginLabel"]["style"] == {"bold": False, "color": "#1e2644"}, edge
     source = next(n for n in changed["nodes"] if n["targetObjectId"] == types["Book"]["id"])
     target = source["borderNodes"][0]
+    assert {target["descriptionId"], library["descriptionId"]} <= set(connector_candidates(source))
     assert {t["label"] for t in connector_tools(source, target)} == {"Reference", "Composition"}
     assert "Supertype" in {t["label"] for t in connector_tools(source, library)}
     for label, cardinality, arrow, name in [("Reference", "[0..1]", "None", "optionalT"),
@@ -591,6 +610,7 @@ try:
     selection = invoke("Documentation")
     documented = refreshed(lambda d: any(n["insideLabel"]["text"] == "New documentation note" for n in d["nodes"]))
     background_note = next(n for n in documented["nodes"] if n["insideLabel"]["text"] == "New documentation note")
+    assert library["descriptionId"] in connector_candidates(background_note)
     assert_selected(selection, background_note)
     assert not any(e["sourceId"] == background_note["id"] for e in documented["edges"]), documented
     text = "Diagram documentation\nKeep this text when reconnecting"

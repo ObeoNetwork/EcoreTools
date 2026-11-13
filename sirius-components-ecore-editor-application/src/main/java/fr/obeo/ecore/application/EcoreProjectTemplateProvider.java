@@ -31,6 +31,6 @@ public class EcoreProjectTemplateProvider implements IProjectTemplateProvider {
     @Override
     public List<ProjectTemplate> getProjectTemplates() {
         return List.of(new ProjectTemplate(TEMPLATE_ID, "Example", "/project-templates/ecore-example.svg",
-                List.of(new ProjectTemplateNature(StudioProjectTemplateProvider.STUDIO_NATURE))));
+                List.of(new ProjectTemplateNature(StudioProjectTemplateProvider.STUDIO_NATURE)), List.of()));
     }
 }

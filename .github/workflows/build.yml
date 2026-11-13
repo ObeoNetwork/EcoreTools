@@ -48,7 +48,7 @@ jobs:
             github-sirius-emfjson:MAVEN_USERNAME:MAVEN_READ_TOKEN
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Configure npm package access
         run: npm config set //npm.pkg.github.com/:_authToken "$MAVEN_READ_TOKEN"
       - name: Read version and validate release tag
@@ -90,7 +90,7 @@ jobs:
             github-ecore-editor:GITHUB_ACTOR:GITHUB_TOKEN
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Configure npm package access
         run: npm config set //npm.pkg.github.com/:_authToken "$MAVEN_READ_TOKEN"
       - name: Publish the verified reactor to GitHub Packages

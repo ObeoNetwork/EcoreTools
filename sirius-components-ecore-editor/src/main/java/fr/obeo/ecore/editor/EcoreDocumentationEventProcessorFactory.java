@@ -65,14 +65,14 @@ public class EcoreDocumentationEventProcessorFactory implements IRepresentationE
         var values = parameters.getOrDefault("objectIds", List.of());
         if (values.isEmpty()) return Optional.empty();
         var objects = this.urlParser.getParameterEntries(values.getFirst()).stream()
-                .map(id -> this.formConfiguration.getObjectService().getObject(editingContext, id))
+                .map(id -> this.formConfiguration.getObjectSearchService().getObject(editingContext, id))
                 .flatMap(Optional::stream)
                 .map(object -> this.documentationTarget(editingContext, object)).toList();
         if (objects.isEmpty()) return Optional.empty();
         var creation = FormCreationParameters.newFormCreationParameters(representationId)
                 .formDescription(this.description.formDescription(representationId)).object(objects.getFirst()).selection(objects).build();
         return Optional.of(new FormEventProcessor(
-                new FormEventProcessorConfiguration(editingContext, this.formConfiguration.getObjectService(), creation,
+                new FormEventProcessorConfiguration(editingContext, this.formConfiguration.getObjectSearchService(), creation,
                         this.widgetDescriptors, this.formConfiguration.getFormEventHandlers(), this.formConfiguration.getTableEventHandlers()),
                 this.subscriptionManagerFactory.create(), this.representationSearchService,
                 this.representationDescriptionSearchService, this.representationRefreshPolicyRegistry,
@@ -81,7 +81,7 @@ public class EcoreDocumentationEventProcessorFactory implements IRepresentationE
 
     private Object documentationTarget(IEditingContext editingContext, Object object) {
         if (object instanceof RepresentationMetadata metadata && Diagram.KIND.equals(metadata.getKind())) {
-            return this.formConfiguration.getObjectService().getObject(editingContext, metadata.getTargetObjectId())
+            return this.formConfiguration.getObjectSearchService().getObject(editingContext, metadata.getTargetObjectId())
                     .filter(EPackage.class::isInstance).orElse(object);
         }
         return object;

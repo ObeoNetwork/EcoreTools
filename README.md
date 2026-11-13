@@ -13,21 +13,21 @@ Creating and editing Ecore models in the browser (2× speed).
 ## Compatibility
 
 **The current Ecore Editor code is built and tested against Sirius Web
-2026.9.0. Use exactly Sirius Web 2026.9.0 in the application embedding it.**
+2026.11.0. Use exactly Sirius Web 2026.11.0 in the application embedding it.**
 
 | Ecore Editor version | Sirius Web version | Spring Boot version | Java |
 | --- | --- | --- | --- |
-| `0.1.0-SNAPSHOT` | **`2026.9.0`** | `4.1.0` | `21` or newer |
+| `0.1.0-SNAPSHOT` | **`2026.11.0`** | `4.1.1` | `21` or newer |
 
 This applies to both the reusable component and the standalone application.
-Keep all Sirius Web backend artifacts and the Sirius Web frontend on `2026.9.0`;
+Keep all Sirius Web backend artifacts and the Sirius Web frontend on `2026.11.0`;
 mixing Sirius Web versions is unsupported. Compatibility with other `2026.x`
 versions has not been established. The source of truth for these versions is
 [the reactor POM](ecore-editor-releng/pom.xml).
 
 ## Try it
 
-You need JDK 21+, Maven 3.9+, Node.js 22.12+ and npm, and Docker with Compose.
+You need JDK 21+, Maven 3.9+, Node.js 24+ and npm, and Docker with Compose.
 Configure [Maven credentials](#maven-credentials) and npm access before building:
 Sirius Web dependencies are downloaded from GitHub Packages. Authenticate npm
 using a GitHub token with `read:packages`:
@@ -35,6 +35,10 @@ using a GitHub token with `read:packages`:
 ```sh
 npm login --registry=https://npm.pkg.github.com --auth-type=legacy
 ```
+
+The npm credential must be permitted by both the `eclipse-sirius` and
+`ObeoNetwork` organization policies. A GitHub Packages 403 rejecting classic
+tokens requires updated npm authentication, including for fresh CI installs.
 
 From the repository root:
 
@@ -189,9 +193,9 @@ repository from source. This follows the
 
 Use the following Maven configuration in your Sirius Web host application.
 If you already have a POM, merge these repositories and dependencies into it,
-keeping its Sirius Web version at **`2026.9.0`** and Spring Boot at **`4.1.0`**.
+keeping its Sirius Web version at **`2026.11.0`** and Spring Boot at **`4.1.1`**.
 Keep the **Liquibase `4.33.0`** pin as well: it matches this application's
-configuration and overrides Spring Boot 4.1.0's default Liquibase 5 version.
+configuration and overrides Spring Boot 4.1.1's default Liquibase 5 version.
 The example assumes that `0.1.0-SNAPSHOT` has been published successfully.
 
 ```xml
@@ -200,7 +204,7 @@ The example assumes that `0.1.0-SNAPSHOT` has been published successfully.
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.1.0</version>
+    <version>4.1.1</version>
     <relativePath/>
   </parent>
   <groupId>com.example</groupId>
@@ -208,7 +212,7 @@ The example assumes that `0.1.0-SNAPSHOT` has been published successfully.
   <version>1.0.0-SNAPSHOT</version>
   <properties>
     <java.version>21</java.version>
-    <sirius.web.version>2026.9.0</sirius.web.version>
+    <sirius.web.version>2026.11.0</sirius.web.version>
     <liquibase.version>4.33.0</liquibase.version>
   </properties>
   <repositories>

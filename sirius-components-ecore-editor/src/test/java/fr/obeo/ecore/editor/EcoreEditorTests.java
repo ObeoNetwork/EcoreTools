@@ -94,10 +94,11 @@ class EcoreEditorTests {
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
         var classNodeDescription = diagram.getNodeDescriptions().getFirst();
         var port = classNodeDescription.getBorderNodesDescriptions().getFirst();
-        var tool = classNodeDescription.getPalette().getEdgeTools().stream()
+        var connector = classNodeDescription.getEdgeTools().getFirst();
+        var tool = connector.getPalette().getNodeTools().stream()
                 .filter(candidate -> candidate.getName().equals(containment ? "Composition" : "Reference"))
                 .findFirst().orElseThrow();
-        assertThat(tool.getTargetElementDescriptions()).containsExactly(classNodeDescription, port);
+        assertThat(connector.getTargetElementDescriptions()).containsExactly(classNodeDescription, port);
         var body = (ChangeContext) tool.getBody().getFirst();
         var result = interpreter.evaluateExpression(Map.of("semanticEdgeSource", book, "semanticEdgeTarget", parameter), body.getExpression());
         assertThat(result.getStatus()).isNotEqualTo(Status.ERROR);
@@ -566,7 +567,7 @@ class EcoreEditorTests {
         resource.getContents().add(examplePackage);
         var diagram = (DiagramDescription) new EcoreViews().create().getDescriptions().getFirst();
         var noteDescription = diagram.getNodeDescriptions().getLast();
-        var assignment = noteDescription.getPalette().getEdgeTools().getFirst();
+        var assignment = noteDescription.getEdgeTools().getFirst();
         var noteLink = diagram.getEdgeDescriptions().getLast();
         assertThat(assignment.getTargetElementDescriptions()).contains(diagram.getEdgeDescriptions().getFirst(), diagram.getEdgeDescriptions().get(1));
         assertThat(noteLink.getTargetDescriptions()).contains(diagram.getEdgeDescriptions().getFirst(), diagram.getEdgeDescriptions().get(1));

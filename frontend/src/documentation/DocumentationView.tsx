@@ -6,6 +6,8 @@ import {
   RepresentationLoadingIndicator,
   Selection,
   useSelection,
+  ViewAccordion,
+  ViewAccordionContent,
   WorkbenchViewComponentProps,
   WorkbenchViewHandle,
 } from "@eclipse-sirius/sirius-components-core";
@@ -15,9 +17,7 @@ import {
   GQLForm,
   Group,
 } from "@eclipse-sirius/sirius-components-forms";
-import DescriptionIcon from "@mui/icons-material/Description";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useDocumentationSubscription } from "./useDocumentationSubscription";
 
@@ -89,20 +89,8 @@ export const DocumentationView = forwardRef<
     [id]
   );
   return (
-    <Box
-      sx={{ display: "flex", flexDirection: "column" }}
-      data-testid="view-Documentation"
-    >
-      <Box
-        sx={(theme) => ({
-          display: "flex",
-          alignItems: "center",
-          borderBottom: `1px solid ${theme.palette.divider}`,
-        })}
-      >
-        <DescriptionIcon sx={(theme) => ({ margin: theme.spacing(1) })} />
-        <Typography>Documentation</Typography>
-      </Box>
+    <ViewAccordion id={id} title="Documentation">
+      <ViewAccordionContent>
       <Box sx={{ flexGrow: 1, minHeight: 0, overflow: "auto" }}>
         {objectIds.length ? (
           <DocumentationContent
@@ -115,6 +103,7 @@ export const DocumentationView = forwardRef<
           <span>Select an element</span>
         )}
       </Box>
-    </Box>
+      </ViewAccordionContent>
+    </ViewAccordion>
   );
 });
