@@ -70,6 +70,7 @@ public class EcoreViews {
         parameterStyle.setBorderLineStyle(LineStyle.DASH);
         parameter.getConditionalStyles().forEach(s -> s.getStyle().setBorderLineStyle(LineStyle.DASH));
         parameter.getInsideLabel().setPosition(InsideLabelPosition.MIDDLE_CENTER);
+        parameter.getInsideLabel().getStyle().setLabelColor(ink);
         parameter.getInsideLabel().getStyle().setShowIconExpression("aql:false");
         parameter.getInsideLabel().getConditionalStyles().forEach(s -> s.getStyle().setShowIconExpression("aql:false"));
         var referenceRow = node("EReference", "aql:self.ecoreReferenceRows(diagramContext)", transparent, false);
@@ -181,7 +182,7 @@ public class EcoreViews {
                 .isDomainBasedEdge(true).sourceDescriptions(classNode).targetDescriptions(classNode, parameter)
                 .sourceExpression("aql:self.eContainingClass").targetExpression("aql:self.ecoreReferenceTarget()")
                 .centerLabelExpression("aql:self.ecoreLabel()")
-                .style(edgeStyle(relationship, ArrowStyle.NONE, ArrowStyle.INPUT_ARROW))
+                .style(edgeStyle(ink, ArrowStyle.NONE, ArrowStyle.INPUT_ARROW))
                 .conditionalStyles(referenceEdgeStyles("self.lowerBound > 0", "self.derived", "self.ecoreHasError()", ArrowStyle.NONE))
                 .palette(diagramBuilders.newEdgePalette().centerLabelEditTool(labelEditTool()).deleteTool(deleteReferencePairTool()).edgeReconnectionTools(
                         diagramBuilders.newSourceEdgeEndReconnectionTool().name("Reconnect reference source")
@@ -217,7 +218,7 @@ public class EcoreViews {
         var inheritance = diagramBuilders.newEdgeDescription().name("ESuperTypes").domainType("ecore::EClass")
                 .centerLabelExpression("aql:self.ecoreSuperTypeLabel(semanticEdgeTarget)")
                 .isDomainBasedEdge(false).sourceDescriptions(classNode).targetDescriptions(classNode)
-                .targetExpression("aql:self.ecoreVisibleSuperTypes(diagramContext)").style(edgeStyle(relationship, ArrowStyle.NONE, ArrowStyle.INPUT_CLOSED_ARROW))
+                .targetExpression("aql:self.ecoreVisibleSuperTypes(diagramContext)").style(edgeStyle(ink, ArrowStyle.NONE, ArrowStyle.INPUT_CLOSED_ARROW))
                 .palette(diagramBuilders.newEdgePalette().deleteTool(diagramBuilders.newDeleteTool().name("Remove supertype")
                         .body(viewBuilders.newChangeContext().expression("aql:semanticEdgeSource.ecoreRemoveSuperType(semanticEdgeTarget)").build()).build())
                         .edgeReconnectionTools(
@@ -228,11 +229,11 @@ public class EcoreViews {
                         .build()).build();
         inheritance.getStyle().setItalic(true);
         inheritance.getConditionalStyles().add(diagramBuilders.newConditionalEdgeStyle().condition("aql:not self.eSuperTypes->includes(semanticEdgeTarget)")
-                .color(relationship).background(transparent).borderColor(relationship).borderSize(0).edgeWidth(1).fontSize(EcoreDiagramStyle.EDGE_SIZE).italic(true)
+                .color(ink).background(transparent).borderColor(ink).borderSize(0).edgeWidth(1).fontSize(EcoreDiagramStyle.EDGE_SIZE).italic(true)
                 .sourceArrowStyle(ArrowStyle.NONE).targetArrowStyle(ArrowStyle.INPUT_CLOSED_ARROW)
                 .edgeType(EdgeType.MANHATTAN).lineStyle(LineStyle.DOT).showIcon(false).build());
         inheritance.getConditionalStyles().add(diagramBuilders.newConditionalEdgeStyle().condition("aql:semanticEdgeTarget.interface")
-                .color(relationship).background(transparent).borderColor(relationship).borderSize(0).edgeWidth(1).fontSize(EcoreDiagramStyle.EDGE_SIZE).italic(true)
+                .color(ink).background(transparent).borderColor(ink).borderSize(0).edgeWidth(1).fontSize(EcoreDiagramStyle.EDGE_SIZE).italic(true)
                 .sourceArrowStyle(ArrowStyle.NONE).targetArrowStyle(ArrowStyle.INPUT_CLOSED_ARROW)
                 .edgeType(EdgeType.MANHATTAN).lineStyle(LineStyle.DASH).showIcon(false).build());
         var diagram = diagramBuilders.newDiagramDescription().name(DIAGRAM_NAME).domainType("ecore::EPackage")
@@ -326,9 +327,9 @@ public class EcoreViews {
             conditionalEdge(derivedCondition + " and self.containment", derivedColor, ArrowStyle.FILL_DIAMOND, false),
             conditionalEdge(derivedCondition + " and (" + mandatory + ")", derivedColor, source, true),
             conditionalEdge(derivedCondition, derivedColor, source, false),
-            conditionalEdge(required + " and self.containment", relationship, ArrowStyle.FILL_DIAMOND, true),
-            conditionalEdge("aql:self.containment", relationship, ArrowStyle.FILL_DIAMOND, false),
-            conditionalEdge(required, relationship, source, true)
+            conditionalEdge(required + " and self.containment", ink, ArrowStyle.FILL_DIAMOND, true),
+            conditionalEdge("aql:self.containment", ink, ArrowStyle.FILL_DIAMOND, false),
+            conditionalEdge(required, ink, source, true)
         };
     }
     private ConditionalEdgeStyle conditionalEdge(String condition, FixedColor color, ArrowStyle source, boolean bold) {

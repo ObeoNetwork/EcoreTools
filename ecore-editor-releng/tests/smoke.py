@@ -109,7 +109,7 @@ subscription($input:DiagramEventInput!) {
    id nodes { NODE childNodes { NODE childNodes { NODE } } borderNodes { NODE } } edges {
     id descriptionId sourceId targetId targetObjectId centerLabel { id text style { bold color } }
     beginLabel { id text style { bold color } } endLabel { id text style { bold color } }
-    style { sourceArrow targetArrow lineStyle }
+    style { color sourceArrow targetArrow lineStyle }
    }
    layoutData { nodeLayoutData { id position { x y } size { width height } resizedByUser } }
   }}
@@ -376,6 +376,7 @@ try:
         edit(reference_label, text)
         changed = refreshed(lambda d: d["edges"][0]["centerLabel"]["style"] == {"bold": mandatory, "color": color})
         assert changed["edges"][0]["style"]["sourceArrow"] == "FillDiamond", changed
+        assert changed["edges"][0]["style"]["color"] == color, changed
     reference_id = both["edges"][0]["targetObjectId"]
     clear_reference_type(reference_id)
     untyped = refreshed(lambda d: not d["edges"] and len(next(n for n in d["nodes"] if n["id"] == library["id"])["childNodes"]) == 1)
@@ -504,7 +505,7 @@ try:
     assert (parameter["defaultWidth"], parameter["defaultHeight"]) == (32, 32), parameter
     assert parameter["style"] == {"borderColor": "#788398", "borderSize": 1, "borderStyle": "Dash",
                                   "background": "#ffffff"}, parameter
-    for text, color in [("1", "#c62828"), ("T", "#566179")]:
+    for text, color in [("1", "#c62828"), ("T", "#1e2644")]:
         edit(parameter["insideLabel"]["id"], text)
         changed = refreshed(lambda d: next(n for n in d["nodes"] if n["id"] == book["id"])["borderNodes"][0]["insideLabel"]["style"]["color"] == color)
         port = next(n for n in changed["nodes"] if n["id"] == book["id"])["borderNodes"][0]
@@ -709,6 +710,7 @@ try:
     generic_inheritance = next(e for e in current["edges"] if e["sourceId"] == reconnect_a["id"] and e["targetId"] == reconnect_b["id"])
     assert generic_inheritance["centerLabel"]["text"] == "<<bind>> ?,?", generic_inheritance
     assert generic_inheritance["style"]["lineStyle"] == "Solid", generic_inheritance
+    assert generic_inheritance["style"]["color"] == "#1e2644", generic_inheritance
     arguments = objects("aql:editingContext.allContents()->filter(ecore::EClass)->select(c | c.name = 'ReconnectA').eGenericSuperTypes.eTypeArguments")
     assert len(arguments) == 2, arguments
     invoke_edge("Supertype", reconnect_b, source)
@@ -719,6 +721,7 @@ try:
     assert projected is not None, {"nodes": [(n["id"], n["insideLabel"]["text"]) for n in current["nodes"]],
                                    "edges": [(e["sourceId"], e["targetId"], e["descriptionId"]) for e in current["edges"]]}
     assert projected["style"]["lineStyle"] == "Dot", projected
+    assert projected["style"]["color"] == "#1e2644", projected
     invoke("Import existing elements", selected=[reconnect_b["targetObjectId"]])
     current = refreshed(lambda d: any(e["sourceId"] == reconnect_a["id"] and e["targetId"] == reconnect_b["id"] for e in d["edges"]))
     assert next(e for e in current["edges"] if e["sourceId"] == reconnect_a["id"] and e["targetId"] == reconnect_b["id"])["style"]["lineStyle"] == "Solid"
@@ -735,6 +738,7 @@ try:
         assert_selected(selection, paired_edge)
         assert paired_edge["beginLabel"] and paired_edge["endLabel"], paired_edge
         assert paired_edge["style"]["sourceArrow"] == paired_edge["style"]["targetArrow"] == "InputArrow", paired_edge
+        assert paired_edge["style"]["color"] == "#1e2644", paired_edge
         element_id = paired_edge["id"]
         if as_row:
             invoke("Remove from diagram", reconnect_b["id"])
