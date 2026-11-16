@@ -11,19 +11,18 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  MAVEN_USERNAME: ${{ vars.MAVEN_USERNAME }}
-  MAVEN_READ_TOKEN: ${{ secrets.MAVEN_READ_TOKEN }}
+  MAVEN_USERNAME: ${{ github.actor }}
+  MAVEN_READ_TOKEN: ${{ github.token }}
 
 jobs:
   build:
-    # Fork pull requests cannot receive the token required by upstream Maven repositories.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
@@ -32,12 +31,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Check dependency credentials
-        run: |
-          if [[ -z "$MAVEN_USERNAME" || -z "$MAVEN_READ_TOKEN" ]]; then
-            echo '::error::Configure the MAVEN_USERNAME variable and MAVEN_READ_TOKEN secret; see README.md.'
-            exit 1
-          fi
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin

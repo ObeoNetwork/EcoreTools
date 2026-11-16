@@ -30,15 +30,16 @@ versions has not been established. The source of truth for these versions is
 You need JDK 21+, Maven 3.9+, Node.js 24+ and npm, and Docker with Compose.
 Configure [Maven credentials](#maven-credentials) and npm access before building:
 Sirius Web dependencies are downloaded from GitHub Packages. Authenticate npm
-using a GitHub token with `read:packages`:
+using a classic personal access token with `read:packages`:
 
 ```sh
 npm login --registry=https://npm.pkg.github.com --auth-type=legacy
 ```
 
 The npm credential must be permitted by both the `eclipse-sirius` and
-`ObeoNetwork` organization policies. A GitHub Packages 403 rejecting classic
-tokens requires updated npm authentication, including for fresh CI installs.
+`ObeoNetwork` organization policies. GitHub Packages does not support fine-grained
+personal access tokens. The GitHub Actions workflow uses its automatic
+`GITHUB_TOKEN` instead of a personal token.
 
 From the repository root:
 
@@ -287,31 +288,30 @@ The Java setup step can generate the matching Maven servers:
     MAVEN_READ_TOKEN: ${{ secrets.MAVEN_READ_TOKEN }}
 ```
 
-Run these steps after checkout. A consuming repository's `GITHUB_TOKEN` does
-not automatically grant access to packages in this repository; use the read
-token described above.
+Run these steps after checkout. For packages in a private repository, a consuming
+repository's `GITHUB_TOKEN` does not automatically grant access; use the read
+token described above. When all required packages are public, use the automatic
+`GITHUB_TOKEN` with `packages: read`, as in this repository's workflow.
 
 ## GitHub Actions and publication
 
 [`.github/workflows/build.yml`](.github/workflows/build.yml) builds the complete
 Maven reactor on Java 21 for pushes to `main`, `v*` tags, pull requests targeting
-`main` from this repository, and manual runs. All Java tests run before publication.
-Fork pull requests skip this workflow's build job because GitHub does not pass
-the upstream dependency secret to forks. Contributors can configure credentials
-in their own fork and run the workflow there; forks do not publish to this repository.
+`main` (including fork pull requests), and manual runs. All Java tests run before
+publication. Fork pull requests use a read-only `GITHUB_TOKEN`; repository or
+organization policy may require approval before their workflows can run.
+Forks do not publish to this repository.
 
 ### Maintainer setup
 
-In **Settings → Secrets and variables → Actions**, configure:
+Enable GitHub Actions and allow `packages: read` for builds and `packages: write`
+for publication. The workflow maps `github.actor` and its automatic
+`GITHUB_TOKEN` to `MAVEN_USERNAME` and `MAVEN_READ_TOKEN` for both Maven and npm.
+No repository variable or personal-token secret is required. Upstream Maven and
+npm dependencies must be public; restricted npm packages must explicitly grant
+this repository read access in their package settings.
 
-| Kind | Name | Value |
-| --- | --- | --- |
-| Repository variable | `MAVEN_USERNAME` | GitHub username that owns the dependency read token |
-| Actions secret | `MAVEN_READ_TOKEN` | Classic PAT with `read:packages` for Sirius Web, Sirius EMF JSON, and frontend npm dependencies |
-
-Enable GitHub Actions and allow the workflow's publication job to request
-`packages: write`. Publication uses the automatically supplied `GITHUB_TOKEN`
-for **this repository**, rather than a personal write token. No Maven Central
+Publication also uses `GITHUB_TOKEN` for **this repository**. No Maven Central
 account or signing key is needed. See
 [GitHub's Maven publication guide](https://docs.github.com/en/actions/tutorials/publish-packages/publish-java-packages-with-maven).
 
