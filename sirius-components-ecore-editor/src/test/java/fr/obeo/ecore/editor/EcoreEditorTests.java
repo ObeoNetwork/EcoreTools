@@ -14,6 +14,7 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.emf.ecore.*;
+import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.sirius.components.interpreter.AQLInterpreter;
 import org.eclipse.sirius.components.interpreter.Status;
@@ -121,7 +122,9 @@ class EcoreEditorTests {
         assertThat(classReference.getName()).isEqualTo("newclass");
         assertThat(classReference.getEType()).isSameAs(target);
         assertThat(classReference.getEGenericType().getETypeArguments()).hasSize(1);
-        assertThat(services.ecoreHasError(classReference)).isFalse();
+        assertThat(services.ecoreHasError(classReference))
+                .as(() -> "Created class reference validation: " + Diagnostician.INSTANCE.validate(classReference))
+                .isFalse();
         assertThatThrownBy(() -> services.ecoreReference(book, EcorePackage.Literals.ESTRING, containment))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(book.getEReferences()).containsExactly(reference, classReference);

@@ -25,9 +25,16 @@ import org.eclipse.sirius.components.forms.description.TextareaDescription;
 import org.eclipse.sirius.components.representations.Failure;
 import org.eclipse.sirius.components.representations.Success;
 import org.eclipse.sirius.components.representations.VariableManager;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class EcoreDocumentationPropertiesConfigurerTests {
+    @BeforeAll
+    static void initializeEcorePackage() {
+        // Complete Ecore bootstrap before annotation map entries initialize EcorePackage.Literals.
+        EcorePackage.eINSTANCE.eClass();
+    }
+
     @Test
     void formIdMatchesTheSubscriptionIdExactly() {
         var configurer = new EcoreDocumentationPropertiesConfigurer(mock(IIdentityService.class), object -> false);
